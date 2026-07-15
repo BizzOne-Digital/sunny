@@ -15,45 +15,152 @@ const brand = {
   boardingNote: "Boarding available 24/7 according to city bylaws and confirmed booking arrangements.",
 };
 
-const unsplash = "https://images.unsplash.com";
-const asset = (id: string, title: string, alt: string, path: string): ImageAsset => ({
+const localImageUrls: Record<string, string> = {
+  "hero-caregiver": "/images/home/hero-caregiver.webp",
+  "floating-pup": "/images/home/floating-pup.webp",
+  "floating-pup-2": "/images/home/floating-pup-2.webp",
+  "trust-full": "/images/home/trust-full.webp",
+  "walk-toronto": "/images/services/serviceswalk-toronto.webp",
+  "boarding-home": "/images/services/servicesboarding-home.webp",
+  "daycare-play": "/images/services/servicesdaycare-play.webp",
+  "pet-visit": "/images/services/servicespet-visit.webp",
+  "house-sitting": "/images/services/serviceshouse-sitting.webp",
+  chauffeur: "/images/services/serviceschauffeur.webp",
+  grooming: "/images/services/servicesgrooming.webp",
+  nails: "/images/services/servicesnails.webp",
+  training: "/images/services/servicestraining.webp",
+  excursion: "/images/services/servicesexcursion.webp",
+  "about-founder": "/images/about/about-founder.webp",
+  "about-1": "/images/about/about-1.png",
+  "about-2": "/images/about/about-2.png",
+  "about-3": "/images/about/about-3.png",
+  "structured-routines-card": "/images/about/Structured-Routines-Card.jpg",
+  "honest-communication-card": "/images/about/Honest-Communication-Card.jpg",
+  "clean-environments-card": "/images/about/Clean-Environments-Card.jpg",
+  facility: "/images/about/facility.webp",
+  "toronto-lifestyle": "/images/about/toronto-lifestyle.webp",
+  "testimonial-pet": "/images/testimonial/testimonial-pet.webp",
+  "shop-mom": "/images/shop/shop-mom.webp",
+  "shop-dad": "/images/shop/shop-dad.webp",
+  "shop-hero-1": "/images/shop/shop-1.png",
+  "shop-hero-2": "/images/shop/shop-2.png",
+  "gift-card-50-image": "/images/shop/gift50.png",
+  "gift-card-100-image": "/images/shop/gift100.png",
+  "booking-bg": "/images/booking/booking-bg.webp",
+  "booking-bg-2": "/images/booking/booking-bg-2.webp",
+  "contact-dog": "/images/contact/contact-dog.webp",
+  "blog-cover": "/images/blog/blog-cover.webp",
+  "policy-care": "/images/policy/policy-care.webp",
+  "gallery-hero-1": "/images/gallery/gallery-1.png",
+  "gallery-hero-2": "/images/gallery/gallery-2.png",
+  "gallery-hero-3": "/images/gallery/gallery-3.png",
+};
+
+function galleryImageUrl(order?: number) {
+  if (!order || order < 1 || order > 33) return undefined;
+  return `/images/gallery/gallery-slot-${String(order).padStart(2, "0")}.webp`;
+}
+
+function treatImageUrl(order?: number) {
+  const urls = ["/images/treats/treat-large.jpg", "/images/treats/treat-topright.jpg", "/images/treats/treat-bottomright.jpg"];
+  if (!order || order < 1 || order > urls.length) return undefined;
+  return urls[order - 1];
+}
+
+function localImageUrl(image: ImageAsset) {
+  if (image.page === "gallery") return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
+  if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
+  return localImageUrls[image.id] ?? image.url;
+}
+
+function productImages(product: Product) {
+  const giftCardImages: Record<string, ImageAsset> = {
+    "gift-card-50": asset("gift-card-50-image", "DTdogs $50 gift card", "Premium DTdogs digital gift card product image for CAD $50", "/images/shop/gift50.png"),
+    "gift-card-100": asset("gift-card-100-image", "DTdogs $100 gift card", "Premium DTdogs digital gift card product image for CAD $100", "/images/shop/gift100.png"),
+  };
+  const primary = giftCardImages[product.slug];
+  return primary ? [primary, ...product.images.filter((image) => image.id !== primary.id)] : product.images;
+}
+
+const asset = (id: string, title: string, alt: string, url: string, page?: string, order?: number): ImageAsset => ({
   id,
   title,
   alt,
-  url: `${unsplash}/${path}`,
+  url,
   width: 1600,
   height: 1100,
+  page,
+  order,
   status: "published",
 });
 
 const homePage = {
   heroImages: [
-    asset("hero-caregiver", "Calm dog with caregiver", "Calm dog sitting beside a caring handler in warm natural light", "photo-1601758125946-6ec2ef64daf8?auto=format&fit=crop&w=1800&q=82"),
-    asset("floating-pup", "Happy relaxed dog portrait", "Happy relaxed dog portrait against a warm interior background", "photo-1552053831-71594a27632d?auto=format&fit=crop&w=1200&q=82"),
-    asset("walk-toronto", "Neighbourhood dog walk", "Dog enjoying a structured neighbourhood walk in Toronto", "photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1400&q=82"),
-    asset("boarding-home", "Home style boarding rest", "Dog resting comfortably in a clean home style boarding environment", "photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=1400&q=82"),
-    asset("daycare-play", "Supervised daycare play", "Dogs enjoying supervised social play in a bright daycare setting", "photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=1400&q=82"),
+    asset("hero-caregiver", "Calm dog with caregiver", "Calm dog sitting beside a caring handler in warm natural light", "/images/home/hero-caregiver.webp"),
+    asset("floating-pup", "Happy relaxed dog portrait", "Happy relaxed dog portrait against a warm interior background", "/images/home/floating-pup.webp"),
+    asset("walk-toronto", "Neighbourhood dog walk", "Dog enjoying a structured neighbourhood walk in Toronto", "/images/services/serviceswalk-toronto.webp"),
+    asset("boarding-home", "Home style boarding rest", "Dog resting comfortably in a clean home style boarding environment", "/images/services/servicesboarding-home.webp"),
+    asset("daycare-play", "Supervised daycare play", "Dogs enjoying supervised social play in a bright daycare setting", "/images/services/servicesdaycare-play.webp"),
   ],
   storyImages: [
-    asset("about-founder", "Founder care portrait", "Pet-care professional connecting with a calm dog", "photo-1598134493136-7b63ebbd7b3b?auto=format&fit=crop&w=1400&q=82"),
-    asset("facility", "Clean care environment", "Bright clean care environment prepared for pet comfort", "photo-1601758177266-bc599de87707?auto=format&fit=crop&w=1600&q=82"),
-    asset("toronto-lifestyle", "Toronto pet lifestyle", "Dog and caregiver enjoying a Toronto neighbourhood setting", "photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=1600&q=82"),
-    asset("pet-visit", "In-home pet visit", "Caregiver offering gentle attention during an in-home pet visit", "photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=1400&q=82"),
-    asset("trust-full", "Trusted calm routine", "Dog relaxing during a calm supervised care routine", "photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=1800&q=82"),
+    asset("about-founder", "Founder care portrait", "Pet-care professional connecting with a calm dog", "/images/about/about-founder.webp"),
+    asset("facility", "Clean care environment", "Bright clean care environment prepared for pet comfort", "/images/about/facility.webp"),
+    asset("toronto-lifestyle", "Toronto pet lifestyle", "Dog and caregiver enjoying a Toronto neighbourhood setting", "/images/about/toronto-lifestyle.webp"),
+    asset("pet-visit", "In-home pet visit", "Caregiver offering gentle attention during an in-home pet visit", "/images/services/servicespet-visit.webp"),
+    asset("trust-full", "Trusted calm routine", "Dog relaxing during a calm supervised care routine", "/images/home/trust-full.webp"),
   ],
-  galleryImages: [
-    asset("gallery-01", "Dog walking moment", "Dog enjoying a structured walk", "photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-02", "Boarding comfort", "Dog resting in a home-style care space", "photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-03", "Daycare play", "Dogs playing under supervision", "photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-04", "Care portrait", "Calm dog portrait in natural light", "photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1200&q=82"),
-    asset("gallery-05", "Grooming detail", "Well-groomed dog looking comfortable", "photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-06", "Chauffeur ride", "Dog safely seated for transport", "photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-07", "Toronto lifestyle", "Dog and caregiver outdoors", "photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=1600&q=82"),
-    asset("gallery-08", "Paw detail", "Close-up of a dog's paw", "photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&w=1400&q=82"),
-    asset("gallery-09", "Care environment", "Bright clean pet-care environment", "photo-1601758177266-bc599de87707?auto=format&fit=crop&w=1600&q=82"),
-    asset("gallery-10", "Booking moment", "Calm dog-care moment", "photo-1544568100-847a948585b9?auto=format&fit=crop&w=1800&q=82"),
-  ],
+  galleryImages: Array.from({ length: 10 }, (_, index) =>
+    asset(
+      `gallery-slot-${String(index + 1).padStart(2, "0")}`,
+      `Gallery slot ${index + 1}`,
+      `DTdogs gallery image ${index + 1}`,
+      `/images/gallery/gallery-slot-${String(index + 1).padStart(2, "0")}.webp`,
+      "gallery",
+      index + 1,
+    ),
+  ),
 };
+
+const aboutStoryImages = [
+  asset("about-1", "Founder care portrait", "Pet-care professional sitting with a happy dog in a bright care space", "/images/about/about-1.png"),
+  asset("about-2", "Clean care environment", "Bright clean dog-care environment with calm dogs resting", "/images/about/about-2.png"),
+  asset("about-3", "Toronto pet lifestyle", "Dog handler walking a happy dog through a leafy neighbourhood", "/images/about/about-3.png"),
+];
+
+const aboutGuideItems = [
+  {
+    title: "Structured routines",
+    body: "Pets thrive when care is predictable, attentive and tailored to individual personality.",
+    image: asset("structured-routines-card", "Structured routines", "Calm dog receiving gentle structured care in a premium indoor setting", "/images/about/Structured-Routines-Card.jpg"),
+  },
+  {
+    title: "Honest communication",
+    body: "Clear updates help pet parents feel connected while away.",
+    image: asset("honest-communication-card", "Honest communication", "Happy dog near a smartphone and care notebook for owner updates", "/images/about/Honest-Communication-Card.jpg"),
+  },
+  {
+    title: "Clean environments",
+    body: "Food safety, hygiene and comfort are treated as core care standards.",
+    image: asset("clean-environments-card", "Clean environments", "Clean modern pet-care environment with a happy dog and caregiver", "/images/about/Clean-Environments-Card.jpg"),
+  },
+];
+
+const aboutBrandImages = [
+  asset("floating-pup-2", "Calm dog portrait", "Happy relaxed dog sitting calmly in a warm modern indoor space", "/images/home/floating-pup-2.webp"),
+  asset("booking-bg-2", "Care planning moment", "Calm dog near a neatly arranged care checklist, leash and notebook", "/images/booking/booking-bg-2.webp"),
+];
+
+const galleryHeroImages = [
+  asset("gallery-hero-1", "Courtyard dog walk", "Small happy dog walking calmly through a clean modern outdoor courtyard", "/images/gallery/gallery-1.png"),
+  asset("gallery-hero-2", "Autumn leash walk", "Dog walking safely on leash through a warm autumn park trail", "/images/gallery/gallery-2.png"),
+  asset("gallery-hero-3", "Indoor care moment", "Dogs calmly gathered in a cozy modern indoor care lounge", "/images/gallery/gallery-3.png"),
+];
+
+const shopHeroImages = [
+  asset("shop-hero-1", "Dog Mom hero apparel", "Dog Mom apparel styled for the DTdogs shop hero", "/images/shop/shop-1.png"),
+  asset("shop-hero-2", "Dog Dad hero apparel", "Dog Dad apparel styled for the DTdogs shop hero", "/images/shop/shop-2.png"),
+  asset("floating-pup", "Happy relaxed dog portrait", "Happy relaxed dog portrait against a warm interior background", "/images/home/floating-pup.webp"),
+];
 
 const nav = [
   { label: "Home", href: "/" },
@@ -73,7 +180,7 @@ function cx(...classes: Array<string | false | undefined>) {
 
 function imageProps(image: ImageAsset, sizes = "(min-width: 1024px) 50vw, 100vw") {
   return {
-    src: image.url,
+    src: localImageUrl(image),
     alt: image.alt,
     width: image.width ?? 1400,
     height: image.height ?? 1000,
@@ -396,7 +503,7 @@ export function StandardPage({
       {page.slug === "shop" || page.slug === "gift-cards" ? <ProductGrid products={page.slug === "gift-cards" ? products.filter((product) => product.slug.includes("gift-card")) : products} /> : null}
       {page.slug === "contact" ? <ContactPanel /> : null}
       {page.blocks.map((block, index) => (
-        <ContentBlock key={`${block.title}-${index}`} block={block} />
+        <ContentBlock key={`${block.title}-${index}`} block={block} pageSlug={page.slug} blockIndex={index} />
       ))}
       {!["booking", "contact"].includes(page.slug) ? <BookingCTA /> : null}
     </>
@@ -404,7 +511,8 @@ export function StandardPage({
 }
 
 function Hero({ page }: { page: PageContent }) {
-  const main = page.hero.images[0];
+  const heroImages = page.slug === "gallery" ? galleryHeroImages : page.slug === "shop" ? shopHeroImages : page.hero.images;
+  const main = heroImages[0];
   return (
     <section className="relative overflow-hidden bg-forest pt-24 text-white md:pt-32">
       <div className="absolute inset-0 opacity-35">
@@ -421,23 +529,25 @@ function Hero({ page }: { page: PageContent }) {
             {page.hero.secondaryCta ? <Button href={page.hero.secondaryCta.href} variant="light">{page.hero.secondaryCta.label}</Button> : null}
           </div>
         </Reveal>
-        <ImageCollage images={page.hero.images.slice(0, 5)} dark />
+        <ImageCollage images={heroImages.slice(0, 5)} dark />
       </div>
     </section>
   );
 }
 
-function ContentBlock({ block }: { block: PageContent["blocks"][number] }) {
+function ContentBlock({ block, pageSlug, blockIndex }: { block: PageContent["blocks"][number]; pageSlug: string; blockIndex: number }) {
   if (block.type === "gallery" || block.type === "faq" || block.type === "shop" || block.type === "testimonials") return null;
+  const items = pageSlug === "about" && blockIndex === 1 ? aboutGuideItems : block.items;
+  const images = pageSlug === "about" && blockIndex === 0 ? aboutStoryImages : pageSlug === "about" && blockIndex === 2 ? aboutBrandImages : block.images;
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <Reveal>
         <SectionHeading eyebrow={block.eyebrow} title={block.title} />
         {block.body ? <p className="mx-auto mt-6 max-w-3xl text-center text-base leading-8 text-ink/70 sm:text-lg">{block.body}</p> : null}
       </Reveal>
-      {block.items?.length ? (
+      {items?.length ? (
         <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {block.items.map((item) => (
+          {items.map((item) => (
             <article key={item.title} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
               {item.image ? <Image className="h-64 w-full object-cover" {...imageProps(item.image)} alt={item.image.alt} /> : null}
               <div className="p-5 sm:p-7">
@@ -448,7 +558,7 @@ function ContentBlock({ block }: { block: PageContent["blocks"][number] }) {
           ))}
         </div>
       ) : null}
-      {block.images?.length ? <ImageRibbon images={block.images.slice(0, 8)} /> : null}
+      {images?.length ? <ImageRibbon images={images.slice(0, 8)} /> : null}
     </section>
   );
 }
@@ -532,14 +642,15 @@ export function BlogDetail({ post, related }: { post: BlogPost; related: BlogPos
 }
 
 export function ProductDetail({ product }: { product: Product }) {
-  const [selected, setSelected] = useState(product.images[0]);
+  const images = productImages(product);
+  const [selected, setSelected] = useState(images[0]);
   return (
     <>
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-14 pt-28 md:px-8 md:pb-20 md:pt-36 lg:grid-cols-2">
         <div>
           <Image className="h-80 w-full rounded-[2rem] object-cover sm:h-[38rem] sm:rounded-[3rem]" priority {...imageProps(selected, "(min-width: 1024px) 50vw, 100vw")} alt={selected.alt} />
           <div className="mt-4 grid grid-cols-5 gap-3">
-            {product.images.slice(0, 5).map((image) => (
+            {images.slice(0, 5).map((image) => (
               <button key={image.id} onClick={() => setSelected(image)} className="overflow-hidden rounded-2xl border-2 border-transparent focus:border-forest">
                 <Image className="h-16 w-full object-cover sm:h-24" {...imageProps(image, "120px")} alt={image.alt} />
               </button>
@@ -991,7 +1102,7 @@ function BlogGrid({ posts, title = "Latest from The Paw Journal" }: { posts: Blo
         {posts.map((post) => (
           <Link key={post.slug} href={`/blog/${post.slug}`} className="group overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
             <Image className="h-64 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-80" {...imageProps(post.featuredImage)} alt={post.featuredImage.alt} />
-            <div className="p-5 sm:p-7">
+            <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-burgundy">{post.category}</p>
               <h2 className="mt-3 font-serif text-3xl text-forest sm:text-4xl">{post.title}</h2>
               <p className="mt-3 leading-7 text-ink/65">{post.excerpt}</p>
@@ -1007,16 +1118,19 @@ function ProductGrid({ products }: { products: Product[] }) {
   return (
     <section id="products" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <div className="grid gap-6 md:grid-cols-2">
-        {products.map((product) => (
+        {products.map((product) => {
+          const primaryImage = productImages(product)[0];
+          return (
           <Link key={product.slug} href={`/shop/${product.slug}`} className="group overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
-            <Image className="h-80 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-[32rem]" {...imageProps(product.images[0])} alt={product.images[0].alt} />
+            <Image className="h-80 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-[32rem]" {...imageProps(primaryImage)} alt={primaryImage.alt} />
             <div className="p-5 sm:p-7">
               <h2 className="font-serif text-3xl text-forest sm:text-4xl">{product.title}</h2>
               <p className="mt-3 text-ink/65">{product.description}</p>
               <p className="mt-4 font-bold text-burgundy">{product.priceLabel}</p>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -1067,8 +1181,8 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
     <section id="team" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {team.map((member) => (
-          <article key={member.slug} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
-            <Image className="h-72 w-full object-cover sm:h-96" {...imageProps(member.image)} alt={member.image.alt} />
+          <article key={member.slug} className="rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 sm:p-7">
+            <div className="mb-6 h-1.5 w-16 rounded-full bg-coral" />
             <div className="p-5 sm:p-7">
               <h2 className="font-serif text-3xl text-forest sm:text-4xl">{member.name}</h2>
               <p className="mt-1 font-bold text-burgundy">{member.role}</p>
@@ -1213,7 +1327,7 @@ function ImageCollage({ images, dark }: { images: ImageAsset[]; dark?: boolean }
 
 function ImageRibbon({ images }: { images: ImageAsset[] }) {
   return (
-    <div className="-mx-4 mt-10 flex snap-x gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:mt-12 sm:gap-5 sm:px-0">
+    <div className={cx("-mx-4 mt-10 flex snap-x gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:mt-12 sm:gap-5 sm:px-0", images.length <= 3 && "sm:justify-center")}>
       {images.map((image, index) => (
         <figure key={`${image.id}-${index}`} className="min-w-[80vw] snap-start overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 sm:min-w-[18rem]">
           <Image className="h-60 w-full object-cover sm:h-72" {...imageProps(image, "320px")} alt={image.alt} loading="lazy" />
