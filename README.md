@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DTdogs.ca / Hand & Paw
+
+Premium pet-care website for DTdogs.ca / Hand & Paw, built with Next.js App Router, TypeScript, Tailwind CSS v4, Framer Motion, MongoDB/Mongoose, Cloudinary media uploads and Resend booking emails.
 
 ## Getting Started
 
-First, run the development server:
+1. Copy `.env.example` to `.env.local`.
+2. Add your MongoDB Compass connection string, for example `mongodb://127.0.0.1:27017/dtdogs`.
+3. Add `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AUTH_SECRET` and `SEED_TOKEN`.
+4. Add Cloudinary credentials for admin media uploads.
+5. Add Resend credentials if booking emails should send during testing.
 
-```bash
+Run the development server:
+
+```sh
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Admin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Admin login is available at `/admin/login`.
 
-## Learn More
+The first admin user is created automatically from:
 
-To learn more about Next.js, take a look at the following resources:
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The admin includes:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Dashboard
+- Booking queue with status tracking
+- Media library with Cloudinary uploads
+- Generic CMS editors for pages, services, pricing, testimonials, FAQs, blog, products and team
 
-## Deploy on Vercel
+## Database Seed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The site renders with safe fallback content before MongoDB is seeded. To copy the starter content into MongoDB, call:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+curl -X POST http://localhost:3000/api/seed -H "x-seed-token: YOUR_SEED_TOKEN"
+```
+
+On Windows PowerShell:
+
+```powershell
+Invoke-WebRequest -Method POST -Uri "http://localhost:3000/api/seed" -Headers @{ "x-seed-token" = "YOUR_SEED_TOKEN" }
+```
+
+## Verification
+
+```sh
+npm run lint
+npm run build
+```
+
+Both commands should pass before deployment.
