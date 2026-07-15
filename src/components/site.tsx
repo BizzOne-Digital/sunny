@@ -61,6 +61,7 @@ const nav = [
   { label: "Services", href: "/services" },
   { label: "Pricing", href: "/pricing" },
   { label: "Gallery", href: "/gallery" },
+  { label: "Treats", href: "/treats" },
   { label: "Shop", href: "/shop" },
   { label: "Journal", href: "/blog" },
   { label: "More", href: "/team" },
@@ -385,6 +386,7 @@ export function StandardPage({
       {page.slug === "services" ? <ServiceGrid services={services} /> : null}
       {page.slug === "pricing" ? <PricingGrid pricing={pricing} /> : null}
       {page.slug === "gallery" ? <GalleryGrid images={page.blocks[0]?.images ?? []} /> : null}
+      {page.slug === "treats" ? <TreatsGallery images={page.blocks[0]?.images ?? []} /> : null}
       {page.slug === "testimonials" ? <TestimonialsPreview testimonials={testimonials} full /> : null}
       {page.slug === "faq" ? <GroupedFaqPage faqs={faqs} images={page.hero.images} /> : null}
       {page.slug === "blog" ? <BlogGrid posts={blogPosts} /> : null}
@@ -646,6 +648,70 @@ function GalleryGrid({ images }: { images: ImageAsset[] }) {
           </button>
         ))}
       </div>
+      <AnimatePresence>
+        {active ? (
+          <motion.div className="fixed inset-0 z-[95] grid place-items-center bg-black/80 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <button onClick={() => setActive(null)} className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white" aria-label="Close image">
+              <X className="h-5 w-5" />
+            </button>
+            <motion.div className="max-h-[90vh] max-w-5xl overflow-auto rounded-[2rem] bg-white" initial={{ scale: 0.94 }} animate={{ scale: 1 }}>
+              <Image className="max-h-[78vh] w-full object-contain" {...imageProps(active, "90vw")} alt={active.alt} />
+              <div className="p-5">
+                <h3 className="font-serif text-3xl text-forest">{active.title}</h3>
+                <p className="text-ink/65">{active.caption ?? active.alt}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+function TreatsGallery({ images }: { images: ImageAsset[] }) {
+  const treatImages = images.length ? images : homePage.galleryImages;
+  const [active, setActive] = useState<ImageAsset | null>(null);
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
+      <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-burgundy">Treat Gallery</p>
+          <h2 className="mt-4 font-serif text-4xl leading-none text-forest sm:text-6xl">A sweet little showcase for dog treats.</h2>
+          <p className="mt-5 leading-8 text-ink/65">
+            Upload treat photography in the Media Library, assign it to the Treats page, and use captions for flavour, ingredients or availability notes.
+          </p>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <Button href="/admin/media" variant="outline">Manage Images</Button>
+            <Button href="/contact">Ask About Treats</Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {treatImages.slice(0, 6).map((image, index) => (
+            <button
+              key={`${image.id}-${index}`}
+              type="button"
+              onClick={() => setActive(image)}
+              className={cx("group overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-black/5", index === 0 && "col-span-2 row-span-2")}
+            >
+              <Image className={cx("w-full object-cover transition duration-500 group-hover:scale-105", index === 0 ? "h-80 sm:h-full" : "h-40 sm:h-52")} {...imageProps(image)} alt={image.alt} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-12 columns-1 gap-5 sm:columns-2 lg:columns-3">
+        {treatImages.map((image, index) => (
+          <button key={`treat-${image.id}-${index}`} type="button" onClick={() => setActive(image)} className="mb-5 block w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-xl shadow-black/5">
+            <Image className="h-auto w-full object-cover transition duration-500 hover:scale-105" {...imageProps(image, "(min-width: 1024px) 33vw, 100vw")} alt={image.alt} loading={index < 3 ? "eager" : "lazy"} />
+            <div className="p-5">
+              <p className="font-serif text-2xl text-forest">{image.title}</p>
+              <p className="mt-1 text-sm text-ink/60">{image.caption ?? image.alt}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
       <AnimatePresence>
         {active ? (
           <motion.div className="fixed inset-0 z-[95] grid place-items-center bg-black/80 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
