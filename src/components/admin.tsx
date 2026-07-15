@@ -96,7 +96,6 @@ export function LoginForm() {
       <form onSubmit={submit} className="w-full max-w-md rounded-[2rem] bg-white p-8 text-ink shadow-2xl">
         <PawPrint className="mb-6 h-10 w-10 text-forest" />
         <h1 className="font-serif text-5xl text-forest">Admin Login</h1>
-        <p className="mt-3 text-sm leading-6 text-ink/60">Use ADMIN_EMAIL and ADMIN_PASSWORD from your environment. The first admin is created automatically.</p>
         <label className="mt-8 block text-sm font-bold">
           Email
           <input name="email" type="email" required className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3" />
