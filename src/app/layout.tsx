@@ -19,14 +19,14 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.dtdogs.ca"),
   title: {
-    default: "DTdogs.ca / Hand & Paw | Premium Pet Care GTA",
+    default: "DTdogs.ca | Professional Pet Care · Downtown Toronto & GTA",
     template: "%s | DTdogs.ca",
   },
   description:
-    "Premium structured pet care across the Greater Toronto Area, including dog walking, boarding, daycare, grooming, pet visits and chauffeur service.",
+    "DTdogs.ca (formerly Handandpaw.ca and Handandpaw.in) — professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
   openGraph: {
-    title: "DTdogs.ca / Hand & Paw",
-    description: "Care, comfort and companionship for pets across the GTA.",
+    title: "DTdogs.ca",
+    description: "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
     type: "website",
   },
 };

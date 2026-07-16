@@ -50,8 +50,13 @@ function InstagramIcon({ className }: { className?: string }) {
 const brand = {
   phone: "+1 (437) 937-5112",
   email: "connect@dtdogs.ca",
-  hours: "Monday-Sunday, 7:00 AM-7:00 PM",
+  hours: "Monday–Sunday, 7:00 AM–9:00 PM",
   boardingNote: "Boarding available 24/7 according to city bylaws and confirmed booking arrangements.",
+  formerly: "formerly Handandpaw.ca and Handandpaw.in",
+  tagline: "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
+  whatsapp: "https://wa.me/14379375112",
+  payments: "Pay online, in store, or by Interac after confirmation.",
+  locations: ["Downtown Toronto · Serving across the GTA"],
 };
 
 const localImageUrls: Record<string, string> = {
@@ -494,8 +499,8 @@ function BrandLogo({ inverted = false }: { inverted?: boolean }) {
             <PawPrint className="h-5 w-5" />
           </span>
           <span className="leading-tight">
-            <span className={cx("block text-[11px] font-extrabold uppercase tracking-[0.12em]", inverted ? "text-white" : "text-forest")}>DT Dogs</span>
-            <span className={cx("block text-[9px] font-semibold uppercase tracking-[0.18em]", inverted ? "text-white/70" : "text-ink/55")}>at Hand & Paw</span>
+            <span className={cx("block text-[11px] font-extrabold uppercase tracking-[0.12em]", inverted ? "text-white" : "text-forest")}>DTdogs.ca</span>
+            <span className={cx("block text-[9px] font-semibold uppercase tracking-[0.14em]", inverted ? "text-white/70" : "text-ink/55")}>Hand & Paw · GTA</span>
           </span>
         </>
       )}
@@ -755,10 +760,10 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               >
                 <PawPrint className="h-4 w-4 shrink-0" />
               </motion.span>
-              Structured pet care across the Greater Toronto Area
+              Structured pet care · Downtown Toronto & GTA
             </motion.p>
 
-            <h1 className="font-serif text-[2.65rem] leading-[0.95] sm:text-6xl md:text-7xl lg:text-[5.5rem]">
+            <h1 className="font-serif text-[2.15rem] leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.25rem]">
               <motion.span
                 className="inline-block"
                 initial={reducedMotion ? false : { opacity: 0, x: -56 }}
@@ -784,14 +789,22 @@ export function HomePage({ services, testimonials, products }: { services: Servi
                 </motion.span>
               </motion.span>
             </h1>
+            <motion.p
+              className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-peach/90 sm:text-xs sm:tracking-[0.18em]"
+              initial={reducedMotion ? false : { opacity: 0 }}
+              animate={enter ? { opacity: 1 } : { opacity: reducedMotion ? 1 : 0 }}
+              transition={{ duration: 0.7, delay: enter ? 0.38 : 0 }}
+            >
+              {brand.formerly}
+            </motion.p>
 
             <motion.p
-              className="mt-6 max-w-lg text-base leading-7 text-white/85 sm:text-lg sm:leading-8"
+              className="mt-5 max-w-lg text-sm leading-7 text-white/85 sm:mt-6 sm:text-base sm:leading-8"
               initial={reducedMotion ? false : { opacity: 0, x: -40 }}
               animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -40 }}
               transition={{ duration: 0.9, delay: enter ? 0.42 : 0, ease }}
             >
-              Make new paw friends at DTdogs.ca while your pet enjoys calm, professional care in a comfortable home-style environment.
+              {brand.tagline}
             </motion.p>
 
             <motion.div
@@ -885,37 +898,40 @@ export function HomePage({ services, testimonials, products }: { services: Servi
 
       <BrandMarquee />
 
-      <section className="relative mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+      <section className="relative mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
         <div className="animate-float pointer-events-none absolute left-0 top-8 h-64 w-64 rounded-full bg-gradient-to-br from-coral/15 to-transparent blur-3xl" />
-        <div className="relative grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14">
+        <div className="relative grid items-center gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
           <Reveal from="left">
-            <div className="overflow-hidden rounded-[2rem] shadow-2xl shadow-forest/15 sm:rounded-[3rem]">
-              <Image className="h-80 w-full object-cover sm:h-[30rem]" {...imageProps(homeSupportingImages.story)} alt={homeSupportingImages.story.alt} />
+            <div className="overflow-hidden rounded-[2rem] shadow-2xl shadow-forest/15 sm:rounded-[2.5rem]">
+              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(homeSupportingImages.story)} alt={homeSupportingImages.story.alt} />
             </div>
           </Reveal>
           <Reveal from="right" delay={0.1}>
-            <SectionHeading eyebrow="Our mission" title="Structured, nurturing pet care designed for comfort, safety and peace of mind." align="left" />
-            <p className="mt-6 max-w-3xl text-base leading-8 text-ink/70 sm:text-xl sm:leading-9">
-              At Hand & Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you&apos;re away. Since 2021, we have built trust through consistent, nurturing services focused on your pet&apos;s well-being throughout the Greater Toronto Area.
+            <SectionHeading eyebrow="Our Vision" title="A safer, warmer rhythm for pets and their people." align="left" />
+            <p className="mt-5 max-w-3xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+              DTdogs.ca ({brand.formerly}) offers structured pet care for discerning pet parents across Downtown Toronto and the GTA. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you&apos;re away. Since 2021, we have built trust through consistent, nurturing services focused on your pet&apos;s well-being in every season.
             </p>
+            <div className="mt-6">
+              <Button href="/our-vision" variant="outline">Read Our Vision</Button>
+            </div>
           </Reveal>
         </div>
       </section>
 
       <ServiceGrid services={services} preview />
 
-      <section className="bg-white py-14 md:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 md:px-8 lg:grid-cols-2 xl:gap-14">
+      <section className="bg-white py-12 md:py-16">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 md:px-8 lg:grid-cols-2 xl:gap-12">
           <Reveal from="left">
             <SectionHeading eyebrow="Why choose us" title="Uncompromised care for your pet's happiness." align="left" />
-            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
               {["Food safety and hygiene monitored", "Comfortable, adjusted temperature", "Certified first-aid and canine behaviour knowledge", "24/7 CCTV surveillance", "Controlled group sizes", "Secure handling and calm routines"].map((item, index) => (
                 <Reveal key={item} from={index % 2 === 0 ? "left" : "right"} delay={index * 0.06}>
-                  <div className="group rounded-[1.5rem] bg-gradient-to-br from-sage/70 to-sage/35 p-5 transition-all duration-500 hover:-translate-y-1 hover:bg-gradient-to-br hover:from-peach/60 hover:to-sage/40 hover:shadow-xl hover:shadow-forest/10">
-                    <span className="mb-4 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-forest to-burgundy text-white shadow-lg shadow-forest/20 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+                  <div className="group rounded-[1.25rem] bg-gradient-to-br from-sage/70 to-sage/35 p-4 transition-all duration-500 hover:-translate-y-1 hover:from-peach/60 hover:to-sage/40 hover:shadow-xl hover:shadow-forest/10 sm:rounded-[1.5rem] sm:p-5">
+                    <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-forest to-burgundy text-white shadow-lg shadow-forest/20 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
                       <Check className="h-4 w-4" />
                     </span>
-                    <p className="font-semibold text-ink">{item}</p>
+                    <p className="text-sm font-semibold text-ink sm:text-base">{item}</p>
                   </div>
                 </Reveal>
               ))}
@@ -925,10 +941,13 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             <ImageCollage images={[homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story]} />
           </Reveal>
         </div>
+        <div className="mx-auto mt-10 max-w-7xl px-4 md:mt-12 md:px-8">
+          <TestimonialsPreview testimonials={testimonials} embedded />
+        </div>
       </section>
 
       <ProcessSection />
-      <TestimonialsPreview testimonials={testimonials} />
+      <SunnyismSection />
       <GalleryPreview images={[homeSupportingImages.gallery, ...homePage.galleryImages]} />
       <ShopPreview products={products} />
       <BrandMarquee dark />
@@ -1006,7 +1025,7 @@ function Hero({ page }: { page: PageContent }) {
   const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
-    <section className="relative overflow-hidden bg-forest pt-36 text-white md:pt-40">
+    <section className={cx("relative overflow-hidden bg-forest text-white", page.slug === "booking" ? "pt-32 md:pt-36" : "pt-36 md:pt-40")}>
       {main ? (
         <motion.div
           className="absolute inset-0"
@@ -1020,6 +1039,7 @@ function Hero({ page }: { page: PageContent }) {
       <div className="absolute inset-0 bg-gradient-to-r from-forest/70 via-forest/35 to-forest/20" />
       <div className="bg-gradient-animated absolute inset-0 opacity-30" />
       <div className="absolute inset-0 bg-gradient-to-t from-forest/45 via-transparent to-forest/15" />
+      <div className="tech-grid absolute inset-0 opacity-40" />
       <motion.div
         className="animate-float absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-gradient-to-br from-coral/18 to-burgundy/10 blur-3xl"
         initial={reducedMotion ? false : { opacity: 0, x: -80 }}
@@ -1032,10 +1052,10 @@ function Hero({ page }: { page: PageContent }) {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.1, delay: 0.15, ease }}
       />
-      <div className="relative mx-auto grid max-w-7xl items-end gap-8 px-4 py-12 sm:gap-10 md:px-8 md:py-24 lg:grid-cols-[1fr_0.9fr]">
+      <div className={cx("relative mx-auto grid max-w-7xl items-end gap-6 px-4 md:px-8 lg:grid-cols-[1fr_0.9fr]", page.slug === "booking" ? "py-8 md:py-12" : "py-12 md:py-20")}>
         <div>
           <motion.p
-            className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-5 sm:gap-3 sm:text-sm sm:tracking-[0.34em]"
+            className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.28em]"
             initial={reducedMotion ? false : { opacity: 0, x: -56, y: 16 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ duration: 0.85, ease }}
@@ -1044,7 +1064,7 @@ function Hero({ page }: { page: PageContent }) {
             {page.hero.eyebrow}
           </motion.p>
           <motion.h1
-            className="font-serif text-[2.35rem] leading-[1.02] drop-shadow-[0_2px_16px_rgba(0,0,0,0.35)] sm:text-5xl md:text-7xl lg:text-8xl"
+            className="font-serif text-[1.85rem] leading-[1.1] tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.35)] sm:text-3xl md:text-4xl lg:text-5xl"
             initial={reducedMotion ? false : { opacity: 0, x: -72 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.12, ease }}
@@ -1052,7 +1072,7 @@ function Hero({ page }: { page: PageContent }) {
             {page.hero.title}
           </motion.h1>
           <motion.p
-            className="mt-6 max-w-2xl text-base leading-7 text-white/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.35)] sm:text-lg sm:leading-8"
+            className="mt-4 max-w-2xl text-sm leading-7 text-white/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.35)] sm:mt-5 sm:text-base sm:leading-8"
             initial={reducedMotion ? false : { opacity: 0, y: 36 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.28, ease }}
@@ -1060,7 +1080,7 @@ function Hero({ page }: { page: PageContent }) {
             {page.hero.body}
           </motion.p>
           <motion.div
-            className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+            className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row sm:flex-wrap"
             initial={reducedMotion ? false : { opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.42, ease }}
@@ -1069,7 +1089,7 @@ function Hero({ page }: { page: PageContent }) {
             {page.hero.secondaryCta ? <Button href={page.hero.secondaryCta.href} variant="light">{page.hero.secondaryCta.label}</Button> : null}
           </motion.div>
         </div>
-        {heroImages.length ? (
+        {heroImages.length && page.slug !== "booking" ? (
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, x: 72, y: 24 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
@@ -1089,10 +1109,10 @@ function ContentBlock({ block, pageSlug, blockIndex }: { block: PageContent["blo
   const images = pageSlug === "about" && blockIndex === 0 ? aboutStoryImages : pageSlug === "about" && blockIndex === 2 ? aboutBrandImages : block.images;
   const directions = ["left", "up", "right", "down"] as const;
   return (
-    <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
+    <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
       <Reveal from={blockIndex % 2 === 0 ? "left" : "right"}>
         <SectionHeading eyebrow={block.eyebrow} title={block.title} />
-        {block.body ? <p className="mx-auto mt-6 max-w-3xl text-center text-base leading-8 text-ink/70 sm:text-lg">{block.body}</p> : null}
+        {block.body ? <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">{block.body}</p> : null}
       </Reveal>
       {items?.length ? (
         <div className="mt-12 grid gap-5 md:grid-cols-3">
@@ -1174,7 +1194,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
               {comingSoon ? "Coming Soon" : service.eyebrow}
             </motion.p>
             <motion.h1
-              className="font-serif text-[2.5rem] leading-[1.02] drop-shadow-[0_2px_16px_rgba(0,0,0,0.35)] sm:text-6xl md:text-8xl"
+              className="font-serif text-[2.1rem] leading-[1.08] tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.35)] sm:text-4xl md:text-5xl lg:text-6xl"
               initial={reducedMotion ? false : { opacity: 0, x: -72 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.12, ease }}
@@ -1492,14 +1512,14 @@ export function ProductDetail({ product }: { product: Product }) {
 
 function ServiceGrid({ services, preview = false }: { services: Service[]; preview?: boolean }) {
   const directions = ["left", "up", "right", "down"] as const;
-  const visibleServices = preview ? services.slice(0, 3) : services;
+  const visibleServices = preview ? services.filter((s) => s.status !== "coming-soon").slice(0, 9) : services;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-24">
+    <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
       <Reveal from="up">
-        <SectionHeading eyebrow="Signature services" title="Every service has its own care story, images and booking path." />
+        <SectionHeading eyebrow="Our services" title="Structured care options for every season in the GTA." />
       </Reveal>
-      <div className="mt-10 grid gap-6 md:mt-14 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-5 md:mt-10 md:grid-cols-2 lg:grid-cols-3">
         {visibleServices.map((service, index) => (
           <Reveal key={service.slug} from={directions[index % directions.length]} delay={(index % 6) * 0.08}>
             <ServiceCard service={service} />
@@ -1507,7 +1527,7 @@ function ServiceGrid({ services, preview = false }: { services: Service[]; previ
         ))}
       </div>
       {preview ? (
-        <Reveal from="up" delay={0.15} className="mt-10 text-center">
+        <Reveal from="up" delay={0.15} className="mt-8 text-center">
           <Button href="/services">View All Services</Button>
         </Reveal>
       ) : null}
@@ -1518,30 +1538,45 @@ function ServiceGrid({ services, preview = false }: { services: Service[]; previ
 function ServiceCard({ service }: { service: Service }) {
   const comingSoon = service.status === "coming-soon";
   const cardImage = servicePrimaryImage(service);
+  const bookHref = `/booking?service=${encodeURIComponent(service.slug)}#booking-form`;
+  const whatsappHref = `${brand.whatsapp}?text=${encodeURIComponent(`Hi DTdogs.ca — I'd like to ask about ${service.name}.`)}`;
 
   return (
-    <Link href={`/services/${service.slug}`} className="group relative overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition duration-500 hover:-translate-y-3 hover:shadow-2xl hover:shadow-burgundy/20">
-      <div className="pointer-events-none absolute inset-0 z-10 rounded-[2rem] opacity-0 ring-2 ring-inset ring-coral/50 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="relative h-60 overflow-hidden sm:h-72">
-        <Image className="h-full w-full object-cover transition duration-700 group-hover:scale-110 group-hover:rotate-1" {...imageProps(cardImage)} alt={cardImage.alt} />
-        <div className="absolute inset-0 bg-gradient-to-t from-forest/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <span className="absolute left-5 top-5 rounded-full bg-gradient-to-r from-cream to-peach px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-forest shadow-lg">
+    <article className="group relative overflow-hidden rounded-[1.75rem] bg-white shadow-xl shadow-black/5 transition duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/20 sm:rounded-[2rem]">
+      <div className="pointer-events-none absolute inset-0 z-10 rounded-[1.75rem] opacity-0 ring-2 ring-inset ring-coral/50 transition-opacity duration-500 group-hover:opacity-100 sm:rounded-[2rem]" />
+      <Link href={`/services/${service.slug}`} className="relative block h-52 overflow-hidden sm:h-64">
+        <Image className="h-full w-full object-cover transition duration-700 group-hover:scale-105" {...imageProps(cardImage)} alt={cardImage.alt} />
+        <div className="absolute inset-0 bg-gradient-to-t from-forest/45 via-transparent to-transparent opacity-60" />
+        <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-cream to-peach px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-forest shadow-lg sm:left-5 sm:top-5 sm:px-4 sm:py-2 sm:text-xs sm:tracking-[0.2em]">
           {comingSoon ? "Coming Soon" : service.eyebrow}
         </span>
-      </div>
-      <div className="relative p-5 sm:p-7">
-        <h3 className="font-serif text-[1.75rem] leading-tight text-forest transition-colors duration-300 group-hover:text-burgundy sm:text-4xl">{service.name}</h3>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-forest/70">
+      </Link>
+      <div className="relative p-5 sm:p-6">
+        <Link href={`/services/${service.slug}`}>
+          <h3 className="font-serif text-[1.45rem] leading-tight text-forest transition-colors duration-300 group-hover:text-burgundy sm:text-2xl">{service.name}</h3>
+        </Link>
+        <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-forest/70">
           {service.duration ? <span>{service.duration}</span> : null}
           {service.duration && service.priceLabel ? <span>•</span> : null}
           {service.priceLabel ? <span className="text-burgundy">{service.priceLabel}</span> : null}
         </div>
-        <p className="mt-3 leading-7 text-ink/65 sm:min-h-20">{service.summary}</p>
-        <span className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-burgundy to-coral bg-clip-text font-bold text-transparent">
-          {comingSoon ? "View Details" : "Learn More"} <ArrowRight className="h-4 w-4 text-burgundy transition duration-300 group-hover:translate-x-2" />
-        </span>
+        <p className="mt-3 line-clamp-3 text-sm leading-6 text-ink/65">{service.summary}</p>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          {comingSoon ? (
+            <Link href={`/services/${service.slug}`} className="inline-flex flex-1 items-center justify-center rounded-full border border-forest/15 px-4 py-2.5 text-sm font-bold text-forest transition hover:bg-sage">
+              View Details
+            </Link>
+          ) : (
+            <Link href={bookHref} className="btn-gradient inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold text-white">
+              Book Now <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+          <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center rounded-full border border-forest/20 px-4 py-2.5 text-sm font-bold text-forest transition hover:border-burgundy hover:text-burgundy">
+            Message us
+          </a>
+        </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -1803,6 +1838,122 @@ function FaqGroup({ title, faqs }: { title: string; faqs: Faq[] }) {
   );
 }
 
+function buildWeekDays(from = new Date()) {
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    return day;
+  });
+}
+
+function buildTimeSlots() {
+  const slots: string[] = [];
+  for (let minutes = 7 * 60; minutes <= 21 * 60; minutes += 30) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  }
+  return slots;
+}
+
+const BOOKING_TIME_SLOTS = buildTimeSlots();
+
+function formatDayKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatDayLabel(date: Date) {
+  return date.toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+}
+
+function formatSlotLabel(slot: string) {
+  const [h, m] = slot.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+function BookingCalendar({
+  selectedDate,
+  selectedTime,
+  onDateChange,
+  onTimeChange,
+  required,
+}: {
+  selectedDate: string;
+  selectedTime: string;
+  onDateChange: (value: string) => void;
+  onTimeChange: (value: string) => void;
+  required?: boolean;
+}) {
+  const days = useMemo(() => buildWeekDays(), []);
+
+  return (
+    <div className="md:col-span-2">
+      <input type="hidden" name="preferredDate" value={selectedDate} required={required} />
+      <input type="hidden" name="preferredTime" value={selectedTime} required={required} />
+      <p className="text-sm font-bold text-ink/70">Choose a day (next 7 days)</p>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {days.map((day) => {
+          const key = formatDayKey(day);
+          const active = selectedDate === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onDateChange(key)}
+              className={cx(
+                "rounded-2xl border px-2 py-3 text-center transition",
+                active ? "border-forest bg-forest text-white shadow-lg shadow-forest/20" : "border-forest/10 bg-cream text-ink hover:border-coral/50",
+              )}
+            >
+              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] opacity-70">{day.toLocaleDateString("en-CA", { weekday: "short" })}</span>
+              <span className="mt-1 block font-serif text-lg leading-none">{day.getDate()}</span>
+              <span className="mt-1 block text-[10px] opacity-70">{day.toLocaleDateString("en-CA", { month: "short" })}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="mt-6 text-sm font-bold text-ink/70">
+        30-minute slots · 7:00 AM – 9:00 PM{selectedDate ? ` · ${formatDayLabel(new Date(`${selectedDate}T12:00:00`))}` : ""}
+      </p>
+      <div className="mt-3 grid max-h-64 grid-cols-3 gap-2 overflow-y-auto rounded-[1.25rem] border border-forest/10 bg-cream/60 p-3 sm:grid-cols-4 md:grid-cols-5">
+        {BOOKING_TIME_SLOTS.map((slot) => {
+          const active = selectedTime === slot;
+          return (
+            <button
+              key={slot}
+              type="button"
+              disabled={!selectedDate}
+              onClick={() => onTimeChange(slot)}
+              className={cx(
+                "rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm",
+                !selectedDate && "cursor-not-allowed opacity-40",
+                active ? "bg-coral text-ink shadow-md" : "bg-white text-forest hover:bg-sage",
+              )}
+            >
+              {formatSlotLabel(slot)}
+            </button>
+          );
+        })}
+      </div>
+      {!selectedDate || !selectedTime ? (
+        <p className="mt-3 text-xs text-burgundy/80">Select a day and a 30-minute time slot to continue.</p>
+      ) : (
+        <p className="mt-3 text-xs text-forest/70">
+          Selected: {formatDayLabel(new Date(`${selectedDate}T12:00:00`))} at {formatSlotLabel(selectedTime)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function BookingForm({ services }: { services: Service[] }) {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
@@ -1821,6 +1972,8 @@ function BookingForm({ services }: { services: Service[] }) {
   const [selectedServiceSlug, setSelectedServiceSlug] = useState(() => resolveServiceSlug(searchParams.get("service")));
   const [includeAddon, setIncludeAddon] = useState(searchParams.get("addon") === "1");
   const [sizeLabel, setSizeLabel] = useState(searchParams.get("size") ?? "");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
 
   const selectedService = bookableServices.find((service) => service.slug === selectedServiceSlug);
 
@@ -1872,9 +2025,19 @@ function BookingForm({ services }: { services: Service[] }) {
   }
 
   return (
-    <section id="booking-form" className="mx-auto max-w-5xl px-4 py-14 md:px-8 md:py-20">
+    <section id="booking-form" className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
       <Reveal from="up">
-      <form onSubmit={submit} className="rounded-[1.75rem] bg-white p-3.5 shadow-2xl shadow-black/10 sm:rounded-[2rem] sm:p-5 md:rounded-[2.5rem] md:p-8">
+      <form
+        onSubmit={(event) => {
+          if (step === 2 && (!preferredDate || !preferredTime)) {
+            event.preventDefault();
+            setStatus("Please choose a date and 30-minute time slot.");
+            return;
+          }
+          void submit(event);
+        }}
+        className="tech-panel rounded-[1.75rem] p-3.5 shadow-2xl shadow-black/10 sm:rounded-[2rem] sm:p-5 md:rounded-[2.5rem] md:p-8"
+      >
         <input type="hidden" name="service" value={bookingServiceLabel} />
         <input type="hidden" name="packageSelection" value={packageSelection} />
         <input type="hidden" name="addonSelected" value={includeAddon ? "true" : "false"} />
@@ -1911,20 +2074,37 @@ function BookingForm({ services }: { services: Service[] }) {
           <div className="grid gap-5 md:grid-cols-2">
             <div className={cx(step === 0 ? "contents" : "hidden")}>
               <div className="md:col-span-2">
-                <h3 className="font-serif text-3xl text-forest">Choose a service</h3>
+                <h3 className="font-serif text-2xl text-forest sm:text-3xl">Choose a service</h3>
                 <p className="mt-2 text-sm text-ink/60">Select your care option, then optionally add the +{serviceAddOn.priceLabel} add-on.</p>
               </div>
-              <label className="block text-sm font-bold text-ink/70 md:col-span-2">
-                Selected service
-                <select required={step === 0} value={selectedServiceSlug} onChange={(event) => setSelectedServiceSlug(event.target.value)} className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-base outline-none ring-forest/20 transition focus:ring-4">
-                  <option value="" disabled>Choose</option>
-                  {bookableServices.map((service) => (
-                    <option key={service.slug} value={service.slug}>
-                      {serviceBookingLabel(service, bookableServices)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2 md:col-span-2">
+                {bookableServices.map((service) => {
+                  const thumb = servicePrimaryImage(service);
+                  const active = selectedServiceSlug === service.slug;
+                  return (
+                    <label
+                      key={service.slug}
+                      className={cx(
+                        "flex cursor-pointer gap-3 rounded-[1.25rem] border p-3 transition",
+                        active ? "border-forest bg-sage/50 shadow-md shadow-forest/10" : "border-forest/10 bg-cream hover:border-coral/40",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="serviceRadio"
+                        className="mt-1 accent-burgundy"
+                        checked={active}
+                        onChange={() => setSelectedServiceSlug(service.slug)}
+                      />
+                      <Image className="h-16 w-20 shrink-0 rounded-xl object-cover" {...imageProps(thumb, "80px")} alt={thumb.alt} />
+                      <span className="min-w-0">
+                        <span className="block font-serif text-lg leading-tight text-forest">{serviceBookingLabel(service, bookableServices)}</span>
+                        <span className="mt-1 block text-xs text-ink/55">{service.duration ?? "Timing confirmed at booking"}{service.priceLabel ? ` · ${service.priceLabel}` : ""}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
 
               {selectedService?.priceTiers?.length ? (
                 <div className="md:col-span-2">
@@ -1949,7 +2129,7 @@ function BookingForm({ services }: { services: Service[] }) {
 
               <div className="rounded-[1.5rem] bg-sage/60 p-5 md:col-span-2">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-burgundy">Live total</p>
-                <p className="mt-2 font-serif text-4xl text-forest">{total === null ? selectedService?.priceLabel ?? "Request quote" : formatMoney(total)}</p>
+                <p className="mt-2 font-serif text-3xl text-forest sm:text-4xl">{total === null ? selectedService?.priceLabel ?? "Request quote" : formatMoney(total)}</p>
                 <p className="mt-2 text-sm text-ink/60">Service {basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}{includeAddon ? ` + Add-on ${formatMoney(serviceAddOn.priceAmount)}` : ""}</p>
               </div>
             </div>
@@ -1971,10 +2151,19 @@ function BookingForm({ services }: { services: Service[] }) {
               <Field label="Vaccination status" name="vaccinationStatus" as="select" options={["Current", "Pending update", "Unsure", "Will upload records"]} />
             </div>
             <div className={cx(step === 2 ? "contents" : "hidden")}>
-              <Field label="Preferred date" name="preferredDate" type="date" required={step === 2} />
-              <Field label="Preferred time" name="preferredTime" type="time" required={step === 2} />
-              <Field label="Pickup time" name="pickupTime" type="time" />
-              <Field label="Drop-off time" name="dropoffTime" type="time" />
+              <div className="md:col-span-2">
+                <h3 className="font-serif text-2xl text-forest sm:text-3xl">Pick a date & time</h3>
+                <p className="mt-2 text-sm text-ink/60">Choose an available appointment slot that works for you — 30-minute intervals from 7:00 AM to 9:00 PM.</p>
+              </div>
+              <BookingCalendar
+                selectedDate={preferredDate}
+                selectedTime={preferredTime}
+                onDateChange={setPreferredDate}
+                onTimeChange={setPreferredTime}
+                required={step === 2}
+              />
+              <Field label="Pickup time (optional)" name="pickupTime" type="time" />
+              <Field label="Drop-off time (optional)" name="dropoffTime" type="time" />
               <Field label="Optional shuttle" name="shuttleRequested" as="select" options={["No", "Yes, please quote shuttle service"]} />
               <Field label="Unavailable date note" name="blackoutNote" textarea />
             </div>
@@ -2031,7 +2220,20 @@ function BookingForm({ services }: { services: Service[] }) {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button type="button" onClick={() => setStep(Math.max(0, step - 1))} className="rounded-full border border-forest/20 px-5 py-3 font-bold">Back</button>
             {step < steps.length - 1 ? (
-              <button type="button" onClick={() => setStep(Math.min(steps.length - 1, step + 1))} className="btn-gradient rounded-full px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25"><span className="relative z-10">Continue</span></button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (step === 2 && (!preferredDate || !preferredTime)) {
+                    setStatus("Please choose a date and 30-minute time slot.");
+                    return;
+                  }
+                  setStatus(null);
+                  setStep(Math.min(steps.length - 1, step + 1));
+                }}
+                className="btn-gradient rounded-full px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25"
+              >
+                <span className="relative z-10">Continue</span>
+              </button>
             ) : (
               <button type="submit" className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25"><span className="relative z-10">Submit Booking Request</span></button>
             )}
@@ -2293,26 +2495,67 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
   );
 }
 
-function TestimonialsPreview({ testimonials, full }: { testimonials: Testimonial[]; full?: boolean }) {
+function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: Testimonial[]; full?: boolean; embedded?: boolean }) {
   const items = full ? testimonials : testimonials.slice(0, 3);
+  const [active, setActive] = useState(0);
   const directions = ["left", "up", "right"] as const;
+  const published = items.filter((item) => item.status !== "draft");
+  const list = published.length ? published : items;
+
+  if (embedded) {
+    return (
+      <div>
+        <Reveal from="up">
+          <SectionHeading eyebrow="Trusted care" title="Pet parents should feel the care before they book." />
+        </Reveal>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {list.map((testimonial, index) => (
+            <Reveal key={testimonial.slug} from={directions[index % directions.length]} delay={index * 0.1}>
+              <article
+                className={cx(
+                  "h-full cursor-pointer rounded-[1.5rem] border bg-cream p-4 transition duration-300 sm:p-5",
+                  active === index ? "border-coral shadow-xl shadow-burgundy/10" : "border-forest/10 hover:border-coral/40",
+                )}
+                onClick={() => setActive(index)}
+              >
+                <Image className="h-40 w-full rounded-[1.15rem] object-cover" {...imageProps(testimonial.image)} alt={testimonial.image.alt} />
+                <p className="mt-4 text-sm text-coral">{"★".repeat(testimonial.rating)}</p>
+                <p className="mt-2 text-sm leading-6 text-ink/75">{`"${testimonial.quote}"`}</p>
+                <p className="mt-4 text-sm font-bold text-forest">{testimonial.reviewer}</p>
+                <p className="text-xs text-ink/55">{testimonial.petName} · {testimonial.service}</p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {list.map((testimonial, index) => (
+            <label key={testimonial.slug} className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-forest/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition hover:border-coral/40">
+              <input type="radio" name="home-testimonial" checked={active === index} onChange={() => setActive(index)} className="accent-burgundy" />
+              {testimonial.petName}
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <section className="bg-gradient-animated relative overflow-hidden py-14 text-white md:py-24">
+    <section className="bg-gradient-animated relative overflow-hidden py-12 text-white md:py-16">
       <div className="animate-float absolute -left-20 top-16 h-80 w-80 rounded-full bg-gradient-to-br from-coral/25 to-transparent blur-3xl" />
       <div className="animate-float-delayed absolute -right-16 bottom-10 h-72 w-72 rounded-full bg-gradient-to-tl from-burgundy/30 to-transparent blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <Reveal from="up">
           <SectionHeading eyebrow="Trusted care" title="Pet parents should feel the care before they book." inverse />
         </Reveal>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {items.map((testimonial, index) => (
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {list.map((testimonial, index) => (
             <Reveal key={testimonial.slug} from={directions[index % directions.length]} delay={index * 0.12}>
-              <article className="h-full rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/15 to-white/5 p-5 backdrop-blur transition duration-500 hover:-translate-y-2 hover:border-coral/40 hover:shadow-2xl hover:shadow-black/30 sm:p-6">
-                <Image className="h-48 w-full rounded-[1.5rem] object-cover sm:h-52" {...imageProps(testimonial.image)} alt={testimonial.image.alt} />
+              <article className="h-full rounded-[1.75rem] border border-white/10 bg-gradient-to-b from-white/15 to-white/5 p-5 backdrop-blur transition duration-500 hover:-translate-y-2 hover:border-coral/40 hover:shadow-2xl hover:shadow-black/30 sm:p-6">
+                <Image className="h-44 w-full rounded-[1.25rem] object-cover sm:h-52" {...imageProps(testimonial.image)} alt={testimonial.image.alt} />
                 <p className="mt-5 text-gradient text-lg">{"★".repeat(testimonial.rating)}</p>
-                <p className="mt-4 leading-8 text-white/80">{`"${testimonial.quote}"`}</p>
-                <p className="mt-5 font-bold">{testimonial.reviewer} {testimonial.sample ? "(sample placeholder)" : ""}</p>
-                <p className="text-sm text-white/60">{testimonial.petName} • {testimonial.service}</p>
+                <p className="mt-4 text-sm leading-7 text-white/80 sm:text-base sm:leading-8">{`"${testimonial.quote}"`}</p>
+                <p className="mt-5 font-bold">{testimonial.reviewer}</p>
+                <p className="text-sm text-white/60">{testimonial.petName} · {testimonial.service}</p>
               </article>
             </Reveal>
           ))}
@@ -2402,27 +2645,63 @@ function BrandMarquee({ dark }: { dark?: boolean }) {
 }
 
 function ProcessSection() {
-  const steps = ["Tell us about your pet", "Select the service", "Confirm the booking", "Relax while we provide professional care"];
+  const steps = [
+    { title: "Choose Your Service", body: "Browse our services and select the care your pet needs." },
+    { title: "Pick a Date & Time", body: "Choose an available appointment slot that works for you and your provider." },
+    { title: "Confirm & Pay", body: "Secure your booking by completing the payment process online, in store or Interac." },
+    { title: "You're All Set!", body: "Receive your confirmation and prepare for your pet's visit. For any questions, changes, or cancellations, please reach out to us via WhatsApp or Email." },
+  ];
   const directions = ["left", "up", "right", "down"] as const;
   return (
-    <section className="relative overflow-hidden py-14 md:py-24">
+    <section className="relative overflow-hidden py-12 md:py-16">
       <div className="absolute inset-0 bg-gradient-to-b from-cream via-sage/40 to-cream" />
       <div className="animate-float absolute right-0 top-10 h-72 w-72 rounded-full bg-gradient-to-bl from-coral/15 to-transparent blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <Reveal from="up">
           <SectionHeading eyebrow="How booking works" title="Four calm steps from hello to care." />
         </Reveal>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {steps.map((step, index) => (
-            <Reveal key={step} from={directions[index % directions.length]} delay={index * 0.1}>
-              <div className="group relative h-full overflow-hidden rounded-[2rem] bg-white p-7 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15">
+            <Reveal key={step.title} from={directions[index % directions.length]} delay={index * 0.1}>
+              <div className="group relative h-full overflow-hidden rounded-[1.5rem] bg-white p-6 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:rounded-[2rem] sm:p-7">
                 <div className="absolute inset-x-0 top-0 h-1.5 origin-left scale-x-0 bg-gradient-to-r from-coral to-burgundy transition-transform duration-500 group-hover:scale-x-100" />
-                <span className="text-gradient font-serif text-5xl sm:text-6xl">0{index + 1}</span>
-                <p className="mt-5 font-semibold leading-7">{step}</p>
+                <span className="text-gradient font-serif text-4xl sm:text-5xl">0{index + 1}</span>
+                <h3 className="mt-4 font-serif text-xl text-forest sm:text-2xl">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-ink/65">{step.body}</p>
               </div>
             </Reveal>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function SunnyismSection() {
+  return (
+    <section className="relative overflow-hidden py-12 text-white md:py-16">
+      <div className="bg-gradient-animated absolute inset-0" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.15]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 md:grid-cols-[0.9fr_1.1fr] md:gap-12 md:px-8">
+        <Reveal from="left">
+          <div className="overflow-hidden rounded-[1.75rem] border border-white/15 shadow-2xl sm:rounded-[2rem]">
+            <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(aboutStoryImages[0])} alt="Sunnyism.Pro #DogDad" />
+          </div>
+        </Reveal>
+        <Reveal from="right" delay={0.1}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-peach sm:text-xs sm:tracking-[0.28em]">Trusted care</p>
+          <h2 className="mt-3 font-serif text-[1.75rem] leading-[1.12] tracking-tight sm:text-3xl md:text-4xl">
+            Meet Sunnyism.Pro <span className="text-gradient italic">#DogDad</span>
+          </h2>
+          <p className="mt-2 text-sm text-white/70">Thoughts, vision, and the journey ahead.</p>
+          <p className="mt-5 max-w-xl text-sm leading-7 text-white/85 sm:text-base sm:leading-8">
+            DTdogs.ca grew from a simple idea: pets deserve calm, professional care with the warmth of home. From Downtown Toronto across the GTA, we keep routines clear, environments clean, and communication honest — so pet parents can leave with confidence.
+          </p>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <Button href="/about">My Photo & Story</Button>
+            <Button href="/our-vision" variant="light">Our Vision</Button>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -2446,12 +2725,15 @@ function BookingCTA({ image = homePage.storyImages[4] }: { image?: ImageAsset })
           <Sparkles className="h-8 w-8 text-white" />
         </motion.span>
         <Reveal from="up" delay={0.1}>
-          <h2 className="font-serif text-[2.15rem] leading-none sm:text-5xl md:text-7xl">
+          <h2 className="font-serif text-[1.85rem] leading-tight tracking-tight sm:text-3xl md:text-4xl">
             Ready to join the <span className="text-gradient italic">DTdogs clan</span>?
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">Tell us about your pet and we will help you choose the right care experience.</p>
-          <div className="mt-8">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/80 sm:text-base sm:leading-8">Tell us about your pet and we will help you choose the right care experience.</p>
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button href="/booking">Book a Meet & Greet</Button>
+            <a href={`${brand.whatsapp}?text=${encodeURIComponent("Hi DTdogs.ca — I'd like to message about care.")}`} target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-3 font-bold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto">
+              Message us
+            </a>
           </div>
         </Reveal>
       </div>
@@ -2573,7 +2855,7 @@ function SectionHeading({ eyebrow, title, align = "center", inverse }: { eyebrow
           <span className={cx("hidden h-px w-8 sm:block", inverse ? "bg-gradient-to-l from-transparent to-peach" : "bg-gradient-to-l from-transparent to-burgundy")} />
         </p>
       ) : null}
-      <h2 className={cx("font-serif text-[1.85rem] leading-[1.05] sm:text-5xl md:text-7xl", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
+      <h2 className={cx("font-serif text-[1.65rem] leading-[1.12] tracking-tight sm:text-3xl md:text-4xl lg:text-5xl", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
       <motion.div
         className={cx("mt-5 h-1 rounded-full bg-gradient-to-r from-coral via-burgundy to-forest sm:mt-6", align === "center" ? "mx-auto w-20 sm:w-24" : "w-20 sm:w-24")}
         initial={{ scaleX: 0, opacity: 0 }}
@@ -2693,21 +2975,27 @@ function Footer({ services }: { services: Service[] }) {
       <div className="relative mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
         <div className="mb-10 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <p className="mb-4 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 backdrop-blur-md sm:text-xs sm:tracking-[0.28em]">
-              DTdogs.ca · Hand &amp; Paw · GTA Pet Care
+            <p className="mb-4 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md sm:text-xs sm:tracking-[0.22em]">
+              DTdogs.ca · {brand.formerly}
             </p>
             <div className="flex items-center gap-3">
               <span className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border border-white/30 bg-white/15 shadow-lg shadow-black/20 backdrop-blur-md">
                 <Image src={LOGO_SRC} alt="DTdogs.ca" width={40} height={40} className="h-10 w-10 object-contain" />
               </span>
               <div>
-                <p className="font-serif text-3xl leading-none sm:text-4xl">DTdogs.ca</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.28em] text-peach">Hand &amp; Paw</p>
+                <p className="font-serif text-2xl leading-none sm:text-3xl">DTdogs.ca</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-peach sm:text-xs sm:tracking-[0.24em]">Hand &amp; Paw · GTA Pet Care</p>
               </div>
             </div>
-            <p className="mt-5 max-w-md text-sm leading-7 text-white/85 sm:text-base sm:leading-8">
-              Structured, attentive pet care across the Greater Toronto Area — designed around safety, comfort and calm routines.
+            <p className="mt-5 max-w-md text-sm leading-7 text-white/85">
+              {brand.tagline}
             </p>
+            <div className="mt-5 space-y-2 text-sm text-white/75">
+              <p><span className="font-semibold text-peach">Hours:</span> {brand.hours}</p>
+              <p><span className="font-semibold text-peach">Boarding:</span> {brand.boardingNote}</p>
+              <p><span className="font-semibold text-peach">Payments:</span> {brand.payments}</p>
+              <p><span className="font-semibold text-peach">Area:</span> {brand.locations[0]}</p>
+            </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
@@ -2716,12 +3004,14 @@ function Footer({ services }: { services: Service[] }) {
             >
               Book Appointment <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              href="/services"
+            <a
+              href={`${brand.whatsapp}?text=${encodeURIComponent("Hi DTdogs.ca — I'd like to message about booking.")}`}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/15 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/25"
             >
-              Explore Services
-            </Link>
+              Message us on WhatsApp
+            </a>
           </div>
         </div>
 
