@@ -17,6 +17,11 @@ export type ImageAsset = {
   order?: number;
 };
 
+export type ServicePriceTier = {
+  label: string;
+  priceLabel: string;
+};
+
 export type Service = {
   slug: string;
   name: string;
@@ -31,8 +36,10 @@ export type Service = {
   related: string[];
   images: ImageAsset[];
   featured?: boolean;
-  status?: "published" | "draft";
+  status?: "published" | "draft" | "coming-soon";
   priceLabel?: string;
+  duration?: string;
+  priceTiers?: ServicePriceTier[];
 };
 
 export type PageBlock = {
@@ -91,7 +98,8 @@ export type Product = {
   title: string;
   description: string;
   priceLabel: string;
-  status: "published" | "draft" | "inquiry";
+  compareAtPriceLabel?: string;
+  status: "published" | "draft" | "inquiry" | "coming-soon";
   images: ImageAsset[];
   sizes: string[];
   colors: string[];
@@ -139,6 +147,8 @@ export type BookingRequest = {
   preferredContact?: string;
   service: string;
   packageSelection?: string;
+  addonSelected?: boolean;
+  estimatedTotal?: string;
   preferredDate: string;
   preferredTime: string;
   pickupTime?: string;
@@ -691,176 +701,338 @@ const faqSeed = (category: string, questions: string[], startOrder: number): Faq
     order: startOrder + index,
   }));
 
+export const serviceAddOn = {
+  name: "Add-On",
+  duration: "10 minutes",
+  priceLabel: "$5",
+  description: "An optional ten-minute add-on that can be included with an eligible pet-care service.",
+};
+
+const groomingImages = [img("grooming"), img("nails"), img("facility"), img("testimonial-pet"), img("booking-bg")];
+const walkImages = [img("walk-toronto"), img("floating-pup"), img("toronto-lifestyle"), img("trust-full"), img("booking-bg")];
+const homeImages = [img("house-sitting"), img("pet-visit"), img("facility"), img("trust-full"), img("booking-bg")];
+const daycareImages = [img("daycare-play"), img("facility"), img("floating-pup"), img("trust-full"), img("walk-toronto")];
+
 export const services: Service[] = [
   {
-    slug: "dog-walking",
-    name: "Dog Walking",
-    eyebrow: "Structured daily movement",
-    summary: "Safe, structured walks tailored to your pet's energy, personality and routine.",
-    description:
-      "Our dog walking service supports healthy routines with calm handling, attentive safety checks and movement matched to your dog's temperament and energy.",
-    forWhom: "Ideal for busy pet parents, active dogs, puppies building routines and dogs who benefit from predictable daily exercise.",
-    benefits: ["Energy-aware walks", "Routine updates", "Secure handling", "Water and comfort checks"],
-    includes: ["Individual or compatible small-group options", "Pace suited to the dog", "Arrival and completion update", "Basic safety monitoring"],
-    process: ["Share your dog's routine", "Confirm timing and walking style", "We complete the walk safely", "You receive a care update"],
-    faqs: [
-      { question: "Will my dog be walked during the day?", answer: "Regular walks are incorporated according to the service booked, the dog's needs and safe operating conditions." },
-      { question: "Do you offer group walks?", answer: "Compatible small-group options may be available after behaviour and comfort are assessed." },
+    slug: "bath-and-nails",
+    name: "Bath and Nails",
+    eyebrow: "Fresh & tidy",
+    summary: "A refreshing bath and paw-care package designed to keep dogs clean, healthy and comfortable.",
+    description: "A refreshing bath and paw-care package designed to keep dogs clean, healthy and comfortable.",
+    forWhom: "Ideal for dogs who need a clean coat, tidy paws and routine hygiene care without a full haircut.",
+    benefits: ["Clean coat and skin comfort", "Healthier nails and paws", "Calm spa-style handling", "Size-based transparent pricing"],
+    includes: [
+      "Bath and dry",
+      "Relaxing massage",
+      "Brushing and de-shedding",
+      "Nail clipping and grinding",
+      "Ear cleaning",
+      "Teeth brushing",
+      "Paw-pad tidy",
+      "Optional anal-gland expression",
     ],
-    related: ["pet-visits", "daycare", "pet-chauffeur"],
-    images: [img("walk-toronto"), img("floating-pup"), img("toronto-lifestyle"), img("trust-full"), img("booking-bg")],
+    process: ["Share coat and size details", "Confirm appointment timing", "Enjoy the bath and nail package", "Receive after-care notes"],
+    faqs: [
+      { question: "How is pricing determined?", answer: "Bath and Nails pricing starts at $55 and is based on your dog’s size, from Extra Small to Extra Large." },
+      { question: "Is anal-gland expression included?", answer: "It is optional and can be included when appropriate for your dog." },
+    ],
+    related: ["bath-and-tidy", "full-haircut", "dog-grooming"],
+    images: [img("nails"), img("grooming"), img("facility"), img("floating-pup"), img("booking-bg")],
     featured: true,
-    priceLabel: "Contact for current pricing",
+    duration: "1 hour",
+    priceLabel: "Starting at $55",
+    priceTiers: [
+      { label: "Extra Small", priceLabel: "$55" },
+      { label: "Small", priceLabel: "$65" },
+      { label: "Medium", priceLabel: "$75" },
+      { label: "Large", priceLabel: "$85" },
+      { label: "Extra Large", priceLabel: "$95" },
+    ],
+    status: "published",
   },
   {
-    slug: "pet-visits",
-    name: "Pet Visits",
-    eyebrow: "Familiar-home comfort",
-    summary: "Reliable, personalized in-home care that keeps pets safe, comfortable and happy while you are away.",
+    slug: "full-haircut",
+    name: "Full Haircut",
+    eyebrow: "Deluxe spa",
+    summary: "A complete luxury grooming experience designed to keep dogs looking stylish, clean and refreshed.",
+    description: "A complete luxury grooming experience designed to keep dogs looking stylish, clean and refreshed.",
+    forWhom: "Perfect for dogs who need a full haircut, styling and a complete spa-style refresh.",
+    benefits: ["Full styling and finish", "Complete hygiene care", "Premium spa experience", "Breed-aware trimming"],
+    includes: [
+      "Bath and blow dry",
+      "Brushing",
+      "Nail clipping and grinding",
+      "Ear cleaning",
+      "Teeth cleaning",
+      "Full haircut and styling",
+      "Scissor trimming",
+      "Sanitary trim",
+      "Optional anal-gland expression",
+    ],
+    process: ["Request the deluxe package", "Share breed and coat notes", "Confirm the one-hour appointment", "Receive a polished spa finish"],
+    faqs: [{ question: "How long is the appointment?", answer: "The Full Haircut package is scheduled for 1 hour." }],
+    related: ["bath-and-nails", "bath-and-tidy", "dog-grooming"],
+    images: groomingImages,
+    featured: true,
+    duration: "1 hour",
+    priceLabel: "$150",
+    status: "published",
+  },
+  {
+    slug: "bath-and-tidy",
+    name: "Bath and Tidy",
+    eyebrow: "Light maintenance",
+    summary: "A maintenance grooming package for dogs that need bathing and light trimming without a complete haircut.",
+    description: "A maintenance grooming package for dogs that need bathing and light trimming without a complete haircut.",
+    forWhom: "Best for dogs who need bathing and tidy scissor work around the face, feet and bum without a full restyle.",
+    benefits: ["Clean and fresh coat", "Light tidy trim", "Routine hygiene care", "Faster maintenance visit"],
+    includes: [
+      "Bath and blow dry",
+      "Brushing",
+      "Nail clipping and grinding",
+      "Ear cleaning",
+      "Teeth cleaning",
+      "Scissor trim around the face, feet and bum",
+      "Sanitary trim",
+      "Optional anal-gland expression",
+    ],
+    process: ["Book the tidy package", "Share trimming preferences", "Complete the one-hour visit", "Go home fresh and neat"],
+    faqs: [{ question: "Is this a full haircut?", answer: "No. Bath and Tidy focuses on bathing and light trimming rather than a complete haircut." }],
+    related: ["bath-and-nails", "full-haircut", "dog-grooming"],
+    images: [img("grooming"), img("nails"), img("floating-pup"), img("facility"), img("booking-bg")],
+    featured: true,
+    duration: "1 hour",
+    priceLabel: "$65",
+    status: "published",
+  },
+  {
+    slug: "meet-and-greet",
+    name: "Meet & Greet",
+    eyebrow: "Complimentary intro",
+    summary: "A complimentary introductory appointment to meet the DTdogs team and discuss your pet’s care needs.",
     description:
-      "Pet visits give your pet companionship, food, water and care checks without changing their familiar environment.",
-    forWhom: "Best for pets who prefer home, senior pets, cats and dogs needing short care visits during the day.",
-    benefits: ["Familiar surroundings", "Personalized routine", "Comfort check-ins", "Written instructions followed"],
-    includes: ["Feeding and water", "Play and companionship", "Medication according to written instructions", "Visit update"],
-    process: ["Complete pet details", "Confirm visit needs", "We follow the care routine", "You receive an update"],
-    faqs: [{ question: "Can you support medical needs?", answer: "Selected needs may be accommodated when written instructions and emergency details are accepted in advance." }],
-    related: ["house-sitting", "dog-walking", "pet-chauffeur"],
+      "A complimentary introductory appointment where pet parents can meet the DTdogs team, discuss their pet’s routine, temperament and care requirements, and determine the most suitable daycare, boarding or pet-care service.",
+    forWhom: "Recommended for every new family before daycare, boarding or ongoing pet-care services.",
+    benefits: ["No cost to book", "Personalized service matching", "Meet the care team", "Discuss temperament and routines"],
+    includes: ["20-minute introduction", "Routine and temperament discussion", "Service recommendations", "Next-step guidance"],
+    process: ["Book your free Meet & Greet", "Share your pet’s details", "Meet the team", "Choose the right care plan"],
+    faqs: [{ question: "Is Meet & Greet required?", answer: "It is strongly recommended for new clients so we can match the safest and best-fitting service." }],
+    related: ["dog-half-daycare", "dog-boarding-one-night", "pet-visit"],
+    images: [img("about-founder"), img("contact-dog"), img("trust-full"), img("facility"), img("booking-bg")],
+    featured: true,
+    duration: "20 minutes",
+    priceLabel: "Free",
+    status: "published",
+  },
+  {
+    slug: "dog-walking-1-hour",
+    name: "Dog Walking",
+    eyebrow: "Full hour walk",
+    summary: "A full one-hour structured walk with exercise, enrichment and personalized attention.",
+    description:
+      "A full one-hour structured walk providing exercise, outdoor enrichment, bathroom breaks and personalized attention based on the dog’s pace and needs.",
+    forWhom: "Ideal for active dogs and busy pet parents who want a complete one-hour outing.",
+    benefits: ["Full-hour exercise", "Outdoor enrichment", "Bathroom breaks", "Pace matched to your dog"],
+    includes: ["1-hour structured walk", "Outdoor stimulation", "Bathroom opportunities", "Personalized handling"],
+    process: ["Share walking preferences", "Confirm timing", "Enjoy the one-hour walk", "Receive a care update"],
+    faqs: [{ question: "Is this a group walk?", answer: "Walks are structured around your dog’s needs and compatible arrangements when appropriate." }],
+    related: ["dog-walking-30-minutes", "pet-visit", "dog-half-daycare"],
+    images: walkImages,
+    featured: true,
+    duration: "1 hour",
+    priceLabel: "$35",
+    status: "published",
+  },
+  {
+    slug: "house-sitting-one-night",
+    name: "Pet House Sitting",
+    eyebrow: "Overnight at home",
+    summary: "Overnight pet care in your home to keep feeding, bathroom, play and morning routines consistent.",
+    description:
+      "Overnight pet care provided in the pet’s own home, helping maintain their regular feeding, bathroom, playtime, evening and morning routines while their family is away.",
+    forWhom: "Best for pets who are most comfortable staying in their own home overnight.",
+    benefits: ["Familiar home environment", "Overnight presence", "Routine continuity", "Reduced travel stress"],
+    includes: ["Overnight in-home care", "Feeding support", "Bathroom routines", "Evening and morning care", "Playtime and companionship"],
+    process: ["Share home and pet routines", "Confirm overnight timing", "Receive in-home overnight care", "Get an update in the morning"],
+    faqs: [{ question: "Does the sitter stay overnight?", answer: "Yes. This package is designed as one-night overnight care in the pet’s home." }],
+    related: ["house-sitting-full-day", "house-sitting-half-day", "pet-visit"],
+    images: homeImages,
+    featured: true,
+    duration: "1 night",
+    priceLabel: "$95",
+    status: "published",
+  },
+  {
+    slug: "house-sitting-full-day",
+    name: "Pet House Sitting",
+    eyebrow: "10-hour home care",
+    summary: "Ten hours of attentive daytime pet care in the client’s home.",
+    description:
+      "Ten hours of attentive daytime pet care in the client’s home, including supervision, companionship, feeding, freshwater, playtime and scheduled bathroom breaks.",
+    forWhom: "Ideal when you need a full workday of reliable in-home pet supervision.",
+    benefits: ["Full-day home supervision", "Companionship and play", "Feeding and freshwater", "Scheduled bathroom breaks"],
+    includes: ["10 hours of in-home care", "Supervision and companionship", "Feeding support", "Freshwater refreshes", "Playtime", "Bathroom breaks"],
+    process: ["Confirm the full-day schedule", "Share feeding and care notes", "Receive daytime in-home care", "Get an end-of-day update"],
+    faqs: [{ question: "How long is a full day?", answer: "Full-day pet house sitting covers 10 hours of in-home care." }],
+    related: ["house-sitting-half-day", "house-sitting-one-night", "pet-visit"],
+    images: [img("house-sitting"), img("facility"), img("about-founder"), img("trust-full"), img("booking-bg")],
+    duration: "10 hours",
+    priceLabel: "$80",
+    status: "published",
+  },
+  {
+    slug: "pet-visit",
+    name: "Pet Visit",
+    eyebrow: "In-home check-in",
+    summary: "A one-hour in-home visit for feeding, play, companionship and routine support.",
+    description:
+      "A one-hour visit in the pet’s home that may include feeding, freshwater replacement, playtime, companionship, bathroom care and support with the pet’s normal routine.",
+    forWhom: "Great for pets who stay home and need a reliable mid-day or scheduled check-in.",
+    benefits: ["Familiar surroundings", "One-hour dedicated visit", "Feeding and freshwater support", "Play and companionship"],
+    includes: ["1-hour home visit", "Feeding support as needed", "Freshwater replacement", "Playtime and companionship", "Bathroom care", "Routine support"],
+    process: ["Share visit instructions", "Confirm timing", "We complete the home visit", "You receive an update"],
+    faqs: [{ question: "What happens during a pet visit?", answer: "Visits can include feeding, freshwater, play, companionship, bathroom care and support with your pet’s normal routine." }],
+    related: ["house-sitting-half-day", "dog-walking-30-minutes", "meet-and-greet"],
     images: [img("pet-visit"), img("house-sitting"), img("facility"), img("testimonial-pet"), img("contact-dog")],
     featured: true,
-    priceLabel: "Request Pricing",
+    duration: "1 hour",
+    priceLabel: "$30",
+    status: "published",
   },
   {
-    slug: "house-sitting",
-    name: "House Sitting",
-    eyebrow: "Care where pets feel safest",
-    summary: "Calm, consistent and attentive care in the comfort of home.",
+    slug: "guided-pet-excursion",
+    name: "Guided Pet Excursion",
+    eyebrow: "Coming soon",
+    summary: "A full-day supervised pet adventure with outdoor exploration, enrichment and rest.",
     description:
-      "House sitting keeps pets surrounded by familiar comforts while receiving attentive, structured care and routine continuity.",
-    forWhom: "For pets who do best at home, multi-pet households and owners who want care continuity while away.",
-    benefits: ["Home routine continuity", "Reduced stress", "Attentive updates", "Personalized care"],
-    includes: ["Feeding and walks", "Routine continuity", "Home and pet updates", "Overnight presence where booked"],
-    process: ["Tell us about home routines", "Confirm schedule", "Care is delivered in-home", "Receive regular updates"],
-    faqs: [{ question: "Do you provide overnight care?", answer: "Overnight presence may be available where booked and confirmed in advance." }],
-    related: ["pet-visits", "boarding", "dog-walking"],
-    images: [img("house-sitting"), img("facility"), img("about-founder"), img("trust-full"), img("booking-bg")],
-    featured: true,
-    priceLabel: "Contact for a custom quote",
+      "A full-day supervised pet adventure offering outdoor exploration, exercise, enrichment, social engagement and scheduled rest periods.",
+    forWhom: "For pets who enjoy structured outdoor adventure once this service launches.",
+    benefits: ["Full-day enrichment", "Supervised outdoor exploration", "Exercise and social engagement", "Scheduled rest periods"],
+    includes: ["12-hour supervised adventure", "Outdoor exploration", "Exercise and enrichment", "Social engagement", "Scheduled rest"],
+    process: ["Join the waitlist interest via contact", "Share your pet’s ability notes", "Wait for launch confirmation", "Book once available"],
+    faqs: [{ question: "Can I book this now?", answer: "Not yet. Guided Pet Excursion is coming soon and booking stays disabled until launch." }],
+    related: ["dog-walking-1-hour", "dog-half-daycare", "meet-and-greet"],
+    images: [img("excursion"), img("walk-toronto"), img("toronto-lifestyle"), img("trust-full"), img("booking-bg")],
+    duration: "12 hours",
+    priceLabel: "$100",
+    status: "coming-soon",
   },
   {
-    slug: "daycare",
-    name: "Dog Daycare",
-    eyebrow: "Supervised social rhythm",
-    summary: "Structured social time and attentive care from an experienced team working with diverse breeds across the GTA.",
+    slug: "training-and-classes",
+    name: "Training and Classes",
+    eyebrow: "Coming soon",
+    summary: "Instructor-led classes for positive behaviour, obedience, confidence and socialization.",
     description:
-      "Daycare balances supervised activity, decompression and hydration in controlled groups that support safer, calmer social time.",
-    forWhom: "For social dogs who benefit from supervised activity, controlled group time and a predictable daily care setting.",
-    benefits: ["Controlled capacity", "Behaviour-aware grouping", "Hydration monitoring", "Rest and play balance"],
-    includes: ["Supervised social time", "Rest periods", "Water checks", "Owner updates"],
-    process: ["Complete intake", "Assess group comfort", "Confirm daycare schedule", "Enjoy structured care"],
-    faqs: [{ question: "Can unneutered dogs attend?", answer: "Eligibility depends on age, behaviour and the service environment. Group restrictions may apply." }],
-    related: ["boarding", "dog-walking", "grooming"],
-    images: [img("daycare-play"), img("facility"), img("floating-pup"), img("trust-full"), img("walk-toronto")],
-    featured: true,
-    priceLabel: "Contact for current pricing",
+      "Instructor-led dog-training classes designed to support positive behaviour, everyday obedience, communication, confidence and appropriate socialization.",
+    forWhom: "For pet parents seeking structured training support once classes officially launch.",
+    benefits: ["Positive behaviour support", "Everyday obedience skills", "Confidence building", "Healthy socialization"],
+    includes: ["1.5-hour instructor-led class", "Behaviour-focused learning", "Communication practice", "Socialization support"],
+    process: ["Express interest", "Share training goals", "Await class schedule launch", "Book when available"],
+    faqs: [{ question: "Is booking open?", answer: "Training and Classes is coming soon. The booking button remains disabled until launch." }],
+    related: ["meet-and-greet", "dog-half-daycare", "dog-walking-1-hour"],
+    images: [img("training"), img("walk-toronto"), img("floating-pup"), img("trust-full"), img("booking-bg")],
+    duration: "1.5 hours",
+    priceLabel: "$100",
+    status: "coming-soon",
   },
   {
-    slug: "boarding",
+    slug: "dog-grooming",
+    name: "Dog Grooming",
+    eyebrow: "Custom grooming",
+    summary: "A professional grooming appointment customized to breed, coat, size and individual needs.",
+    description:
+      "A professional grooming appointment customized according to the dog’s breed, coat condition, size and individual grooming requirements.",
+    forWhom: "For dogs needing a customized grooming appointment beyond a fixed package.",
+    benefits: ["Breed and coat customization", "Flexible grooming scope", "Professional handling", "Per-pet appointment"],
+    includes: ["Custom grooming consultation", "Breed and coat-based care", "Professional grooming appointment", "Individual requirement planning"],
+    process: ["Request grooming", "Share breed and coat details", "Confirm the customized scope", "Complete the appointment"],
+    faqs: [
+      {
+        question: "How is this different from Bath and Nails or Full Haircut?",
+        answer: "Dog Grooming is a separate customized option when the appointment needs to be tailored beyond the fixed Bath and Nails, Bath and Tidy, or Full Haircut packages.",
+      },
+    ],
+    related: ["bath-and-nails", "bath-and-tidy", "full-haircut"],
+    images: [img("grooming"), img("nails"), img("testimonial-pet"), img("facility"), img("booking-bg")],
+    duration: "1 hour",
+    priceLabel: "$100",
+    status: "published",
+  },
+  {
+    slug: "dog-half-daycare",
+    name: "Dog Half Daycare",
+    eyebrow: "6-hour daycare",
+    summary: "A structured six-hour daycare day with supervised play, enrichment and rest.",
+    description:
+      "A structured six-hour daycare experience featuring supervised play, safe socialization, enrichment activities, individual attention and scheduled rest periods.",
+    forWhom: "Ideal for dogs who thrive with half-day social play and structured enrichment.",
+    benefits: ["Supervised play", "Safe socialization", "Enrichment activities", "Scheduled rest"],
+    includes: ["6-hour daycare stay", "Supervised play", "Safe socialization", "Enrichment activities", "Individual attention", "Scheduled rest periods"],
+    process: ["Complete intake", "Book a half day", "Drop off for structured care", "Pick up after enrichment and rest"],
+    faqs: [{ question: "How long is half daycare?", answer: "Dog Half Daycare is a structured 6-hour experience." }],
+    related: ["dog-boarding-one-night", "dog-walking-1-hour", "meet-and-greet"],
+    images: daycareImages,
+    featured: true,
+    duration: "6 hours",
+    priceLabel: "$40",
+    status: "published",
+  },
+  {
+    slug: "dog-boarding-one-night",
     name: "Dog Boarding",
-    eyebrow: "Overnight comfort",
-    summary: "Safe, structured day-and-night care with our trusted paw pack while you are away.",
+    eyebrow: "Overnight boarding",
+    summary: "Comfortable overnight boarding with personalized feeding, rest and care routines.",
     description:
-      "Boarding offers home-style overnight care with regular routines, supervision and calm comfort for dogs staying away from home.",
-    forWhom: "For travel, long work commitments and families needing supervised overnight care.",
-    benefits: ["Day-and-night supervision", "Home-style comfort", "Regular walks and play", "Owner-supplied food encouraged"],
-    includes: ["Structured day routine", "Overnight care", "Regular activity", "Updates for pet parents"],
-    process: ["Request dates", "Complete intake", "Confirm availability", "Board with structured care"],
-    faqs: [{ question: "Do you provide overnight boarding?", answer: "Yes. Safe, comfortable overnight boarding is available with structured routines and supervision." }],
-    related: ["daycare", "house-sitting", "pet-chauffeur"],
+      "Comfortable overnight boarding in a calm and supervised environment, with personalized feeding, bathroom, rest and care routines based on each dog’s needs.",
+    forWhom: "For families needing calm overnight boarding while away.",
+    benefits: ["Overnight supervision", "Calm environment", "Personalized routines", "Feeding and rest support"],
+    includes: ["One-night boarding", "Personalized feeding", "Bathroom support", "Rest routines", "Supervised overnight care"],
+    process: ["Request overnight dates", "Complete intake details", "Confirm boarding", "Receive overnight care updates"],
+    faqs: [{ question: "Is daycare included?", answer: "Overnight boarding focuses on calm overnight care with personalized routines based on each dog’s needs." }],
+    related: ["dog-half-daycare", "house-sitting-one-night", "meet-and-greet"],
     images: [img("boarding-home"), img("daycare-play"), img("facility"), img("testimonial-pet"), img("booking-bg")],
     featured: true,
-    priceLabel: "Contact for current pricing",
+    duration: "1 night",
+    priceLabel: "$50",
+    status: "published",
   },
   {
-    slug: "pet-chauffeur",
-    name: "Pet Chauffeur",
-    eyebrow: "Premium GTA transport",
-    summary: "Premium pickup and drop-off across the GTA for daycare, grooming, veterinary and home-care needs.",
+    slug: "house-sitting-half-day",
+    name: "Pet House Sitting",
+    eyebrow: "6-hour home care",
+    summary: "Six hours of in-home pet care, companionship, feeding and bathroom breaks.",
     description:
-      "The pet chauffeur service helps pet parents coordinate safe transport with secure handling, sanitized vehicles and trained care.",
-    forWhom: "For busy owners who need safe pet transport across the Greater Toronto Area.",
-    benefits: ["Secure harness or crate systems", "Sanitized vehicle", "Scheduled routes", "Trained handler"],
-    includes: ["One-way or round-trip options", "Pickup and drop-off coordination", "Route timing", "Transport safety checks"],
-    process: ["Request a ride", "Share destination and pet details", "Confirm route and timing", "Receive transport update"],
-    faqs: [{ question: "How is chauffeur pricing calculated?", answer: "Pricing depends on distance, route timing, one-way or round-trip service and special requirements." }],
-    related: ["daycare", "grooming", "pet-visits"],
-    images: [img("chauffeur"), img("toronto-lifestyle"), img("floating-pup"), img("contact-dog"), img("booking-bg")],
-    priceLabel: "Request a custom quote",
+      "Six hours of in-home pet care and companionship, including supervision, playtime, feeding, freshwater and bathroom breaks while the owner is away.",
+    forWhom: "Perfect for half-day absences when pets are happiest at home.",
+    benefits: ["Half-day home supervision", "Play and companionship", "Feeding and freshwater", "Bathroom breaks"],
+    includes: ["6 hours of in-home care", "Supervision", "Playtime", "Feeding support", "Freshwater", "Bathroom breaks"],
+    process: ["Confirm the half-day window", "Share care instructions", "Receive in-home care", "Get an update afterward"],
+    faqs: [{ question: "How long is half-day house sitting?", answer: "Half-day pet house sitting covers 6 hours of in-home care." }],
+    related: ["house-sitting-full-day", "pet-visit", "house-sitting-one-night"],
+    images: [img("house-sitting"), img("pet-visit"), img("about-founder"), img("trust-full"), img("booking-bg")],
+    duration: "6 hours",
+    priceLabel: "$40",
+    status: "published",
   },
   {
-    slug: "guided-excursions",
-    name: "Guided Excursions",
-    eyebrow: "Enrichment with intention",
-    summary: "Enriching outdoor experiences planned around safety, ability, weather and owner authorization.",
+    slug: "dog-walking-30-minutes",
+    name: "Dog Walking",
+    eyebrow: "Quick neighbourhood walk",
+    summary: "A focused thirty-minute walk for exercise, fresh air and a bathroom break.",
     description:
-      "Guided excursions create memorable, safe outdoor enrichment for pets when route, weather and ability align.",
-    forWhom: "For pets who enjoy structured outdoor enrichment and have owner approval for off-site adventures.",
-    benefits: ["Weather planning", "Capacity controls", "Safe route selection", "Enrichment-focused care"],
-    includes: ["Guided outdoor time", "Handler supervision", "Route planning", "Owner authorization"],
-    process: ["Discuss your pet's ability", "Confirm destination and permissions", "Complete the excursion", "Share updates"],
-    faqs: [{ question: "How far do excursions travel?", answer: "Routes are planned around safety, service area, weather and confirmed booking arrangements." }],
-    related: ["dog-walking", "pet-chauffeur", "daycare"],
-    images: [img("excursion"), img("walk-toronto"), img("toronto-lifestyle"), img("trust-full"), img("booking-bg")],
-    priceLabel: "Contact for availability",
-  },
-  {
-    slug: "grooming",
-    name: "Dog Grooming",
-    eyebrow: "Elegant practical care",
-    summary: "Professional grooming to help dogs look and feel their best.",
-    description:
-      "Grooming supports coat comfort, hygiene and confidence. Scope and pricing should be confirmed based on breed, coat condition and care needs.",
-    forWhom: "For dogs needing coat maintenance, hygiene support or a polished refresh.",
-    benefits: ["Consultation-led scope", "Coat comfort", "Hygiene support", "Calm handling"],
-    includes: ["Service scope confirmed in CMS", "Breed and coat consultation", "Careful handling", "After-care guidance where appropriate"],
-    process: ["Request grooming", "Share coat details", "Confirm service scope", "Receive appointment care"],
-    faqs: [{ question: "Are grooming prices fixed?", answer: "Pricing should be confirmed after coat condition, breed needs and service scope are reviewed." }],
-    related: ["nail-trimming", "pet-chauffeur", "daycare"],
-    images: [img("grooming"), img("nails"), img("facility"), img("testimonial-pet"), img("booking-bg")],
+      "A focused thirty-minute neighbourhood walk providing exercise, fresh air, outdoor stimulation and a bathroom break.",
+    forWhom: "Ideal for shorter outings, puppies, seniors or mid-day bathroom needs.",
+    benefits: ["Quick exercise", "Fresh air", "Outdoor stimulation", "Bathroom break"],
+    includes: ["30-minute neighbourhood walk", "Exercise", "Outdoor stimulation", "Bathroom break"],
+    process: ["Choose a walk window", "Share pace notes", "Enjoy the 30-minute walk", "Receive a quick update"],
+    faqs: [{ question: "Is 30 minutes enough for my dog?", answer: "Many dogs benefit from a focused half-hour outing for exercise and a bathroom break; longer walks are also available." }],
+    related: ["dog-walking-1-hour", "pet-visit", "dog-half-daycare"],
+    images: [img("walk-toronto"), img("toronto-lifestyle"), img("floating-pup"), img("trust-full"), img("booking-bg")],
     featured: true,
-    priceLabel: "Request Pricing",
-  },
-  {
-    slug: "nail-trimming",
-    name: "Nail Trimming",
-    eyebrow: "Gentle paw care",
-    summary: "Routine nail care delivered calmly and carefully.",
-    description:
-      "Nail trimming provides focused paw care with calm handling, appointment-based timing and after-care guidance.",
-    forWhom: "For dogs who need routine paw maintenance and gentle appointment-based handling.",
-    benefits: ["Calm handling", "Focused appointment", "Comfort-first approach", "After-care guidance"],
-    includes: ["Handling assessment", "Routine nail care", "Comfort breaks if needed", "Owner guidance"],
-    process: ["Request appointment", "Share handling notes", "Complete nail trim", "Review next care timing"],
-    faqs: [{ question: "Can nervous dogs book nail care?", answer: "Handling comfort is assessed first so care can remain calm and safe." }],
-    related: ["grooming", "daycare", "pet-chauffeur"],
-    images: [img("nails"), img("grooming"), img("floating-pup"), img("facility"), img("booking-bg")],
-    priceLabel: "Contact for current pricing",
-  },
-  {
-    slug: "training",
-    name: "Training & Classes",
-    eyebrow: "Behaviour-informed learning",
-    summary: "Selected behaviour-informed learning experiences, pending confirmed class formats and credentials.",
-    description:
-      "This service should remain draft until the client confirms class types, qualifications, formats, pricing and policies.",
-    forWhom: "For pet parents seeking structured behavioural support once final offerings are confirmed.",
-    benefits: ["Behaviour-informed", "Format to be confirmed", "Credential-aware publishing", "Editable CMS status"],
-    includes: ["Draft service page", "Client confirmation required", "Editable FAQs", "Booking inquiry path"],
-    process: ["Confirm offering", "Add format and pricing", "Publish page", "Accept inquiries"],
-    faqs: [{ question: "Is this service available now?", answer: "Availability and exact class details should be confirmed by DTdogs before publishing." }],
-    related: ["daycare", "dog-walking", "pet-visits"],
-    images: [img("training"), img("walk-toronto"), img("floating-pup"), img("trust-full"), img("booking-bg")],
-    status: "draft",
-    priceLabel: "Details to be confirmed",
+    duration: "30 minutes",
+    priceLabel: "$20",
+    status: "published",
   },
 ];
 
@@ -922,16 +1094,108 @@ export const faqs: Faq[] = [
   ], 500),
 ];
 
-export const pricingPackages: PricingPackage[] = services.map((service) => ({
-  slug: service.slug,
-  service: service.name,
-  name: `${service.name} care request`,
-  priceLabel: service.priceLabel ?? "Contact for current pricing",
-  duration: "Custom duration",
-  features: service.includes.slice(0, 4),
-  featured: service.featured,
-  status: service.status === "draft" ? "hidden" : "published",
-}));
+export const pricingPackages: PricingPackage[] = [
+  {
+    slug: "pay-as-you-go-half-day",
+    service: "Dog Daycare",
+    name: "Pay as you Go",
+    priceLabel: "$40",
+    duration: "Half Day Play (up to 6 hrs)",
+    features: ["Half Day Play (up to 6 hrs)", "Structured Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "pay-as-you-go-full-day",
+    service: "Dog Daycare",
+    name: "Pay as you Go",
+    priceLabel: "$60",
+    duration: "Full Day Play (up to 10 hrs)",
+    features: ["Full Day Play (up to 10 hrs)", "Structured Enrichment Activities"],
+    featured: true,
+    status: "published",
+  },
+  {
+    slug: "overnight-boarding",
+    service: "Dog Boarding",
+    name: "Overnight Boarding",
+    priceLabel: "$80",
+    duration: "Overnight stay",
+    features: ["Boarding from the comfort of home", "Daycare included", "Structured Enrichment Activities"],
+    featured: true,
+    status: "published",
+  },
+  {
+    slug: "5-half-day-package",
+    service: "Dog Daycare",
+    name: "5 Half Day Package",
+    priceLabel: "$195",
+    duration: "Expires 10 days after purchase",
+    features: ["5 Half Day (up to 6 hrs) Play", "Package expires 10 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "5-full-day-package",
+    service: "Dog Daycare",
+    name: "5 Full Day Package",
+    priceLabel: "$270",
+    duration: "Expires 10 days after purchase",
+    features: ["5 Full Day (up to 10 hrs) Play", "Package expires 10 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "10-half-day-package",
+    service: "Dog Daycare",
+    name: "10 Half Day Package",
+    priceLabel: "$390",
+    duration: "Expires 20 days after purchase",
+    features: ["10 Half Day (up to 6 hrs) Play", "Package expires 20 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "10-full-day-package",
+    service: "Dog Daycare",
+    name: "10 Full Day Package",
+    priceLabel: "$540",
+    duration: "Expires 20 days after purchase",
+    features: ["10 Full Day (up to 10 hrs) Play", "Package expires 20 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "20-half-day-package",
+    service: "Dog Daycare",
+    name: "20 Half Day Package",
+    priceLabel: "$780",
+    duration: "Expires 40 days after purchase",
+    features: ["20 Half Day (up to 6 hrs) Play", "Package expires 40 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "20-full-day-package",
+    service: "Dog Daycare",
+    name: "20 Full Day Package",
+    priceLabel: "$1,080",
+    duration: "Expires 40 days after purchase",
+    features: ["20 Full Day (up to 10 hrs) Play", "Package expires 40 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: false,
+    status: "published",
+  },
+  {
+    slug: "28-full-day-package",
+    service: "Dog Daycare",
+    name: "28 Full Day Package",
+    priceLabel: "$1,480",
+    duration: "Expires 56 days after purchase",
+    features: ["28 Full Day (up to 10 hrs) Play", "Package expires 56 days after purchase", "Structured Daycare with Enrichment Activities"],
+    featured: true,
+    status: "published",
+  },
+];
 
 export const testimonials: Testimonial[] = [
   {
@@ -1002,25 +1266,27 @@ export const products: Product[] = [
     inventory: 999,
   },
   {
-    slug: "dog-mom-long-sleeve-shirt",
-    title: "Dog Mom Long-Sleeve Shirt",
-    description: "A warm lifestyle apparel item for proud dog moms. Product details, price, sizing and final images are editable in the CMS.",
-    priceLabel: "Price to be confirmed",
-    status: "inquiry",
-    images: [img("shop-mom"), img("floating-pup"), img("policy-care"), img("shop-dad"), img("booking-bg")],
+    slug: "dog-dad-merch",
+    title: "Dog Dad Merch",
+    description: "Coming Soon #2026",
+    priceLabel: "$33.00",
+    compareAtPriceLabel: "$41.00",
+    status: "coming-soon",
+    images: [img("shop-dad"), img("shop-hero-2"), img("floating-pup"), img("policy-care"), img("shop-mom")],
     sizes: ["S", "M", "L", "XL"],
-    colors: ["Cream", "Forest", "Black"],
+    colors: ["Black", "White", "Forest"],
     inventory: 0,
   },
   {
-    slug: "dog-dad-long-sleeve-shirt",
-    title: "Dog Dad Long-Sleeve Shirt",
-    description: "A premium casual long-sleeve for dog dads. Product details, price, sizing and final images are editable in the CMS.",
-    priceLabel: "Price to be confirmed",
-    status: "inquiry",
-    images: [img("shop-dad"), img("floating-pup"), img("policy-care"), img("shop-mom"), img("contact-dog")],
+    slug: "dog-mom-merch",
+    title: "Dog Mom Merch",
+    description: "Coming Soon #2026",
+    priceLabel: "$33.00",
+    compareAtPriceLabel: "$41.00",
+    status: "coming-soon",
+    images: [img("shop-mom"), img("shop-hero-1"), img("floating-pup"), img("policy-care"), img("shop-dad")],
     sizes: ["S", "M", "L", "XL"],
-    colors: ["Cream", "Forest", "Black"],
+    colors: ["Cream", "Black", "Pink"],
     inventory: 0,
   },
 ];
@@ -1116,17 +1382,17 @@ export const pages: PageContent[] = [
     slug: "pricing",
     title: "Pricing",
     navTitle: "Pricing",
-    seoTitle: "DTdogs.ca Pricing | Request Premium Pet Care Quotes",
-    metaDescription: "Request current pricing for DTdogs.ca pet care services across the Greater Toronto Area. Confirmed pricing is editable in the CMS.",
+    seoTitle: "DTdogs.ca Pricing | Dog Daycare, Boarding & Dog Walks",
+    metaDescription: "View DTdogs.ca daycare, boarding and package pricing across the Greater Toronto Area — from pay-as-you-go days to overnight boarding and multi-day packages.",
     hero: {
-      eyebrow: "Clear care options, tailored to your pet",
-      title: "Pricing stays honest: confirmed rates only, custom quotes when needed.",
-      body: "Where current pricing is not confirmed, the website shows request-pricing language instead of inventing numbers.",
-      primaryCta: { label: "Request Pricing", href: "/booking" },
+      eyebrow: "Dog Daycare, Boarding & Dog Walks",
+      title: "Clear packages for structured play, enrichment and overnight care.",
+      body: "Choose pay-as-you-go daycare, overnight boarding, or value packages — all with structured enrichment activities.",
+      primaryCta: { label: "Book Now", href: "/booking" },
       secondaryCta: { label: "Contact Us", href: "/contact" },
       images: [img("policy-care"), img("grooming"), img("boarding-home"), img("chauffeur"), img("booking-bg")],
     },
-    blocks: [{ type: "cards", title: "Editable pricing cards", body: "The admin can manage packages, features, duration, labels, featured state and publish status.", images: [img("walk-toronto"), img("daycare-play"), img("pet-visit"), img("house-sitting"), img("facility")] }],
+    blocks: [],
   },
   {
     slug: "gallery",
@@ -1260,9 +1526,9 @@ export const pages: PageContent[] = [
     metaDescription: "Browse DTdogs.ca apparel including Dog Mom and Dog Dad long-sleeve shirts. Catalogue mode until checkout is confirmed.",
     hero: {
       eyebrow: "A lightweight boutique, ready to grow",
-      title: "Warm lifestyle goods for the DTdogs clan.",
-      body: "The initial shop supports two apparel items and up to 30 products, with image galleries, inventory and catalogue/inquiry mode.",
-      primaryCta: { label: "Browse Products", href: "#products" },
+      title: "Dog Dad and Dog Mom merch for the DTdogs clan.",
+      body: "Coming soon in 2026 — premium merch bundles with clear pricing, ready for final product photography and checkout.",
+      primaryCta: { label: "Browse Merch", href: "#products" },
       images: [img("shop-hero-1"), img("shop-hero-2"), img("floating-pup"), img("policy-care"), img("booking-bg")],
     },
     blocks: [{ type: "shop", title: "Product catalogue", images: [img("shop-mom"), img("shop-dad"), img("policy-care"), img("floating-pup"), img("contact-dog")] }],
@@ -1417,15 +1683,15 @@ function getModel<T>(name: string, schema: Schema<T>): Model<T> {
 
 export const Models = {
   Page: () => getModel<PageContent>("Page", new Schema<PageContent>({ slug: { type: String, unique: true }, title: String, navTitle: String, seoTitle: String, metaDescription: String, hero: Schema.Types.Mixed, blocks: [Schema.Types.Mixed], status: String }, { timestamps: true })),
-  Service: () => getModel<Service>("Service", new Schema<Service>({ slug: { type: String, unique: true }, name: String, eyebrow: String, summary: String, description: String, forWhom: String, benefits: [String], includes: [String], process: [String], faqs: [Schema.Types.Mixed], related: [String], images: [imageSchema], featured: Boolean, status: String, priceLabel: String }, { timestamps: true })),
+  Service: () => getModel<Service>("Service", new Schema<Service>({ slug: { type: String, unique: true }, name: String, eyebrow: String, summary: String, description: String, forWhom: String, benefits: [String], includes: [String], process: [String], faqs: [Schema.Types.Mixed], related: [String], images: [imageSchema], featured: Boolean, status: String, priceLabel: String, duration: String, priceTiers: [Schema.Types.Mixed] }, { timestamps: true })),
   MediaAsset: () => getModel<ImageAsset>("MediaAsset", new Schema<ImageAsset>({ id: { type: String, unique: true }, title: String, alt: String, caption: String, url: String, mobileUrl: String, width: Number, height: Number, fileSize: Number, page: String, tags: [String], status: String, focalPoint: Schema.Types.Mixed, order: Number }, { timestamps: true })),
   PricingPackage: () => getModel<PricingPackage>("PricingPackage", new Schema<PricingPackage>({ slug: { type: String, unique: true }, service: String, name: String, priceLabel: String, duration: String, features: [String], featured: Boolean, status: String }, { timestamps: true })),
   BlogPost: () => getModel<BlogPost>("BlogPost", new Schema<BlogPost>({ slug: { type: String, unique: true }, title: String, excerpt: String, category: String, author: String, date: String, body: String, featuredImage: imageSchema, inlineImages: [imageSchema], status: String }, { timestamps: true })),
-  Product: () => getModel<Product>("Product", new Schema<Product>({ slug: { type: String, unique: true }, title: String, description: String, priceLabel: String, status: String, images: [imageSchema], sizes: [String], colors: [String], inventory: Number }, { timestamps: true })),
+  Product: () => getModel<Product>("Product", new Schema<Product>({ slug: { type: String, unique: true }, title: String, description: String, priceLabel: String, compareAtPriceLabel: String, status: String, images: [imageSchema], sizes: [String], colors: [String], inventory: Number }, { timestamps: true })),
   TeamMember: () => getModel<TeamMember>("TeamMember", new Schema<TeamMember>({ slug: { type: String, unique: true }, name: String, role: String, bio: String, credentials: [String], image: imageSchema, status: String }, { timestamps: true })),
   Testimonial: () => getModel<Testimonial>("Testimonial", new Schema<Testimonial>({ slug: { type: String, unique: true }, reviewer: String, petName: String, service: String, rating: Number, quote: String, location: String, image: imageSchema, status: String, sample: Boolean }, { timestamps: true })),
   Faq: () => getModel<Faq>("Faq", new Schema<Faq>({ slug: { type: String, unique: true }, question: String, answer: String, category: String, serviceSlug: String, status: String, order: Number }, { timestamps: true })),
-  Booking: () => getModel<BookingRequest>("Booking", new Schema<BookingRequest>({ customerName: String, fullName: String, email: String, phone: String, address: String, preferredContact: String, service: String, packageSelection: String, preferredDate: String, preferredTime: String, pickupTime: String, dropoffTime: String, shuttleRequested: String, petName: String, petType: String, breed: String, age: String, weight: String, sex: String, spayNeuterStatus: String, temperament: String, specialNeeds: String, vaccinationStatus: String, medicalDetails: String, allergies: String, feedingInstructions: String, emergencyContact: String, veterinarian: String, behaviouralNotes: String, vaccinationUploadNote: String, giftCardCode: String, paymentNote: String, notes: String, policyAgreement: Boolean, paymentStatus: String, status: { type: String, default: "New" }, adminNotes: String }, { timestamps: true })),
+  Booking: () => getModel<BookingRequest>("Booking", new Schema<BookingRequest>({ customerName: String, fullName: String, email: String, phone: String, address: String, preferredContact: String, service: String, packageSelection: String, addonSelected: Boolean, estimatedTotal: String, preferredDate: String, preferredTime: String, pickupTime: String, dropoffTime: String, shuttleRequested: String, petName: String, petType: String, breed: String, age: String, weight: String, sex: String, spayNeuterStatus: String, temperament: String, specialNeeds: String, vaccinationStatus: String, medicalDetails: String, allergies: String, feedingInstructions: String, emergencyContact: String, veterinarian: String, behaviouralNotes: String, vaccinationUploadNote: String, giftCardCode: String, paymentNote: String, notes: String, policyAgreement: Boolean, paymentStatus: String, status: { type: String, default: "New" }, adminNotes: String }, { timestamps: true })),
   GiftCardOrder: () => getModel<GiftCardOrder>("GiftCardOrder", new Schema<GiftCardOrder>({ denomination: String, recipientName: String, recipientEmail: String, senderName: String, senderEmail: String, message: String, deliveryDate: String, paymentStatus: { type: String, default: "Payment Pending" }, status: { type: String, default: "New" } }, { timestamps: true })),
   AdminUser: () => getModel<{ email: string; passwordHash: string; role: string }>("AdminUser", new Schema({ email: { type: String, unique: true }, passwordHash: String, role: { type: String, default: "Owner/Admin" } }, { timestamps: true })),
 };
@@ -1470,13 +1736,46 @@ export async function getPage(slug: string) {
 }
 
 export async function getServices() {
-  const allServices = await getCollection<Service>("services", services);
-  return allServices.filter((service) => service.status !== "draft");
+  // Public site always uses the confirmed service catalog.
+  return services.filter((service) => service.status !== "draft");
+}
+
+export async function getProducts() {
+  // Public shop uses the confirmed merch + gift-card catalog.
+  return products.filter((product) => product.status !== "draft");
 }
 
 export async function getService(slug: string) {
-  const allServices = await getCollection<Service>("services", services);
-  return allServices.find((service) => service.slug === slug);
+  return services.find((service) => service.slug === slug);
+}
+
+export async function syncServices() {
+  const db = await connectMongo();
+  if (!db) return getServices();
+
+  const ModelCtor = Models.Service() as unknown as Model<Record<string, unknown>>;
+  await ModelCtor.deleteMany({});
+  for (const item of services) {
+    await ModelCtor.updateOne({ slug: item.slug }, { $set: item }, { upsert: true });
+  }
+  return getServices();
+}
+
+export async function syncPricingPackages() {
+  const db = await connectMongo();
+  if (!db) return pricingPackages.filter((item) => item.status !== "hidden");
+
+  const ModelCtor = Models.PricingPackage() as unknown as Model<Record<string, unknown>>;
+  await ModelCtor.deleteMany({});
+  for (const item of pricingPackages) {
+    await ModelCtor.updateOne({ slug: item.slug }, { $set: item }, { upsert: true });
+  }
+  return pricingPackages.filter((item) => item.status !== "hidden");
+}
+
+/** Public pricing always uses the confirmed daycare/boarding package list. */
+export async function getPricingPackages(): Promise<PricingPackage[]> {
+  return pricingPackages.filter((item) => item.status !== "hidden");
 }
 
 export async function seedDatabase() {
@@ -1486,6 +1785,9 @@ export async function seedDatabase() {
   const entries = Object.entries(collectionDefaults) as [CollectionName, unknown[]][];
   for (const [collection, data] of entries) {
     const ModelCtor = collectionModelMap[collection]() as unknown as Model<Record<string, unknown>>;
+    if (collection === "pricing" || collection === "services") {
+      await ModelCtor.deleteMany({});
+    }
     for (const item of data as Record<string, unknown>[]) {
       const key = item.slug ? { slug: item.slug } : { id: item.id };
       await ModelCtor.updateOne(key, { $set: item }, { upsert: true });

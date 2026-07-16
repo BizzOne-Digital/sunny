@@ -11,6 +11,8 @@ const bookingSchema = z.object({
   preferredContact: z.string().optional(),
   service: z.string().min(2),
   packageSelection: z.string().optional(),
+  addonSelected: z.union([z.boolean(), z.string()]).optional(),
+  estimatedTotal: z.string().optional(),
   preferredDate: z.string().min(4),
   preferredTime: z.string().min(2),
   pickupTime: z.string().optional(),
@@ -58,6 +60,8 @@ export async function POST(request: Request) {
   const booking: BookingRequest = {
     ...parsed.data,
     customerName: parsed.data.customerName || parsed.data.fullName || "Customer",
+    addonSelected: parsed.data.addonSelected === true || parsed.data.addonSelected === "true" || parsed.data.addonSelected === "on",
+    estimatedTotal: parsed.data.estimatedTotal,
     status: "Awaiting Payment" as BookingRequest["status"],
     paymentStatus: "Payment Pending",
   };

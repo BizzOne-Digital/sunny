@@ -5,18 +5,16 @@ import {
   BlogPost,
   Faq,
   PageContent,
-  PricingPackage,
-  Product,
   TeamMember,
   Testimonial,
   blogPosts,
   faqs,
   getCollection,
   getPage,
+  getPricingPackages,
+  getProducts,
   getServices,
   pages,
-  pricingPackages,
-  products,
   team,
   testimonials,
 } from "@/lib/site";
@@ -30,13 +28,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const page = await getPage(slug);
   if (!page) return {};
 
+  const ogImage = page.hero?.images?.[0]?.url;
+
   return {
     title: page.seoTitle,
     description: page.metaDescription,
     openGraph: {
       title: page.seoTitle,
       description: page.metaDescription,
-      images: page.hero.images[0]?.url ? [page.hero.images[0].url] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -46,13 +46,14 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   const page = await getPage(slug);
   if (!page) notFound();
 
+  // Keep CMS/seed page content as-is; only pricing packages use the confirmed package list.
   const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers] = await Promise.all([
     getServices(),
-    getCollection<PricingPackage>("pricing", pricingPackages),
+    slug === "pricing" ? getPricingPackages() : Promise.resolve([]),
     getCollection<Faq>("faqs", faqs),
     getCollection<Testimonial>("testimonials", testimonials),
     getCollection<BlogPost>("blog", blogPosts),
-    getCollection<Product>("products", products),
+    getProducts(),
     getCollection<TeamMember>("team", team),
   ]);
 

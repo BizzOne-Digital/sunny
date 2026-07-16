@@ -300,6 +300,7 @@ function getFields(collection: CollectionName): FieldConfig[] {
       { path: "description", label: "Full Description", type: "textarea", wide: true },
       { path: "forWhom", label: "Who It Is For", type: "textarea", wide: true },
       { path: "priceLabel", label: "Price Label" },
+      { path: "duration", label: "Duration" },
       { path: "featured", label: "Featured Service", type: "checkbox" },
       { path: "benefits", label: "Benefits", type: "list", wide: true, help: "One benefit per line." },
       { path: "includes", label: "What Is Included", type: "list", wide: true, help: "One included item per line." },

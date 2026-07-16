@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProductDetail } from "@/components/site";
-import { Product, getCollection, products } from "@/lib/site";
+import { getProducts, products } from "@/lib/site";
+
+const productAliases: Record<string, string> = {
+  "dog-mom-long-sleeve-shirt": "dog-mom-merch",
+  "dog-dad-long-sleeve-shirt": "dog-dad-merch",
+};
 
 export async function generateStaticParams() {
-  return products.map((product) => ({ slug: product.slug }));
+  return [
+    ...products.map((product) => ({ slug: product.slug })),
+    ...Object.keys(productAliases).map((slug) => ({ slug })),
+  ];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const allProducts = await getCollection<Product>("products", products);
-  const product = allProducts.find((item) => item.slug === slug);
+  const resolvedSlug = productAliases[slug] ?? slug;
+  const allProducts = await getProducts();
+  const product = allProducts.find((item) => item.slug === resolvedSlug);
   if (!product) return {};
 
   return {
@@ -26,7 +35,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const allProducts = await getCollection<Product>("products", products);
+  if (productAliases[slug]) redirect(`/shop/${productAliases[slug]}`);
+
+  const allProducts = await getProducts();
   const product = allProducts.find((item) => item.slug === slug && item.status !== "draft");
   if (!product) notFound();
 

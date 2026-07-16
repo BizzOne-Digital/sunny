@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.dtdogs.ca" },
     ],
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
   },
 };
 

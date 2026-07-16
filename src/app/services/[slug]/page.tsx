@@ -4,9 +4,19 @@ import { ServiceDetail } from "@/components/site";
 import { getService, getServices, services } from "@/lib/site";
 
 const serviceAliases: Record<string, string> = {
-  "dog-daycare": "daycare",
-  "dog-boarding": "boarding",
-  "dog-grooming": "grooming",
+  "dog-walking": "dog-walking-1-hour",
+  "pet-visits": "pet-visit",
+  "house-sitting": "house-sitting-one-night",
+  daycare: "dog-half-daycare",
+  "dog-daycare": "dog-half-daycare",
+  boarding: "dog-boarding-one-night",
+  "dog-boarding": "dog-boarding-one-night",
+  grooming: "dog-grooming",
+  "dog-grooming": "dog-grooming",
+  "nail-trimming": "bath-and-nails",
+  training: "training-and-classes",
+  "guided-excursions": "guided-pet-excursion",
+  "pet-chauffeur": "meet-and-greet",
 };
 
 function normalizeServiceSlug(slug: string) {
