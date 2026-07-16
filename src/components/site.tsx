@@ -1025,7 +1025,7 @@ function Hero({ page }: { page: PageContent }) {
   const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
-    <section className={cx("relative overflow-hidden bg-forest text-white", page.slug === "booking" ? "pt-32 md:pt-36" : "pt-36 md:pt-40")}>
+    <section className={cx("relative overflow-hidden bg-forest text-white", page.slug === "booking" ? "pt-28 md:pt-32" : "pt-28 md:pt-32")}>
       {main ? (
         <motion.div
           className="absolute inset-0"
@@ -1052,7 +1052,14 @@ function Hero({ page }: { page: PageContent }) {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.1, delay: 0.15, ease }}
       />
-      <div className={cx("relative mx-auto grid max-w-7xl items-end gap-6 px-4 md:px-8 lg:grid-cols-[1fr_0.9fr]", page.slug === "booking" ? "py-8 md:py-12" : "py-12 md:py-20")}>
+      <div
+        className={cx(
+          "relative mx-auto grid max-w-7xl items-center gap-6 px-4 md:px-8 lg:grid-cols-[1fr_0.9fr]",
+          page.slug === "booking"
+            ? "min-h-0 py-8 md:py-10"
+            : "min-h-[70svh] py-8 md:min-h-[78svh] md:py-10 lg:py-12",
+        )}
+      >
         <div>
           <motion.p
             className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.28em]"
@@ -1156,7 +1163,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
 
   return (
     <PageEnter pageKey={service.slug}>
-      <section className="relative overflow-hidden bg-forest pt-36 text-white md:pt-40">
+      <section className="relative overflow-hidden bg-forest pt-28 text-white md:pt-32">
         {heroImages[0] ? (
           <motion.div
             className="absolute inset-0"
@@ -1182,7 +1189,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1.1, delay: 0.12, ease }}
         />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 md:px-8 md:py-24 lg:grid-cols-2">
+        <div className="relative mx-auto grid min-h-[70svh] max-w-7xl items-center gap-8 px-4 py-8 sm:gap-10 md:min-h-[78svh] md:px-8 md:py-10 lg:grid-cols-2 lg:py-12">
           <div>
             <motion.p
               className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-5 sm:gap-3 sm:text-sm sm:tracking-[0.34em]"
