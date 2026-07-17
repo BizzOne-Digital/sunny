@@ -707,7 +707,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               alt="Friendly dog in a calm home-style care setting"
               fill
               priority
-              className="object-cover object-[72%_center] md:object-center"
+              className="object-cover object-[88%_35%] md:object-[85%_32%]"
               sizes="100vw"
             />
           </div>
@@ -739,7 +739,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
           : null}
 
         <motion.div
-          className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1400px] flex-col justify-center px-4 pb-32 pt-40 sm:px-6 sm:pb-28 sm:pt-36 md:pb-32 md:pt-40 lg:pt-36"
+          className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1400px] flex-col justify-center px-4 pb-28 pt-48 sm:px-6 sm:pb-24 sm:pt-48 md:pb-28 md:pt-52 lg:pt-48"
           style={{ y: contentY, opacity: contentOpacity }}
         >
           <motion.div
