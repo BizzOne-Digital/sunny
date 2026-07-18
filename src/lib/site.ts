@@ -196,17 +196,24 @@ export type GiftCardOrder = {
 export const brand = {
   name: "DTdogs.ca",
   secondaryName: "Hand & Paw",
-  formerly: "formerly Handandpaw.ca and Handandpaw.in",
+  formerly: "Handandpaw.ca and Handandpaw.in",
+  formerlyShort: "(Handandpaw.ca / Handandpaw.in)",
   phone: "+1 (437) 937-5112",
   email: "connect@dtdogs.ca",
   hours: "Monday–Sunday, 7:00 AM–9:00 PM",
   boardingNote: "Boarding available 24/7 according to city bylaws and confirmed booking arrangements.",
   tagline: "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
   whatsapp: "https://wa.me/14379375112",
-  payments: "Pay online, in store, or by Interac after confirmation.",
+  payments: "Pay online, in store, Interac, Amex, or with a DTdogs.ca gift card after confirmation.",
   locations: [
     "218 Queen Street East, Toronto, ON M5A 1S3",
     "Floor 15, 65 High Park Avenue, Toronto, ON M6P 2R7",
+  ],
+  lines: [
+    "Serving across GTA",
+    "Operating all season across GTA",
+    "Located in Downtown, Toronto",
+    "We are a team of #petpeople and #petparents",
   ],
   palette: {
     forest: "#3D634E",
@@ -1784,6 +1791,11 @@ export async function getServices() {
 export async function getProducts() {
   // Public shop uses the confirmed merch + gift-card catalog.
   return products.filter((product) => product.status !== "draft");
+}
+
+export async function getTestimonials() {
+  // Public site always uses the confirmed review list (skips stale CMS sample entries).
+  return testimonials.filter((item) => item.status !== "draft" && !item.sample);
 }
 
 export async function getService(slug: string) {

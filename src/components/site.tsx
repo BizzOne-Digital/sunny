@@ -52,11 +52,18 @@ const brand = {
   email: "connect@dtdogs.ca",
   hours: "Monday–Sunday, 7:00 AM–9:00 PM",
   boardingNote: "Boarding available 24/7 according to city bylaws and confirmed booking arrangements.",
-  formerly: "formerly Handandpaw.ca and Handandpaw.in",
+  formerly: "Handandpaw.ca and Handandpaw.in",
+  formerlyShort: "(Handandpaw.ca / Handandpaw.in)",
   tagline: "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
   whatsapp: "https://wa.me/14379375112",
-  payments: "Pay online, in store, or by Interac after confirmation.",
-  locations: ["Downtown Toronto · Serving across the GTA"],
+  payments: "Pay online, in store, Interac, Amex, or with a DTdogs.ca gift card after confirmation.",
+  locations: ["Located in Downtown, Toronto"],
+  lines: [
+    "Serving across GTA",
+    "Operating all season across GTA",
+    "Located in Downtown, Toronto",
+    "We are a team of #petpeople and #petparents",
+  ],
 };
 
 const localImageUrls: Record<string, string> = {
@@ -411,12 +418,12 @@ function IntroWrapper() {
                 </motion.div>
                 <div>
                   <motion.p
-                    className="text-xs uppercase tracking-[0.28em] text-peach sm:text-sm sm:tracking-[0.5em]"
-                    initial={{ opacity: 0, letterSpacing: "0.1em" }}
+                    className="text-xs font-medium tracking-wide text-peach sm:text-sm"
+                    initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 0.4 }}
                   >
-                    DTdogs.ca
+                    DTdogs.ca {brand.formerlyShort}
                   </motion.p>
                   <h1 className="mt-3 font-serif text-4xl italic sm:text-5xl md:text-8xl">
                     {"Care begins with trust.".split(" ").map((word, index) => (
@@ -483,24 +490,24 @@ function BrandLogo({ inverted = false }: { inverted?: boolean }) {
   }, []);
 
   return (
-    <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+    <Link href="/" className="group flex shrink-0 items-center gap-2">
       {ready ? (
         <Image
           src={LOGO_SRC}
-          alt="DT Dogs at Hand & Paw"
-          width={200}
-          height={64}
-          className="h-10 w-auto object-contain sm:h-14 md:h-16"
+          alt="DTdogs.ca"
+          width={260}
+          height={84}
+          className="h-14 w-auto object-contain sm:h-16 md:h-[4.5rem] lg:h-20"
           priority
         />
       ) : (
         <>
-          <span className={cx("grid h-11 w-11 place-items-center rounded-full shadow-md transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105", inverted ? "bg-white text-forest" : "bg-forest text-white")}>
-            <PawPrint className="h-5 w-5" />
+          <span className={cx("grid h-12 w-12 place-items-center rounded-full shadow-md transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105 sm:h-14 sm:w-14", inverted ? "bg-white text-forest" : "bg-forest text-white")}>
+            <PawPrint className="h-6 w-6" />
           </span>
           <span className="leading-tight">
-            <span className={cx("block text-[11px] font-extrabold uppercase tracking-[0.12em]", inverted ? "text-white" : "text-forest")}>DTdogs.ca</span>
-            <span className={cx("block text-[9px] font-semibold uppercase tracking-[0.14em]", inverted ? "text-white/70" : "text-ink/55")}>Hand & Paw · GTA</span>
+            <span className={cx("block text-sm font-extrabold tracking-tight", inverted ? "text-white" : "text-forest")}>DTdogs.ca</span>
+            <span className={cx("block text-[10px] font-medium", inverted ? "text-white/70" : "text-ink/55")}>{brand.formerlyShort}</span>
           </span>
         </>
       )}
@@ -549,7 +556,7 @@ function Navigation({ services }: { services: Service[] }) {
       </div>
 
       <div className={cx("px-2 pt-2 transition-all duration-500 sm:px-3 sm:pt-3 md:px-5", solid && "pb-2")}>
-        <div className={cx("mx-auto flex max-w-[1400px] items-center justify-between gap-2 rounded-full border border-white/70 bg-white/95 px-2.5 py-2 shadow-[0_12px_40px_rgba(32,37,34,0.12)] backdrop-blur-xl transition-all duration-500 sm:gap-3 sm:px-5 sm:py-2.5", solid && "shadow-[0_16px_48px_rgba(32,37,34,0.16)]")}>
+        <div className={cx("mx-auto flex max-w-[1400px] items-center justify-between gap-2 rounded-full border border-white/70 bg-white/95 px-2.5 py-2 shadow-[0_12px_40px_rgba(32,37,34,0.12)] backdrop-blur-xl transition-all duration-500 sm:gap-3 sm:px-4 sm:py-2.5 md:px-5 md:py-3", solid && "shadow-[0_16px_48px_rgba(32,37,34,0.16)]")}>
           <BrandLogo />
 
           <nav className="hidden items-center gap-0.5 text-[13px] font-semibold text-ink/75 xl:flex 2xl:gap-1">
@@ -590,10 +597,10 @@ function Navigation({ services }: { services: Service[] }) {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <Link href="/booking" className="group inline-flex items-center gap-1.5 rounded-full bg-forest py-1.5 pl-3.5 pr-1.5 text-xs font-bold text-white transition hover:bg-burgundy sm:gap-2 sm:pl-5 sm:text-sm md:inline-flex">
+            <Link href="/booking" className="btn-gradient group inline-flex items-center gap-1.5 rounded-full py-1.5 pl-3.5 pr-1.5 text-xs font-bold text-white shadow-md sm:gap-2 sm:pl-5 sm:text-sm">
               <span className="hidden min-[360px]:inline">Book</span>
               <span className="hidden sm:inline">Now</span>
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-forest transition group-hover:scale-110 sm:h-8 sm:w-8">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-burgundy transition group-hover:scale-110 sm:h-8 sm:w-8">
                 <PawPrint className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </span>
             </Link>
@@ -618,7 +625,7 @@ function Navigation({ services }: { services: Service[] }) {
               ))}
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row">
-              <Link href="/booking" onClick={() => setOpen(false)} className="rounded-full bg-coral px-6 py-3.5 text-center font-bold text-ink transition hover:bg-burgundy hover:text-white">
+              <Link href="/booking" onClick={() => setOpen(false)} className="btn-gradient rounded-full px-6 py-3.5 text-center font-bold text-white">
                 Book Now
               </Link>
               <a href={`tel:${brand.phone}`} className="rounded-full border border-white/30 px-6 py-3.5 text-center">
@@ -669,16 +676,16 @@ export function HomePage({ services, testimonials, products }: { services: Servi
   }, [reducedMotion]);
 
   const trustItems = [
-    { label: "Certified Care", icon: ShieldCheck },
-    { label: "24/7 CCTV", icon: Camera },
-    { label: "Calm Environment", icon: Heart },
-    { label: "GTA Service", icon: MapPin },
+    { label: "Serving across GTA", icon: MapPin },
+    { label: "Operating all season", icon: CalendarDays },
+    { label: "Downtown, Toronto", icon: Heart },
+    { label: "#petpeople & #petparents", icon: Users },
   ];
   const stats = [
-    { label: "Happy Pets", value: "1,200+", icon: PawPrint },
-    { label: "Happy Families", value: "900+", icon: Users },
-    { label: "Years of Care", value: "4+", icon: CalendarDays },
-    { label: "Trusted Care", value: "100%", icon: ShieldCheck },
+    { label: "Tons of happy pets and counting", value: "Tons", icon: PawPrint },
+    { label: "Hundreds of petparents and counting", value: "100s", icon: Users },
+    { label: "4+ years of serving across GTA and counting", value: "4+", icon: CalendarDays },
+    { label: "100% care with attentions", value: "100%", icon: ShieldCheck },
   ];
   const floatingPaws = [
     { top: "18%", left: "8%", size: "h-7 w-7", delay: 0, duration: 9 },
@@ -749,7 +756,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             transition={{ duration: 1, ease }}
           >
             <motion.p
-              className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-peach sm:mb-5 sm:text-xs sm:tracking-[0.28em]"
+              className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-xs font-medium tracking-wide text-peach sm:mb-5 sm:text-sm"
               initial={reducedMotion ? false : { opacity: 0, x: -40 }}
               animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -40 }}
               transition={{ duration: 0.85, delay: enter ? 0.1 : 0, ease }}
@@ -790,12 +797,12 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               </motion.span>
             </h1>
             <motion.p
-              className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-peach/90 sm:text-xs sm:tracking-[0.18em]"
+              className="mt-1.5 text-[13px] font-normal leading-snug text-white/70 sm:text-sm"
               initial={reducedMotion ? false : { opacity: 0 }}
               animate={enter ? { opacity: 1 } : { opacity: reducedMotion ? 1 : 0 }}
               transition={{ duration: 0.7, delay: enter ? 0.38 : 0 }}
             >
-              {brand.formerly}
+              {brand.formerlyShort}
             </motion.p>
 
             <motion.p
@@ -804,7 +811,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -40 }}
               transition={{ duration: 0.9, delay: enter ? 0.42 : 0, ease }}
             >
-              {brand.tagline}
+              {brand.tagline} {brand.lines[3]}.
             </motion.p>
 
             <motion.div
@@ -888,8 +895,8 @@ export function HomePage({ services, testimonials, products }: { services: Servi
                 <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
               <div className="min-w-0">
-                <p className="font-serif text-xl leading-none sm:text-3xl">{stat.value}</p>
-                <p className="mt-1 text-[11px] leading-tight text-white/70 sm:text-sm">{stat.label}</p>
+                <p className="font-serif text-lg leading-none sm:text-2xl md:text-3xl">{stat.value}</p>
+                <p className="mt-1 text-[10px] leading-snug text-white/75 sm:text-xs md:text-sm">{stat.label}</p>
               </div>
             </motion.div>
           ))}
@@ -909,7 +916,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
           <Reveal from="right" delay={0.1}>
             <SectionHeading eyebrow="Our Vision" title="A safer, warmer rhythm for pets and their people." align="left" />
             <p className="mt-5 max-w-3xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
-              DTdogs.ca ({brand.formerly}) offers structured pet care for discerning pet parents across Downtown Toronto and the GTA. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you&apos;re away. Since 2021, we have built trust through consistent, nurturing services focused on your pet&apos;s well-being in every season.
+              DTdogs.ca {brand.formerlyShort} offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you&apos;re away.
             </p>
             <div className="mt-6">
               <Button href="/our-vision" variant="outline">Read Our Vision</Button>
@@ -1062,7 +1069,7 @@ function Hero({ page }: { page: PageContent }) {
       >
         <div>
           <motion.p
-            className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.28em]"
+            className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-xs font-medium tracking-wide text-peach sm:mb-4 sm:gap-3 sm:text-sm"
             initial={reducedMotion ? false : { opacity: 0, x: -56, y: 16 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ duration: 0.85, ease }}
@@ -1192,13 +1199,13 @@ export function ServiceDetail({ service, related }: { service: Service; related:
         <div className="relative mx-auto grid min-h-[70svh] max-w-7xl items-center gap-8 px-4 py-8 sm:gap-10 md:min-h-[78svh] md:px-8 md:py-10 lg:grid-cols-2 lg:py-12">
           <div>
             <motion.p
-              className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-peach sm:mb-5 sm:gap-3 sm:text-sm sm:tracking-[0.34em]"
+              className="mb-4 inline-flex max-w-full flex-wrap items-center gap-2 text-xs font-medium tracking-wide text-peach sm:mb-5 sm:gap-3 sm:text-sm"
               initial={reducedMotion ? false : { opacity: 0, x: -56, y: 16 }}
               animate={{ opacity: 1, x: 0, y: 0 }}
               transition={{ duration: 0.85, ease }}
             >
               <span className="hidden h-px w-10 bg-gradient-to-r from-transparent to-peach sm:block" />
-              {comingSoon ? "Coming Soon" : service.eyebrow}
+              {comingSoon ? "Coming soon" : service.eyebrow}
             </motion.p>
             <motion.h1
               className="font-serif text-[2.1rem] leading-[1.08] tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.35)] sm:text-4xl md:text-5xl lg:text-6xl"
@@ -1387,7 +1394,7 @@ function ServiceBookingPanel({ service }: { service: Service }) {
                     onClick={() => setSizeLabel(tier.label)}
                     className={cx(
                       "rounded-full px-4 py-2 text-sm font-bold transition",
-                      sizeLabel === tier.label ? "bg-forest text-white" : "bg-sage text-ink hover:bg-peach/50",
+                      sizeLabel === tier.label ? "btn-gradient text-white shadow-md shadow-coral/25" : "bg-sage text-ink hover:bg-peach/50",
                     )}
                   >
                     {tier.label} · {tier.priceLabel}
@@ -1554,15 +1561,15 @@ function ServiceCard({ service }: { service: Service }) {
       <Link href={`/services/${service.slug}`} className="relative block h-52 overflow-hidden sm:h-64">
         <Image className="h-full w-full object-cover transition duration-700 group-hover:scale-105" {...imageProps(cardImage)} alt={cardImage.alt} />
         <div className="absolute inset-0 bg-gradient-to-t from-forest/45 via-transparent to-transparent opacity-60" />
-        <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-cream to-peach px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-forest shadow-lg sm:left-5 sm:top-5 sm:px-4 sm:py-2 sm:text-xs sm:tracking-[0.2em]">
-          {comingSoon ? "Coming Soon" : service.eyebrow}
+        <span className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-cream to-peach px-3 py-1.5 text-[10px] font-semibold tracking-wide text-forest shadow-lg sm:left-5 sm:top-5 sm:px-4 sm:py-2 sm:text-xs">
+          {comingSoon ? "Coming soon" : service.eyebrow}
         </span>
       </Link>
       <div className="relative p-5 sm:p-6">
         <Link href={`/services/${service.slug}`}>
           <h3 className="font-serif text-[1.45rem] leading-tight text-forest transition-colors duration-300 group-hover:text-burgundy sm:text-2xl">{service.name}</h3>
         </Link>
-        <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-forest/70">
+        <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium tracking-wide text-forest/70">
           {service.duration ? <span>{service.duration}</span> : null}
           {service.duration && service.priceLabel ? <span>•</span> : null}
           {service.priceLabel ? <span className="text-burgundy">{service.priceLabel}</span> : null}
@@ -1595,7 +1602,7 @@ function PricingGrid({ pricing }: { pricing: PricingPackage[] }) {
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <Reveal from="up">
         <div className="mb-10 text-center md:mb-14">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-burgundy">Dog Daycare, Boarding & Dog Walks</p>
+          <p className="text-xs font-semibold tracking-wide text-burgundy">Dog daycare, boarding & dog walks</p>
           <h2 className="mt-3 font-serif text-3xl text-forest sm:text-4xl md:text-5xl">Choose your package</h2>
         </div>
       </Reveal>
@@ -1626,9 +1633,9 @@ function PricingGrid({ pricing }: { pricing: PricingPackage[] }) {
                 {item.duration ? <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-forest/70">{item.duration}</p> : null}
                 <Link
                   href={`/booking?package=${encodeURIComponent(item.name)}&price=${encodeURIComponent(item.priceLabel)}`}
-                  className="btn-gradient mt-8 inline-flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-lg transition hover:-translate-y-0.5"
+                  className="btn-gradient mt-8 inline-flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5"
                 >
-                  Select
+                  Book now
                 </Link>
               </article>
             </Reveal>
@@ -1916,10 +1923,10 @@ function BookingCalendar({
               onClick={() => onDateChange(key)}
               className={cx(
                 "rounded-2xl border px-2 py-3 text-center transition",
-                active ? "border-forest bg-forest text-white shadow-lg shadow-forest/20" : "border-forest/10 bg-cream text-ink hover:border-coral/50",
+                active ? "btn-gradient border-transparent text-white shadow-lg shadow-coral/30" : "border-forest/10 bg-cream text-ink hover:border-coral/50",
               )}
             >
-              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] opacity-70">{day.toLocaleDateString("en-CA", { weekday: "short" })}</span>
+              <span className="block text-[10px] font-semibold tracking-wide opacity-70">{day.toLocaleDateString("en-CA", { weekday: "short" })}</span>
               <span className="mt-1 block font-serif text-lg leading-none">{day.getDate()}</span>
               <span className="mt-1 block text-[10px] opacity-70">{day.toLocaleDateString("en-CA", { month: "short" })}</span>
             </button>
@@ -1942,7 +1949,7 @@ function BookingCalendar({
               className={cx(
                 "rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm",
                 !selectedDate && "cursor-not-allowed opacity-40",
-                active ? "bg-coral text-ink shadow-md" : "bg-white text-forest hover:bg-sage",
+                active ? "btn-gradient text-white shadow-md shadow-coral/30" : "bg-white text-forest hover:bg-sage",
               )}
             >
               {formatSlotLabel(slot)}
@@ -2052,7 +2059,7 @@ function BookingForm({ services }: { services: Service[] }) {
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
           {steps.map((label, index) => (
-            <button key={label} type="button" onClick={() => setStep(index)} className={cx("shrink-0 rounded-full px-3.5 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm", step === index ? "bg-forest text-white" : "bg-sage text-ink")}>
+            <button key={label} type="button" onClick={() => setStep(index)} className={cx("shrink-0 rounded-full px-3.5 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm", step === index ? "btn-gradient text-white shadow-md shadow-coral/25" : "bg-sage text-ink")}>
               <span className="sm:hidden">{index + 1}</span>
               <span className="hidden sm:inline">{index + 1}. {label}</span>
             </button>
@@ -2071,7 +2078,7 @@ function BookingForm({ services }: { services: Service[] }) {
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr_18rem]">
           <aside className="hidden rounded-[2rem] bg-forest p-4 text-white lg:block">
             {steps.map((label, index) => (
-              <button key={label} type="button" onClick={() => setStep(index)} className={cx("mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm", step === index ? "bg-coral text-ink" : index < step ? "bg-white/10 text-white" : "text-white/55")}>
+              <button key={label} type="button" onClick={() => setStep(index)} className={cx("mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm", step === index ? "btn-gradient text-white shadow-md shadow-coral/25" : index < step ? "bg-white/10 text-white" : "text-white/55")}>
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 text-xs">{index < step ? "✓" : index + 1}</span>
                 {label}
               </button>
@@ -2093,13 +2100,13 @@ function BookingForm({ services }: { services: Service[] }) {
                       key={service.slug}
                       className={cx(
                         "flex cursor-pointer gap-3 rounded-[1.25rem] border p-3 transition",
-                        active ? "border-forest bg-sage/50 shadow-md shadow-forest/10" : "border-forest/10 bg-cream hover:border-coral/40",
+                        active ? "border-coral bg-peach/25 shadow-md shadow-coral/20 ring-2 ring-coral/40" : "border-forest/10 bg-cream hover:border-coral/40",
                       )}
                     >
                       <input
                         type="radio"
                         name="serviceRadio"
-                        className="mt-1 accent-burgundy"
+                        className="mt-1 accent-[#e89373]"
                         checked={active}
                         onChange={() => setSelectedServiceSlug(service.slug)}
                       />
@@ -2118,7 +2125,7 @@ function BookingForm({ services }: { services: Service[] }) {
                   <p className="text-sm font-bold text-ink/70">Dog size</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {selectedService.priceTiers.map((tier) => (
-                      <button key={tier.label} type="button" onClick={() => setSizeLabel(tier.label)} className={cx("rounded-full px-4 py-2 text-sm font-bold transition", sizeLabel === tier.label ? "bg-forest text-white" : "bg-sage text-ink hover:bg-peach/50")}>
+                      <button key={tier.label} type="button" onClick={() => setSizeLabel(tier.label)} className={cx("rounded-full px-4 py-2 text-sm font-bold transition", sizeLabel === tier.label ? "btn-gradient text-white shadow-md shadow-coral/25" : "bg-sage text-ink hover:bg-peach/50")}>
                         {tier.label} · {tier.priceLabel}
                       </button>
                     ))}
@@ -2199,6 +2206,9 @@ function BookingForm({ services }: { services: Service[] }) {
               <div className="rounded-[2rem] bg-sage/70 p-6">
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Checkout / Deposit</h3>
                 <p className="mt-3 leading-7 text-ink/70">Estimated total: <strong>{total === null ? selectedService?.priceLabel ?? "Quote on confirmation" : formatMoney(total)}</strong>{includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : ""}. Payments stay pending until confirmation.</p>
+                <div className="mt-4 rounded-[1.25rem] bg-white/70 p-4">
+                  <PaymentLogos light />
+                </div>
                 <Field label="Gift card code" name="giftCardCode" />
                 <Field label="Payment note" name="paymentNote" textarea />
               </div>
@@ -2504,7 +2514,6 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
 
 function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: Testimonial[]; full?: boolean; embedded?: boolean }) {
   const items = full ? testimonials : testimonials.slice(0, 3);
-  const [active, setActive] = useState(0);
   const directions = ["left", "up", "right"] as const;
   const published = items.filter((item) => item.status !== "draft");
   const list = published.length ? published : items;
@@ -2518,28 +2527,13 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {list.map((testimonial, index) => (
             <Reveal key={testimonial.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-              <article
-                className={cx(
-                  "h-full cursor-pointer rounded-[1.5rem] border bg-cream p-4 transition duration-300 sm:p-5",
-                  active === index ? "border-coral shadow-xl shadow-burgundy/10" : "border-forest/10 hover:border-coral/40",
-                )}
-                onClick={() => setActive(index)}
-              >
-                <Image className="h-40 w-full rounded-[1.15rem] object-cover" {...imageProps(testimonial.image)} alt={testimonial.image.alt} />
-                <p className="mt-4 text-sm text-coral">{"★".repeat(testimonial.rating)}</p>
+              <article className="h-full rounded-[1.5rem] border border-forest/10 bg-cream p-4 transition duration-300 hover:border-coral/40 sm:p-5">
+                <p className="text-sm text-coral">{"★".repeat(testimonial.rating)}</p>
                 <p className="mt-2 text-sm leading-6 text-ink/75">{`"${testimonial.quote}"`}</p>
                 <p className="mt-4 text-sm font-bold text-forest">{testimonial.reviewer}</p>
                 <p className="text-xs text-ink/55">{testimonial.petName} · {testimonial.service}</p>
               </article>
             </Reveal>
-          ))}
-        </div>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          {list.map((testimonial, index) => (
-            <label key={testimonial.slug} className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-forest/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition hover:border-coral/40">
-              <input type="radio" name="home-testimonial" checked={active === index} onChange={() => setActive(index)} className="accent-burgundy" />
-              {testimonial.petName}
-            </label>
           ))}
         </div>
       </div>
@@ -2558,8 +2552,7 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
           {list.map((testimonial, index) => (
             <Reveal key={testimonial.slug} from={directions[index % directions.length]} delay={index * 0.12}>
               <article className="h-full rounded-[1.75rem] border border-white/10 bg-gradient-to-b from-white/15 to-white/5 p-5 backdrop-blur transition duration-500 hover:-translate-y-2 hover:border-coral/40 hover:shadow-2xl hover:shadow-black/30 sm:p-6">
-                <Image className="h-44 w-full rounded-[1.25rem] object-cover sm:h-52" {...imageProps(testimonial.image)} alt={testimonial.image.alt} />
-                <p className="mt-5 text-gradient text-lg">{"★".repeat(testimonial.rating)}</p>
+                <p className="text-gradient text-lg">{"★".repeat(testimonial.rating)}</p>
                 <p className="mt-4 text-sm leading-7 text-white/80 sm:text-base sm:leading-8">{`"${testimonial.quote}"`}</p>
                 <p className="mt-5 font-bold">{testimonial.reviewer}</p>
                 <p className="text-sm text-white/60">{testimonial.petName} · {testimonial.service}</p>
@@ -2696,7 +2689,7 @@ function SunnyismSection() {
           </div>
         </Reveal>
         <Reveal from="right" delay={0.1}>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-peach sm:text-xs sm:tracking-[0.28em]">Trusted care</p>
+          <p className="text-xs font-semibold tracking-wide text-peach sm:text-sm">Trusted care</p>
           <h2 className="mt-3 font-serif text-[1.75rem] leading-[1.12] tracking-tight sm:text-3xl md:text-4xl">
             Meet Sunnyism.Pro <span className="text-gradient italic">#DogDad</span>
           </h2>
@@ -2856,7 +2849,7 @@ function SectionHeading({ eyebrow, title, align = "center", inverse }: { eyebrow
   return (
     <div className={cx(align === "center" && "mx-auto text-center", "max-w-4xl")}>
       {eyebrow ? (
-        <p className={cx("mb-3 inline-flex max-w-full flex-wrap items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] sm:mb-4 sm:gap-3 sm:text-sm sm:tracking-[0.34em]", inverse ? "text-peach" : "text-transparent bg-clip-text bg-gradient-to-r from-burgundy via-coral to-burgundy", align === "left" && "justify-start")}>
+        <p className={cx("mb-3 inline-flex max-w-full flex-wrap items-center justify-center gap-2 text-xs font-semibold tracking-wide sm:mb-4 sm:gap-3 sm:text-sm", inverse ? "text-peach" : "text-burgundy", align === "left" && "justify-start")}>
           <span className={cx("hidden h-px w-8 sm:block", inverse ? "bg-gradient-to-r from-transparent to-peach" : "bg-gradient-to-r from-transparent to-burgundy")} />
           {eyebrow}
           <span className={cx("hidden h-px w-8 sm:block", inverse ? "bg-gradient-to-l from-transparent to-peach" : "bg-gradient-to-l from-transparent to-burgundy")} />
@@ -2896,7 +2889,7 @@ function Button({ href, children, variant = "solid", className }: { href: string
 function InfoPill({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-2xl bg-white p-5 shadow-lg shadow-black/5">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-burgundy">{title}</p>
+      <p className="text-xs font-semibold tracking-wide text-burgundy">{title}</p>
       <p className="mt-2 text-ink/70">{value}</p>
     </div>
   );
@@ -2979,37 +2972,42 @@ function Footer({ services }: { services: Service[] }) {
       <div className="absolute inset-0 bg-gradient-to-t from-forest/70 via-transparent to-forest/35" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: "radial-gradient(circle at 18% 40%, #e89373 0.7px, transparent 1.1px)", backgroundSize: "42px 42px" }} />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
+      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-14 md:px-8 md:pb-8 md:pt-20">
         <div className="mb-10 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <p className="mb-4 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md sm:text-xs sm:tracking-[0.22em]">
-              DTdogs.ca · {brand.formerly}
-            </p>
-            <div className="flex items-center gap-3">
-              <span className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border border-white/30 bg-white/15 shadow-lg shadow-black/20 backdrop-blur-md">
-                <Image src={LOGO_SRC} alt="DTdogs.ca" width={40} height={40} className="h-10 w-10 object-contain" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <span className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border border-white/30 bg-white shadow-lg shadow-black/20 sm:h-24 sm:w-24">
+                <Image src={LOGO_SRC} alt="DTdogs.ca" width={88} height={88} className="h-[85%] w-[85%] object-contain" />
               </span>
               <div>
                 <p className="font-serif text-2xl leading-none sm:text-3xl">DTdogs.ca</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-peach sm:text-xs sm:tracking-[0.24em]">Hand &amp; Paw · GTA Pet Care</p>
+                <p className="mt-1 text-[11px] leading-snug text-white/65 sm:text-xs">{brand.formerlyShort}</p>
+                <p className="mt-1.5 text-xs font-medium tracking-wide text-peach">Hand &amp; Paw · GTA pet care</p>
               </div>
             </div>
             <p className="mt-5 max-w-md text-sm leading-7 text-white/85">
               {brand.tagline}
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {brand.lines.map((line) => (
+                <span key={line} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] text-white/85 backdrop-blur-md sm:text-xs">
+                  {line}
+                </span>
+              ))}
+            </div>
             <div className="mt-5 space-y-2 text-sm text-white/75">
               <p><span className="font-semibold text-peach">Hours:</span> {brand.hours}</p>
               <p><span className="font-semibold text-peach">Boarding:</span> {brand.boardingNote}</p>
               <p><span className="font-semibold text-peach">Payments:</span> {brand.payments}</p>
-              <p><span className="font-semibold text-peach">Area:</span> {brand.locations[0]}</p>
+              <p><span className="font-semibold text-peach">Area:</span> {brand.locations[0]} · Serving across GTA</p>
             </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               href="/booking"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-coral px-6 py-3 text-sm font-bold text-ink shadow-lg shadow-coral/30 transition hover:-translate-y-0.5 hover:bg-peach"
+              className="btn-gradient inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white shadow-lg shadow-coral/30 transition hover:-translate-y-0.5"
             >
-              Book Appointment <ArrowRight className="h-4 w-4" />
+              Book appointment <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href={`${brand.whatsapp}?text=${encodeURIComponent("Hi DTdogs.ca — I'd like to message about booking.")}`}
@@ -3026,6 +3024,7 @@ function Footer({ services }: { services: Service[] }) {
           <div className="sm:col-span-2 lg:col-span-1">
             <h3 className="font-serif text-2xl text-white sm:text-3xl">Stay connected</h3>
             <p className="mt-4 max-w-sm text-sm leading-7 text-white/75">{brand.hours}</p>
+            <p className="mt-2 max-w-sm text-sm leading-7 text-white/65">Operating all season across GTA · We are a team of #petpeople and #petparents.</p>
             <div className="mt-5 flex flex-wrap gap-2.5">
               <a href={`tel:${brand.phone}`} className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-sm text-white/90 backdrop-blur-md transition hover:border-peach/50 hover:text-peach">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-peach" /> <span className="truncate">{brand.phone}</span>
@@ -3039,16 +3038,46 @@ function Footer({ services }: { services: Service[] }) {
             </div>
           </div>
           <FooterColumn title="Services" links={serviceLinks} />
-          <FooterColumn title="Explore" links={[{ label: "About", href: "/about" }, { label: "Pricing", href: "/pricing" }, { label: "Gallery", href: "/gallery" }, { label: "Shop", href: "/shop" }, { label: "FAQ", href: "/faq" }, { label: "Journal", href: "/blog" }, { label: "Contact", href: "/contact" }]} />
+          <FooterColumn title="Explore" links={[{ label: "About", href: "/about" }, { label: "Our Vision", href: "/our-vision" }, { label: "Pricing", href: "/pricing" }, { label: "Gallery", href: "/gallery" }, { label: "Shop", href: "/shop" }, { label: "FAQ", href: "/faq" }, { label: "Journal", href: "/blog" }, { label: "Contact", href: "/contact" }]} />
           <FooterColumn title="Policies" links={[{ label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Cancellation", href: "/cancellation-policy" }, { label: "Admin", href: "/admin" }]} />
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} DTdogs.ca. Owned and managed by Sunnyism.Pro.</p>
-          <p className="text-white/50">Calm care for pets across the GTA.</p>
+          <p>© {new Date().getFullYear()} DTdogs.ca {brand.formerlyShort}. Owned and managed by Sunnyism.Pro.</p>
+          <p className="text-white/50">Serving across GTA · Calm care in every season.</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function PaymentLogos({ light = false }: { light?: boolean } = {}) {
+  const items = [
+    { label: "Visa", mark: "VISA" },
+    { label: "Mastercard", mark: "MC" },
+    { label: "Amex", mark: "AMEX" },
+    { label: "Interac", mark: "Interac" },
+    { label: "Bitcoin", mark: "₿" },
+    { label: "DTdogs Gift Card", mark: "Gift" },
+  ];
+  return (
+    <div className={cx(light ? "mt-2" : "mt-6")}>
+      <p className={cx("mb-3 text-xs font-semibold tracking-wide", light ? "text-burgundy" : "text-peach")}>We accept</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={item.label}
+            title={item.label}
+            className={cx(
+              "inline-flex h-9 min-w-[3.25rem] items-center justify-center rounded-lg px-2.5 text-[11px] font-bold tracking-wide shadow-sm",
+              light ? "border border-forest/15 bg-cream text-forest" : "border border-white/25 bg-white text-forest",
+            )}
+          >
+            {item.mark}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 

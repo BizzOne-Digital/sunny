@@ -6,7 +6,6 @@ import {
   Faq,
   PageContent,
   TeamMember,
-  Testimonial,
   blogPosts,
   faqs,
   getCollection,
@@ -14,9 +13,9 @@ import {
   getPricingPackages,
   getProducts,
   getServices,
+  getTestimonials,
   pages,
   team,
-  testimonials,
 } from "@/lib/site";
 
 export async function generateStaticParams() {
@@ -51,7 +50,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
     getServices(),
     slug === "pricing" ? getPricingPackages() : Promise.resolve([]),
     getCollection<Faq>("faqs", faqs),
-    getCollection<Testimonial>("testimonials", testimonials),
+    getTestimonials(),
     getCollection<BlogPost>("blog", blogPosts),
     getProducts(),
     getCollection<TeamMember>("team", team),
