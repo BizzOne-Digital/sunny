@@ -3,7 +3,8 @@ import { z } from "zod";
 import { connectMongo, Models } from "@/lib/site";
 
 const giftCardSchema = z.object({
-  denomination: z.enum(["CAD $50", "CAD $100"]),
+  denomination: z.literal("CAD $150"),
+  quantity: z.coerce.number().int().min(1).max(50),
   recipientName: z.string().min(2),
   recipientEmail: z.string().email(),
   senderName: z.string().min(2),

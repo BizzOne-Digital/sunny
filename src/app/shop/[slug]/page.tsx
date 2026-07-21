@@ -6,6 +6,8 @@ import { getProducts, products } from "@/lib/site";
 const productAliases: Record<string, string> = {
   "dog-mom-long-sleeve-shirt": "dog-mom-merch",
   "dog-dad-long-sleeve-shirt": "dog-dad-merch",
+  "gift-card-50": "gift-card-150",
+  "gift-card-100": "gift-card-150",
 };
 
 export async function generateStaticParams() {

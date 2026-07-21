@@ -53,7 +53,7 @@ const brand = {
   hours: "Monday–Sunday, 7:00 AM–9:00 PM",
   boardingNote: "Boarding available 24/7 according to city bylaws and confirmed booking arrangements.",
   formerly: "Handandpaw.ca and Handandpaw.in",
-  formerlyShort: "(Handandpaw.ca / Handandpaw.in)",
+  formerlyShort: "(formerly known as Handandpaw.ca / Handandpaw.in)",
   tagline: "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season.",
   whatsapp: "https://wa.me/14379375112",
   payments: "Pay online, in store, Interac, Amex, or with a DTdogs.ca gift card after confirmation.",
@@ -121,15 +121,14 @@ function treatImageUrl(order?: number) {
 }
 
 function localImageUrl(image: ImageAsset) {
-  if (image.page === "gallery") return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
+  if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   return localImageUrls[image.id] ?? image.url;
 }
 
 function productImages(product: Product) {
   const giftCardImages: Record<string, ImageAsset> = {
-    "gift-card-50": asset("gift-card-50-image", "DTdogs $50 gift card", "Premium DTdogs digital gift card product image for CAD $50", "/images/shop/gift50.png"),
-    "gift-card-100": asset("gift-card-100-image", "DTdogs $100 gift card", "Premium DTdogs digital gift card product image for CAD $100", "/images/shop/gift100.png"),
+    "gift-card-150": asset("gift-card-100-image", "DTdogs $150 gift card", "Premium DTdogs digital gift card product image for CAD $150", "/images/shop/gift100.png"),
   };
   const primary = giftCardImages[product.slug];
   return primary ? [primary, ...product.images.filter((image) => image.id !== primary.id)] : product.images;
@@ -237,21 +236,12 @@ const pageHeroImages: Record<string, ImageAsset> = {
 };
 
 const serviceHeroImages: Record<string, ImageAsset> = {
-  "bath-and-nails": asset("service-bath-and-nails-hero", "Bath and Nails", "Freshly washed dog receiving gentle spa and paw care", "/images/services/service-bath-and-nails.png"),
-  "full-haircut": asset("service-full-haircut-hero", "Full Haircut", "Perfectly styled dog after a premium full haircut", "/images/services/service-full-haircut.png"),
-  "bath-and-tidy": asset("service-bath-and-tidy-hero", "Bath and Tidy", "Dog receiving light maintenance grooming in a bright salon", "/images/services/service-bath-and-tidy.png"),
-  "meet-and-greet": asset("service-meet-and-greet-hero", "Meet and Greet", "Caregiver warmly meeting a curious dog for the first time", "/images/services/service-meet-and-greet.png"),
-  "dog-walking-1-hour": asset("service-dog-walking-1hr-hero", "One-hour Dog Walking", "Happy dog enjoying a structured golden-hour Toronto walk", "/images/services/service-dog-walking-1hr.png"),
-  "dog-walking-30-minutes": asset("service-dog-walking-30-hero", "Thirty-minute Dog Walking", "Small dog enjoying a focused neighbourhood walk", "/images/services/service-dog-walking-30.png"),
-  "house-sitting-one-night": asset("service-house-sitting-night-hero", "Overnight House Sitting", "Dog resting comfortably during cozy overnight in-home care", "/images/services/service-house-sitting-night.png"),
-  "house-sitting-full-day": asset("service-house-sitting-day-hero", "Full-day House Sitting", "Dog enjoying attentive daytime companionship at home", "/images/services/service-house-sitting-day.png"),
-  "house-sitting-half-day": asset("service-house-sitting-half-hero", "Half-day House Sitting", "Caregiver preparing a calm midday routine for a dog at home", "/images/services/service-house-sitting-half.png"),
-  "pet-visit": asset("service-pet-visit-hero", "Pet Visit", "Dog greeting a professional caregiver during an in-home visit", "/images/services/service-pet-visit.png"),
-  "guided-pet-excursion": asset("service-excursion-hero", "Guided Pet Excursion", "Adventure-ready dog exploring a scenic green park trail", "/images/services/service-excursion.png"),
-  "training-and-classes": asset("service-training-hero", "Training and Classes", "Calm dog participating in a modern positive training class", "/images/services/service-training.png"),
-  "dog-grooming": asset("service-dog-grooming-hero", "Dog Grooming", "Refined grooming tools and a beautifully groomed dog", "/images/services/service-dog-grooming.png"),
-  "dog-half-daycare": asset("service-half-daycare-hero", "Dog Half Daycare", "Dogs resting calmly in a bright supervised daycare room", "/images/services/service-half-daycare.png"),
-  "dog-boarding-one-night": asset("service-boarding-hero", "Dog Boarding", "Calm dog resting in a boutique-style overnight boarding suite", "/images/services/service-boarding.png"),
+  "dog-walking": asset("service-dog-walking-hero", "Dog Walking", "Dog being walked on a calm neighbourhood outing", "/images/services/service-dog-walking-1hr.png"),
+  grooming: asset("service-grooming-hero", "Grooming", "Professional grooming photo of a freshly styled dog", "/images/services/service-dog-grooming.png"),
+  daycare: asset("service-daycare-hero", "Daycare", "Dogs playing together in supervised daycare", "/images/services/service-half-daycare.png"),
+  boarding: asset("service-boarding-hero", "Boarding", "Comfortable resting dogs in calm overnight care", "/images/services/service-boarding.png"),
+  "nail-trim": asset("service-nail-trim-hero", "Nail Trim", "Gentle nail trimming image for tidy paws", "/images/services/service-bath-and-nails.png"),
+  "behaviour-training": asset("service-behaviour-training-hero", "Behaviour Training", "Training interaction between caregiver and dog", "/images/services/service-training.png"),
 };
 
 function servicePrimaryImage(service: Service) {
@@ -274,9 +264,9 @@ const homeSupportingImages = {
 
 const nav = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
+  { label: "Our Vision", href: "/our-vision" },
   { label: "Services", href: "/services" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Bundle", href: "/pricing" },
   { label: "Gallery", href: "/gallery" },
   { label: "Shop", href: "/shop" },
   { label: "Testimonials", href: "/testimonials" },
@@ -497,7 +487,7 @@ function BrandLogo({ inverted = false }: { inverted?: boolean }) {
           alt="DTdogs.ca"
           width={260}
           height={84}
-          className="h-14 w-auto object-contain sm:h-16 md:h-[4.5rem] lg:h-20"
+          className="h-[75px] w-auto object-contain"
           priority
         />
       ) : (
@@ -532,8 +522,9 @@ function Navigation({ services }: { services: Service[] }) {
       <div className="bg-forest text-[11px] text-white/90 sm:text-xs">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-x-3 gap-y-1 px-3 py-2 sm:px-4 md:px-6">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <a href={`tel:${brand.phone}`} className="inline-flex items-center gap-1.5 transition hover:text-peach">
-              <Phone className="h-3 w-3 shrink-0 text-peach" /> <span className="truncate">{brand.phone}</span>
+            <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 transition hover:text-peach">
+              <svg className="h-3 w-3 shrink-0 text-peach" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <span className="truncate">{brand.phone}</span>
             </a>
             <a href={`mailto:${brand.email}`} className="hidden items-center gap-1.5 transition hover:text-peach sm:inline-flex">
               <Mail className="h-3 w-3 text-peach" /> {brand.email}
@@ -547,8 +538,8 @@ function Navigation({ services }: { services: Service[] }) {
             <a href="https://instagram.com/dtdogs.ca" target="_blank" rel="noreferrer" aria-label="Instagram" className="transition hover:text-peach">
               <InstagramIcon className="h-3.5 w-3.5" />
             </a>
-            <a href="https://facebook.com/dtdogs.ca" target="_blank" rel="noreferrer" aria-label="Facebook" className="text-[11px] font-bold transition hover:text-peach">
-              f
+            <a href="https://google.com" target="_blank" rel="noreferrer" aria-label="Google" className="transition hover:text-peach">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
             </a>
             <span className="hidden text-white/80 min-[380px]:inline">@DTdogs.ca</span>
           </div>
@@ -567,15 +558,12 @@ function Navigation({ services }: { services: Service[] }) {
                     Services <ChevronDown className="h-3.5 w-3.5" />
                   </Link>
                   <div className="invisible absolute left-1/2 top-full z-50 max-h-[70vh] w-[min(24rem,90vw)] -translate-x-1/2 overflow-y-auto rounded-[1.75rem] border border-forest/5 bg-white p-3 opacity-0 shadow-2xl shadow-black/10 transition group-hover:visible group-hover:opacity-100">
-                    {services.slice(0, 12).map((service) => {
+                    {services.filter((service) => service.status !== "draft").map((service) => {
                       const thumb = servicePrimaryImage(service);
                       return (
-                      <Link key={service.slug} href={`/services/${service.slug}`} className="group/card flex gap-3 rounded-3xl p-3 transition hover:bg-burgundy/10">
-                        <Image className="h-16 w-20 rounded-2xl object-cover" {...imageProps(thumb, "80px")} alt={thumb.alt} />
-                        <span>
-                          <span className="block font-serif text-lg text-forest">{service.name}</span>
-                          <span className="line-clamp-2 text-xs leading-5 text-ink/60">{service.summary}</span>
-                        </span>
+                      <Link key={service.slug} href={`/services/${service.slug}`} className="group/card flex items-center gap-3 rounded-3xl p-3 transition hover:bg-burgundy/10">
+                        <Image className="h-16 w-16 shrink-0 rounded-2xl object-cover" {...imageProps(thumb, "64px")} alt={thumb.alt} />
+                        <span className="min-w-0 font-serif text-lg text-forest">{service.name}</span>
                       </Link>
                       );
                     })}
@@ -682,10 +670,10 @@ export function HomePage({ services, testimonials, products }: { services: Servi
     { label: "#petpeople & #petparents", icon: Users },
   ];
   const stats = [
-    { label: "Tons of happy pets and counting", value: "Tons", icon: PawPrint },
-    { label: "Hundreds of petparents and counting", value: "100s", icon: Users },
-    { label: "4+ years of serving across GTA and counting", value: "4+", icon: CalendarDays },
-    { label: "100% care with attentions", value: "100%", icon: ShieldCheck },
+    { label: "Happy Pets & Counting", value: "Happy Pets", icon: PawPrint },
+    { label: "Hundreds of petparents and counting", value: "Pet Parents", icon: Users },
+    { label: "4+ years of serving across GTA and counting", value: "Experience", icon: CalendarDays },
+    { label: "100% care with attentions", value: "Care & Attention", icon: ShieldCheck },
   ];
   const floatingPaws = [
     { top: "18%", left: "8%", size: "h-7 w-7", delay: 0, duration: 9 },
@@ -714,7 +702,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               alt="Friendly dog in a calm home-style care setting"
               fill
               priority
-              className="object-cover object-[88%_35%] md:object-[85%_32%]"
+              className="object-cover object-[88%_35%] md:object-[85%_30%]"
               sizes="100vw"
             />
           </div>
@@ -780,20 +768,12 @@ export function HomePage({ services, testimonials, products }: { services: Servi
                 Welcome to
               </motion.span>{" "}
               <motion.span
-                className="relative inline-block italic"
+                className="relative inline-block"
                 initial={reducedMotion ? false : { opacity: 0, x: -48, scale: 0.96 }}
                 animate={enter ? { opacity: 1, x: 0, scale: 1 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -48, scale: reducedMotion ? 1 : 0.96 }}
                 transition={{ duration: 1.05, delay: enter ? 0.32 : 0, ease }}
               >
-                <span className="text-gradient">DTdogs.ca</span>
-                <motion.span
-                  className="absolute -bottom-1 left-2"
-                  initial={reducedMotion ? false : { scale: 0, rotate: -30 }}
-                  animate={enter ? { scale: 1, rotate: 0 } : { scale: reducedMotion ? 1 : 0, rotate: reducedMotion ? 0 : -30 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 14, delay: enter ? 0.75 : 0 }}
-                >
-                  <Heart className="h-4 w-4 fill-white text-white sm:h-5 sm:w-5" />
-                </motion.span>
+                <span className="text-white">DT<span className="text-gradient">d</span>ogs.ca</span>
               </motion.span>
             </h1>
             <motion.p
@@ -802,7 +782,11 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               animate={enter ? { opacity: 1 } : { opacity: reducedMotion ? 1 : 0 }}
               transition={{ duration: 0.7, delay: enter ? 0.38 : 0 }}
             >
-              {brand.formerlyShort}
+              (Formerly Known As{" "}
+              <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.ca</a>
+              {" / "}
+              <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.in</a>
+              )
             </motion.p>
 
             <motion.p
@@ -811,7 +795,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -40 }}
               transition={{ duration: 0.9, delay: enter ? 0.42 : 0, ease }}
             >
-              {brand.tagline} {brand.lines[3]}.
+              Professional, structured pet care in Downtown Toronto, proudly serving the GTA year-round. We are team of #petpeople and #petparents.
             </motion.p>
 
             <motion.div
@@ -822,9 +806,9 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             >
               <Link
                 href="/booking"
-                className="btn-gradient animate-glow inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 sm:w-auto"
+                className="btn-gradient inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 sm:w-auto"
               >
-                Book a Meet & Greet <PawPrint className="h-4 w-4" />
+                Book Now <PawPrint className="h-4 w-4" />
               </Link>
               <Link
                 href="/services"
@@ -837,21 +821,6 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               </Link>
             </motion.div>
 
-            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/15 pt-6 sm:gap-x-8">
-              {trustItems.map((item, index) => (
-                <motion.div
-                  key={item.label}
-                  className="flex items-center gap-2 text-sm text-white/85"
-                  initial={reducedMotion ? false : { opacity: 0, x: -28 }}
-                  animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -28 }}
-                  transition={{ duration: 0.55, delay: enter ? 0.7 + index * 0.08 : 0, ease }}
-                  whileHover={reducedMotion ? undefined : { y: -3, color: "#f8d5c5" }}
-                >
-                  <item.icon className="h-4 w-4 text-peach" />
-                  <span className="font-medium">{item.label}</span>
-                </motion.div>
-              ))}
-            </div>
           </motion.div>
         </motion.div>
 
@@ -870,9 +839,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             <motion.div
               animate={enter && !reducedMotion ? { scale: [1, 1.12, 1] } : undefined}
               transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Heart className="mb-2 h-5 w-5 fill-coral text-coral" />
-            </motion.div>
+            />
             <p className="font-serif text-2xl text-forest lg:text-3xl">Since 2021</p>
             <p className="mt-1 text-xs leading-5 text-ink/60">Consistent, nurturing services for your pet&apos;s well-being.</p>
             <PawPrint className="mt-3 h-4 w-4 text-coral" />
@@ -914,7 +881,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             </div>
           </Reveal>
           <Reveal from="right" delay={0.1}>
-            <SectionHeading eyebrow="Our Vision" title="A safer, warmer rhythm for pets and their people." align="left" />
+            <SectionHeading eyebrow="Our Vision" title="Professional and structured pet care in Downtown Toronto, serving across the GTA in every season." align="left" />
             <p className="mt-5 max-w-3xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
               DTdogs.ca {brand.formerlyShort} offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you&apos;re away.
             </p>
@@ -958,6 +925,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
       <GalleryPreview images={[homeSupportingImages.gallery, ...homePage.galleryImages]} />
       <ShopPreview products={products} />
       <BrandMarquee dark />
+      <TestimonialsSlider testimonials={testimonials} />
       <BookingCTA image={homeSupportingImages.booking} />
     </PageEnter>
   );
@@ -997,18 +965,9 @@ export function StandardPage({
           <BookingForm services={services} />
         </Suspense>
       ) : null}
-      {page.slug === "team" ? <TeamGrid team={team} /> : null}
+      {page.slug === "team" || page.slug === "our-vision" ? <TeamGrid team={team} /> : null}
       {page.slug === "gift-cards" ? <GiftCardForm /> : null}
-      {page.slug === "shop" || page.slug === "gift-cards" ? (
-        <ProductGrid
-          products={
-            page.slug === "gift-cards"
-              ? products.filter((product) => product.slug.includes("gift-card"))
-              : products
-          }
-          merchLayout={page.slug === "shop"}
-        />
-      ) : null}
+      {page.slug === "shop" ? <ProductGrid products={products} merchLayout /> : null}
       {page.slug === "contact" ? <ContactPanel /> : null}
       {page.slug !== "pricing"
         ? page.blocks.map((block, index) => (
@@ -1018,6 +977,19 @@ export function StandardPage({
       {!["booking", "contact"].includes(page.slug) ? <BookingCTA /> : null}
     </PageEnter>
   );
+}
+
+function isHeroBookNowLabel(label: string) {
+  const normalized = label.trim().toLowerCase();
+  return normalized === "book now" || normalized === "book your pet";
+}
+
+function heroBookingHref(cta: { label: string; href: string }) {
+  return isHeroBookNowLabel(cta.label) ? "/booking" : cta.href;
+}
+
+function heroBookingLabel(cta: { label: string; href: string }) {
+  return isHeroBookNowLabel(cta.label) ? "Book Now" : cta.label;
 }
 
 function Hero({ page }: { page: PageContent }) {
@@ -1061,10 +1033,10 @@ function Hero({ page }: { page: PageContent }) {
       />
       <div
         className={cx(
-          "relative mx-auto grid max-w-7xl items-center gap-6 px-4 md:px-8 lg:grid-cols-[1fr_0.9fr]",
+          "relative mx-auto grid max-w-7xl items-start gap-6 px-4 md:px-8 lg:grid-cols-[1fr_0.9fr]",
           page.slug === "booking"
             ? "min-h-0 py-8 md:py-10"
-            : "min-h-[70svh] py-8 md:min-h-[78svh] md:py-10 lg:py-12",
+            : "min-h-[70svh] py-10 md:min-h-[78svh] md:py-14 lg:py-16",
         )}
       >
         <div>
@@ -1099,8 +1071,23 @@ function Hero({ page }: { page: PageContent }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.42, ease }}
           >
-            {page.hero.primaryCta ? <Button href={page.hero.primaryCta.href}>{page.hero.primaryCta.label}</Button> : null}
-            {page.hero.secondaryCta ? <Button href={page.hero.secondaryCta.href} variant="light">{page.hero.secondaryCta.label}</Button> : null}
+            {page.hero.primaryCta ? (
+              <Button
+                href={heroBookingHref(page.hero.primaryCta)}
+                arrow={page.hero.primaryCta.href.startsWith("#") ? "down" : "right"}
+              >
+                {heroBookingLabel(page.hero.primaryCta)}
+              </Button>
+            ) : null}
+            {page.hero.secondaryCta ? (
+              <Button
+                href={heroBookingHref(page.hero.secondaryCta)}
+                variant="light"
+                arrow={page.hero.secondaryCta.href.startsWith("#") ? "down" : "right"}
+              >
+                {heroBookingLabel(page.hero.secondaryCta)}
+              </Button>
+            ) : null}
           </motion.div>
         </div>
         {heroImages.length && page.slug !== "booking" ? (
@@ -1649,17 +1636,71 @@ function PricingGrid({ pricing }: { pricing: PricingPackage[] }) {
 function GalleryGrid({ images }: { images: ImageAsset[] }) {
   const [filter, setFilter] = useState("All");
   const [active, setActive] = useState<ImageAsset | null>(null);
-  const categories = ["All", ...Array.from(new Set(images.flatMap((image) => image.tags ?? []).filter(Boolean)))];
-  const visible = filter === "All" ? images : images.filter((image) => image.tags?.includes(filter));
+  const preferredOrder = [
+    "Hero",
+    "Care",
+    "Portrait",
+    "Dog Walking",
+    "Boarding",
+    "Daycare",
+    "Pet Visits",
+    "House Sitting",
+    "Chauffeur",
+    "Grooming",
+    "Nail Trimming",
+    "Training",
+    "Excursions",
+    "Team",
+    "Facility",
+    "Toronto",
+    "Trust",
+    "Testimonial",
+    "Product",
+    "Booking",
+    "Contact",
+    "Journal",
+    "Policy",
+    "Happy Clients",
+    "Behind The Scenes",
+    "Toronto Adventures",
+    "Seasonal",
+    "Apparel",
+  ];
+  const formatTag = (tag: string) =>
+    tag
+      .split(/[-_\s]+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ")
+      .replace(/\bThe\b/g, "The");
+  const discovered = Array.from(
+    new Set(images.flatMap((image) => (image.tags ?? []).map(formatTag)).filter(Boolean)),
+  );
+  // Keep only the curated gallery categories — skip noisy media tags like Brand/Story/Guides.
+  const categories = ["All", ...preferredOrder.filter((tag) => discovered.includes(tag))];
+  const visible =
+    filter === "All"
+      ? images
+      : images.filter((image) => (image.tags ?? []).map(formatTag).includes(filter));
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-      <div className="flex gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible">
-        {categories.map((category) => (
-          <button key={category} onClick={() => setFilter(category)} className={cx("shrink-0 rounded-full px-5 py-3 text-sm font-bold capitalize transition-all duration-300 hover:-translate-y-0.5", filter === category ? "bg-gradient-to-r from-forest to-burgundy text-white shadow-lg shadow-forest/25" : "bg-white text-ink hover:bg-sage")}>
-            {category.replace("-", " ")}
-          </button>
-        ))}
+      <div className="gallery-filter-flow rounded-[2rem] border border-white/50 px-4 py-6 sm:rounded-[2.5rem] sm:px-6 sm:py-7 md:px-8">
+        <div className="relative z-[1] flex flex-wrap justify-center gap-2 sm:gap-2.5">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setFilter(category)}
+              className={cx(
+                "shrink-0 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 sm:px-5 sm:py-2.5",
+                filter === category
+                  ? "bg-gradient-to-r from-forest to-burgundy text-white shadow-lg shadow-burgundy/25"
+                  : "border border-white/80 bg-white/90 text-ink backdrop-blur-md hover:bg-white hover:shadow-md",
+              )}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="mt-12 columns-1 gap-5 sm:columns-2 lg:columns-3">
         {visible.map((image, index) => (
@@ -1808,7 +1849,7 @@ function GroupedFaqPage({ faqs, images }: { faqs: Faq[]; images: ImageAsset[] })
         <p className="mx-auto mt-3 max-w-2xl leading-8 text-ink/65">Send us a note or start a booking request and the DTdogs team will help confirm the right next step.</p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Button href="/contact" variant="outline">Contact Us</Button>
-          <Button href="/booking">Start Booking</Button>
+          <Button href="/booking">Book Now</Button>
         </div>
       </div>
     </section>
@@ -2376,13 +2417,13 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
             <Reveal from="up">
               <SectionHeading eyebrow="Gift cards" title="Digital gifts for calm, professional pet care." />
             </Reveal>
-            <div className="mt-10 grid gap-6 md:grid-cols-2">
+            <div className="mx-auto mt-10 grid max-w-xl gap-6">
               {giftCards.map((product, index) => {
                 const primaryImage = productImages(product)[0];
                 return (
                   <Reveal key={product.slug} from={index % 2 === 0 ? "left" : "right"} delay={index * 0.1}>
                     <Link
-                      href={`/shop/${product.slug}`}
+                      href="/gift-cards#gift-card-form"
                       className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15"
                     >
                       <div className="relative overflow-hidden">
@@ -2401,6 +2442,7 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
                         <p className="mt-4 bg-gradient-to-r from-burgundy to-coral bg-clip-text font-bold text-transparent">
                           {product.priceLabel}
                         </p>
+                        <p className="mt-2 text-sm font-semibold text-forest/70">Buy multiple · digital delivery</p>
                       </div>
                     </Link>
                   </Reveal>
@@ -2447,6 +2489,9 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
 
 function GiftCardForm() {
   const [status, setStatus] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const unitPrice = 150;
+  const total = unitPrice * quantity;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2455,10 +2500,13 @@ function GiftCardForm() {
     const response = await fetch("/api/gift-cards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, denomination: "CAD $150", quantity }),
     });
     setStatus(response.ok ? "Gift card request saved. Payment is pending until checkout is configured." : "Unable to save gift card request.");
-    if (response.ok) event.currentTarget.reset();
+    if (response.ok) {
+      event.currentTarget.reset();
+      setQuantity(1);
+    }
   }
 
   return (
@@ -2467,11 +2515,37 @@ function GiftCardForm() {
       <form onSubmit={submit} className="grid gap-5 rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 md:grid-cols-2 md:p-8">
         <div className="md:col-span-2">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-burgundy">Gift Card Purchase</p>
-          <h2 className="mt-3 font-serif text-4xl text-forest sm:text-5xl">Choose $50 or $100 digital delivery.</h2>
-          <p className="mt-3 leading-8 text-ink/65">No fake payment success state is shown. Requests save as Payment Pending until payment credentials are configured.</p>
+          <h2 className="mt-3 font-serif text-4xl text-forest sm:text-5xl">CAD $150 digital gift cards — buy as many as you need.</h2>
+          <p className="mt-3 leading-8 text-ink/65">One price point only. Choose your quantity below. Requests save as Payment Pending until payment credentials are configured.</p>
         </div>
-        <Field label="Denomination" name="denomination" as="select" required options={["CAD $50", "CAD $100"]} />
+        <div className="rounded-2xl border border-forest/15 bg-cream p-4 md:col-span-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-ink/70">Denomination</p>
+              <p className="mt-1 font-serif text-3xl text-forest">CAD $150</p>
+              <p className="mt-1 text-sm text-ink/55">Fixed gift card value · digital delivery</p>
+            </div>
+            <label className="block text-sm font-bold text-ink/70">
+              Quantity
+              <input
+                name="quantity"
+                type="number"
+                min={1}
+                max={50}
+                required
+                value={quantity}
+                onChange={(event) => setQuantity(Math.max(1, Math.min(50, Number(event.target.value) || 1)))}
+                className="mt-2 w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-base outline-none ring-forest/20 transition focus:ring-4 sm:w-28"
+              />
+            </label>
+            <div className="sm:text-right">
+              <p className="text-sm font-bold text-ink/70">Estimated total</p>
+              <p className="mt-1 font-serif text-3xl font-bold text-burgundy">CAD ${total}</p>
+            </div>
+          </div>
+        </div>
         <Field label="Delivery date" name="deliveryDate" type="date" />
+        <div className="hidden md:block" />
         <Field label="Recipient name" name="recipientName" required />
         <Field label="Recipient email" name="recipientEmail" type="email" required />
         <Field label="Sender name" name="senderName" required />
@@ -2491,7 +2565,10 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
   const directions = ["left", "up", "right"] as const;
   return (
     <section id="team" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <Reveal from="up">
+        <SectionHeading eyebrow="Our Team" title="Experienced hands, calm energy, genuine care." />
+      </Reveal>
+      <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {team.map((member, index) => (
           <Reveal key={member.slug} from={directions[index % directions.length]} delay={index * 0.1}>
             <article className="group h-full rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:p-7">
@@ -2507,6 +2584,86 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
             </article>
           </Reveal>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSlider({ testimonials }: { testimonials: Testimonial[] }) {
+  const published = testimonials.filter((t) => t.status !== "draft" && !t.sample);
+  const items = published.length ? published : testimonials.slice(0, 6);
+  const [active, setActive] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion || items.length <= 1) return;
+    const timer = setInterval(() => setActive((prev) => (prev + 1) % items.length), 4500);
+    return () => clearInterval(timer);
+  }, [items.length, reducedMotion]);
+
+  return (
+    <section className="relative overflow-hidden bg-cream py-14 md:py-20">
+      <div className="animate-float pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-gradient-to-br from-coral/10 to-transparent blur-3xl" />
+      <div className="animate-float-delayed pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-gradient-to-tl from-burgundy/10 to-transparent blur-3xl" />
+      <div className="relative mx-auto max-w-7xl px-4 md:px-8">
+        <Reveal from="up">
+          <SectionHeading eyebrow="What pet parents say" title="Trusted by families across the GTA." />
+        </Reveal>
+
+        {/* Slider */}
+        <div className="relative mt-12 overflow-hidden">
+          <div
+            className="flex transition-transform duration-700 ease-[0.22,1,0.36,1]"
+            style={{ transform: `translateX(-${active * 100}%)` }}
+          >
+            {items.map((t) => (
+              <div key={t.slug} className="w-full shrink-0 px-2 sm:px-4">
+                <div className="mx-auto max-w-2xl rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5 sm:p-10">
+                  <p className="text-gradient text-xl">{"★".repeat(t.rating)}</p>
+                  <p className="mt-5 font-serif text-xl leading-relaxed text-ink sm:text-2xl">{`"${t.quote}"`}</p>
+                  <div className="mt-6 flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral to-burgundy text-sm font-bold text-white shadow-lg">
+                      {t.reviewer.charAt(0)}
+                    </span>
+                    <div>
+                      <p className="font-bold text-forest">{t.reviewer}</p>
+                      <p className="text-xs text-ink/55">{t.petName} · {t.service}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Dots */}
+          {items.length > 1 && (
+            <div className="mt-8 flex justify-center gap-2">
+              {items.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActive(i)}
+                  className={cx("h-2 rounded-full transition-all duration-300", i === active ? "w-8 bg-coral" : "w-2 bg-forest/25")}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Book Now CTA */}
+        <Reveal from="up" delay={0.1}>
+          <div className="mt-10 flex justify-center">
+            <Link
+              href="/booking"
+              className="btn-gradient group inline-flex items-center gap-2 rounded-full py-2 pl-6 pr-2 font-bold text-white shadow-lg transition hover:-translate-y-0.5"
+            >
+              Book Now
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-white text-burgundy transition group-hover:scale-110">
+                <PawPrint className="h-5 w-5" />
+              </span>
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -2546,7 +2703,7 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
       <div className="animate-float-delayed absolute -right-16 bottom-10 h-72 w-72 rounded-full bg-gradient-to-tl from-burgundy/30 to-transparent blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <Reveal from="up">
-          <SectionHeading eyebrow="Trusted care" title="Pet parents should feel the care before they book." inverse />
+          <SectionHeading eyebrow="Trusted care" title="We are a team of #petpeople and #petparents." inverse />
         </Reveal>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {list.map((testimonial, index) => (
@@ -2647,9 +2804,9 @@ function BrandMarquee({ dark }: { dark?: boolean }) {
 function ProcessSection() {
   const steps = [
     { title: "Choose Your Service", body: "Browse our services and select the care your pet needs." },
-    { title: "Pick a Date & Time", body: "Choose an available appointment slot that works for you and your provider." },
+    { title: "Pick a Date & Time", body: "Pick a date & time with your service provider and preferred location." },
     { title: "Confirm & Pay", body: "Secure your booking by completing the payment process online, in store or Interac." },
-    { title: "You're All Set!", body: "Receive your confirmation and prepare for your pet's visit. For any questions, changes, or cancellations, please reach out to us via WhatsApp or Email." },
+    { title: "You're All Set!", body: "Receive your confirmation and get ready for your pet's visit.", highlight: "Customers should expect text and email, either or both." },
   ];
   const directions = ["left", "up", "right", "down"] as const;
   return (
@@ -2668,6 +2825,7 @@ function ProcessSection() {
                 <span className="text-gradient font-serif text-4xl sm:text-5xl">0{index + 1}</span>
                 <h3 className="mt-4 font-serif text-xl text-forest sm:text-2xl">{step.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-ink/65">{step.body}</p>
+                {step.highlight && <p className="mt-2 text-sm font-black leading-6 text-gradient">{step.highlight}</p>}
               </div>
             </Reveal>
           ))}
@@ -2695,7 +2853,7 @@ function SunnyismSection() {
           </h2>
           <p className="mt-2 text-sm text-white/70">Thoughts, vision, and the journey ahead.</p>
           <p className="mt-5 max-w-xl text-sm leading-7 text-white/85 sm:text-base sm:leading-8">
-            DTdogs.ca grew from a simple idea: pets deserve calm, professional care with the warmth of home. From Downtown Toronto across the GTA, we keep routines clear, environments clean, and communication honest — so pet parents can leave with confidence.
+            At Hand &amp; Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you&apos;re away. Since 2021 we have built trust through consistent nurturing services for your pet&apos;s well-being in Greater Toronto area.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button href="/about">My Photo & Story</Button>
@@ -2722,15 +2880,15 @@ function BookingCTA({ image = homePage.storyImages[4] }: { image?: ImageAsset })
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
         >
-          <Sparkles className="h-8 w-8 text-white" />
+          <PawPrint className="h-8 w-8 text-white" />
         </motion.span>
         <Reveal from="up" delay={0.1}>
           <h2 className="font-serif text-[1.85rem] leading-tight tracking-tight sm:text-3xl md:text-4xl">
-            Ready to join the <span className="text-gradient italic">DTdogs clan</span>?
+            Ready to join the <span className="text-gradient italic">DTdogs.ca</span>?
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/80 sm:text-base sm:leading-8">Tell us about your pet and we will help you choose the right care experience.</p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href="/booking">Book a Meet & Greet</Button>
+            <Button href="/booking">Book Now</Button>
             <a href={`${brand.whatsapp}?text=${encodeURIComponent("Hi DTdogs.ca — I'd like to message about care.")}`} target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-3 font-bold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto">
               Message us
             </a>
@@ -2855,7 +3013,7 @@ function SectionHeading({ eyebrow, title, align = "center", inverse }: { eyebrow
           <span className={cx("hidden h-px w-8 sm:block", inverse ? "bg-gradient-to-l from-transparent to-peach" : "bg-gradient-to-l from-transparent to-burgundy")} />
         </p>
       ) : null}
-      <h2 className={cx("font-serif text-[1.65rem] leading-[1.12] tracking-tight sm:text-3xl md:text-4xl lg:text-5xl", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
+      <h2 className={cx("font-serif text-[1.5rem] leading-[1.12] tracking-tight sm:text-[1.75rem] md:text-[2rem] lg:text-[2.4rem]", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
       <motion.div
         className={cx("mt-5 h-1 rounded-full bg-gradient-to-r from-coral via-burgundy to-forest sm:mt-6", align === "center" ? "mx-auto w-20 sm:w-24" : "w-20 sm:w-24")}
         initial={{ scaleX: 0, opacity: 0 }}
@@ -2867,7 +3025,20 @@ function SectionHeading({ eyebrow, title, align = "center", inverse }: { eyebrow
   );
 }
 
-function Button({ href, children, variant = "solid", className }: { href: string; children: React.ReactNode; variant?: "solid" | "light" | "outline"; className?: string }) {
+function Button({
+  href,
+  children,
+  variant = "solid",
+  className,
+  arrow = "right",
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: "solid" | "light" | "outline";
+  className?: string;
+  arrow?: "right" | "down" | "none";
+}) {
+  const ArrowIcon = arrow === "down" ? ChevronDown : ArrowRight;
   return (
     <Link
       href={href}
@@ -2880,7 +3051,15 @@ function Button({ href, children, variant = "solid", className }: { href: string
       )}
     >
       <span className="relative z-10 inline-flex items-center gap-2">
-        {children} <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+        {children}
+        {arrow !== "none" ? (
+          <ArrowIcon
+            className={cx(
+              "h-4 w-4 transition-transform duration-300",
+              arrow === "down" ? "group-hover/btn:translate-y-0.5" : "group-hover/btn:translate-x-1",
+            )}
+          />
+        ) : null}
       </span>
     </Link>
   );
@@ -2954,8 +3133,7 @@ function Reveal({
 
 function Footer({ services }: { services: Service[] }) {
   const serviceLinks = services
-    .filter((service) => service.status !== "coming-soon")
-    .slice(0, 8)
+    .filter((service) => service.status !== "coming-soon" && service.status !== "draft")
     .map((service) => ({ label: service.name, href: `/services/${service.slug}` }));
 
   return (
@@ -2975,32 +3153,32 @@ function Footer({ services }: { services: Service[] }) {
       <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-14 md:px-8 md:pb-8 md:pt-20">
         <div className="mb-10 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <span className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border border-white/30 bg-white shadow-lg shadow-black/20 sm:h-24 sm:w-24">
-                <Image src={LOGO_SRC} alt="DTdogs.ca" width={88} height={88} className="h-[85%] w-[85%] object-contain" />
+            {/* Eyebrow */}
+            <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-peach">
+              <PawPrint className="h-3.5 w-3.5" /> Structured pet care · Downtown Toronto &amp; GTA
+            </p>
+            {/* Logo + Welcome heading */}
+            <div className="flex items-center gap-4">
+              <span className="relative grid h-24 w-24 shrink-0 place-items-center sm:h-28 sm:w-28">
+                <Image src={LOGO_SRC} alt="DTdogs.ca" width={112} height={112} className="h-full w-full object-contain" />
               </span>
               <div>
-                <p className="font-serif text-2xl leading-none sm:text-3xl">DTdogs.ca</p>
-                <p className="mt-1 text-[11px] leading-snug text-white/65 sm:text-xs">{brand.formerlyShort}</p>
-                <p className="mt-1.5 text-xs font-medium tracking-wide text-peach">Hand &amp; Paw · GTA pet care</p>
+                <p className="font-serif text-2xl leading-tight text-white sm:text-3xl">
+                  Welcome to DT<span className="text-gradient">d</span>ogs.ca
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                  (Formerly Known As{" "}
+                  <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.ca</a>
+                  {" / "}
+                  <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.in</a>
+                  )
+                </p>
               </div>
             </div>
+            {/* Description */}
             <p className="mt-5 max-w-md text-sm leading-7 text-white/85">
-              {brand.tagline}
+              Professional, structured pet care in Downtown Toronto, proudly serving the GTA year-round. We are a team of #petpeople and #petparents.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {brand.lines.map((line) => (
-                <span key={line} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] text-white/85 backdrop-blur-md sm:text-xs">
-                  {line}
-                </span>
-              ))}
-            </div>
-            <div className="mt-5 space-y-2 text-sm text-white/75">
-              <p><span className="font-semibold text-peach">Hours:</span> {brand.hours}</p>
-              <p><span className="font-semibold text-peach">Boarding:</span> {brand.boardingNote}</p>
-              <p><span className="font-semibold text-peach">Payments:</span> {brand.payments}</p>
-              <p><span className="font-semibold text-peach">Area:</span> {brand.locations[0]} · Serving across GTA</p>
-            </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
@@ -3020,14 +3198,80 @@ function Footer({ services }: { services: Service[] }) {
           </div>
         </div>
 
+        {/* Info strip */}
+        <div className="mt-10 grid gap-6 rounded-[1.75rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:p-5">
+          {/* Business Hours */}
+          <div>
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
+              <Clock className="h-3.5 w-3.5" /> Business Hours
+            </p>
+            <p className="text-sm text-white/85">Monday – Sunday</p>
+            <p className="text-sm font-semibold text-white">7:00 AM – 9:00 PM</p>
+            <p className="mt-2 text-xs text-white/60">{brand.boardingNote}</p>
+          </div>
+
+          {/* Payments */}
+          <div>
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
+              <ShieldCheck className="h-3.5 w-3.5" /> Payments
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {["VISA", "Mastercard", "Amex", "Interac", "Gift Card"].map((m) => (
+                <span key={m} className="rounded-md border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/85">{m}</span>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-white/55">Pay online, in store, or after confirmation.</p>
+          </div>
+
+          {/* Contact & Social */}
+          <div>
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
+              <Mail className="h-3.5 w-3.5" /> Contact & Social
+            </p>
+            <div className="flex flex-col gap-2">
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm text-white/85 transition hover:text-peach">
+                <svg className="h-4 w-4 shrink-0 text-peach" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </a>
+              <a href={`mailto:${brand.email}`} className="inline-flex items-center gap-2 text-sm text-white/85 transition hover:text-peach">
+                <Mail className="h-4 w-4 shrink-0 text-peach" /> {brand.email}
+              </a>
+              <div className="mt-1 flex gap-3">
+                <a href="https://instagram.com/dtdogs.ca" target="_blank" rel="noreferrer" aria-label="Instagram" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 transition hover:border-peach/50 hover:text-peach">
+                  <InstagramIcon className="h-4 w-4" />
+                </a>
+                <a href="https://google.com" target="_blank" rel="noreferrer" aria-label="Google" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 transition hover:border-peach/50 hover:text-peach">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
+              <MapPin className="h-3.5 w-3.5" /> Base Location
+            </p>
+            <p className="text-sm text-white/85">218 Queen Street East</p>
+            <p className="text-sm text-white/85">Toronto, M5A 1S3</p>
+            <a
+              href="https://www.google.com/maps/place/218+Queen+St+E,+Toronto,+ON+M5A+1S3"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-peach"
+            >
+              <MapPin className="h-3 w-3" /> View on Google Maps
+            </a>
+          </div>
+        </div>
+
         <div className="grid gap-10 border-t border-white/15 pt-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="font-serif text-2xl text-white sm:text-3xl">Stay connected</h3>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-white/75">{brand.hours}</p>
-            <p className="mt-2 max-w-sm text-sm leading-7 text-white/65">Operating all season across GTA · We are a team of #petpeople and #petparents.</p>
+            <h3 className="font-serif text-2xl text-white sm:text-3xl">Contact Us</h3>
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <a href={`tel:${brand.phone}`} className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-sm text-white/90 backdrop-blur-md transition hover:border-peach/50 hover:text-peach">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-peach" /> <span className="truncate">{brand.phone}</span>
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-sm text-white/90 backdrop-blur-md transition hover:border-peach/50 hover:text-peach">
+                <svg className="h-3.5 w-3.5 shrink-0 text-peach" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                <span className="truncate">{brand.phone}</span>
               </a>
               <a href={`mailto:${brand.email}`} className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-sm text-white/90 backdrop-blur-md transition hover:border-peach/50 hover:text-peach">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-peach" /> <span className="truncate">{brand.email}</span>
@@ -3038,13 +3282,14 @@ function Footer({ services }: { services: Service[] }) {
             </div>
           </div>
           <FooterColumn title="Services" links={serviceLinks} />
-          <FooterColumn title="Explore" links={[{ label: "About", href: "/about" }, { label: "Our Vision", href: "/our-vision" }, { label: "Pricing", href: "/pricing" }, { label: "Gallery", href: "/gallery" }, { label: "Shop", href: "/shop" }, { label: "FAQ", href: "/faq" }, { label: "Journal", href: "/blog" }, { label: "Contact", href: "/contact" }]} />
-          <FooterColumn title="Policies" links={[{ label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Cancellation", href: "/cancellation-policy" }, { label: "Admin", href: "/admin" }]} />
+          <FooterColumn title="Explore" links={[{ label: "Our Vision", href: "/our-vision" }, { label: "Bundle", href: "/pricing" }, { label: "Gallery", href: "/gallery" }, { label: "Shop", href: "/shop" }, { label: "FAQ", href: "/faq" }, { label: "Blogs", href: "/blog" }, { label: "Contact", href: "/contact" }]} />
+          <FooterColumn title="Policy and Community" links={[{ label: "Policy", href: "/policy" }]} footer="#PetPeople" />
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-sm text-white/65 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} DTdogs.ca {brand.formerlyShort}. Owned and managed by Sunnyism.Pro.</p>
-          <p className="text-white/50">Serving across GTA · Calm care in every season.</p>
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} DTdogs.ca. All rights reserved.</p>
+          <p>Owned and managed by <a href="https://sunnyism.pro/" target="_blank" rel="noreferrer" className="text-white/70 transition hover:text-peach">Sunnyism.Pro</a>.</p>
+          <p>Designed and Developed by <a href="https://bizzonedigital.com" target="_blank" rel="noreferrer" className="text-white/70 transition hover:text-peach">BizzOne Digital</a>.</p>
         </div>
       </div>
     </footer>
@@ -3081,21 +3326,40 @@ function PaymentLogos({ light = false }: { light?: boolean } = {}) {
   );
 }
 
-function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+function FooterColumn({
+  title,
+  links,
+  subtitle,
+  footer,
+}: {
+  title: string;
+  links: { label: string; href: string; comingSoon?: boolean }[];
+  subtitle?: string;
+  footer?: string;
+}) {
   return (
     <div>
       <h3 className="font-serif text-2xl text-white sm:text-3xl">{title}</h3>
+      {subtitle && <p className="mt-1 text-xs font-semibold tracking-wide text-peach">{subtitle}</p>}
       <div className="mt-5 grid gap-2.5">
-        {links.map((link) => (
-          <Link
-            key={`${link.href}-${link.label}`}
-            href={link.href}
-            className="w-fit text-sm text-white/75 transition-all duration-300 hover:translate-x-1 hover:text-peach"
-          >
-            {link.label}
-          </Link>
-        ))}
+        {links.map((link) =>
+          link.comingSoon ? (
+            <span key={`${link.href}-${link.label}`} className="w-fit text-sm text-white/75">
+              {link.label}
+              <span className="mt-0.5 block text-[11px] font-medium tracking-wide text-peach/90">Community / client login coming soon</span>
+            </span>
+          ) : (
+            <Link
+              key={`${link.href}-${link.label}`}
+              href={link.href}
+              className="w-fit text-sm text-white/75 transition-all duration-300 hover:translate-x-1 hover:text-peach"
+            >
+              {link.label}
+            </Link>
+          ),
+        )}
       </div>
+      {footer && <p className="mt-4 text-xs font-semibold tracking-wide text-peach">{footer}</p>}
     </div>
   );
 }

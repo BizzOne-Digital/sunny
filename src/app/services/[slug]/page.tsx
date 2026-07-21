@@ -1,22 +1,32 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ServiceDetail } from "@/components/site";
 import { getService, getServices, services } from "@/lib/site";
 
 const serviceAliases: Record<string, string> = {
-  "dog-walking": "dog-walking-1-hour",
-  "pet-visits": "pet-visit",
-  "house-sitting": "house-sitting-one-night",
-  daycare: "dog-half-daycare",
-  "dog-daycare": "dog-half-daycare",
-  boarding: "dog-boarding-one-night",
-  "dog-boarding": "dog-boarding-one-night",
-  grooming: "dog-grooming",
-  "dog-grooming": "dog-grooming",
-  "nail-trimming": "bath-and-nails",
-  training: "training-and-classes",
-  "guided-excursions": "guided-pet-excursion",
-  "pet-chauffeur": "meet-and-greet",
+  "dog-walking-1-hour": "dog-walking",
+  "dog-walking-30-minutes": "dog-walking",
+  "dog-grooming": "grooming",
+  "bath-and-nails": "nail-trim",
+  "bath-and-tidy": "grooming",
+  "full-haircut": "grooming",
+  "nail-trimming": "nail-trim",
+  "dog-half-daycare": "daycare",
+  "dog-daycare": "daycare",
+  "dog-boarding-one-night": "boarding",
+  "dog-boarding": "boarding",
+  "training-and-classes": "behaviour-training",
+  training: "behaviour-training",
+  "meet-and-greet": "dog-walking",
+  "pet-visit": "dog-walking",
+  "pet-visits": "dog-walking",
+  "house-sitting": "boarding",
+  "house-sitting-one-night": "boarding",
+  "house-sitting-full-day": "boarding",
+  "house-sitting-half-day": "boarding",
+  "guided-pet-excursion": "dog-walking",
+  "guided-excursions": "dog-walking",
+  "pet-chauffeur": "dog-walking",
 };
 
 function normalizeServiceSlug(slug: string) {
@@ -34,10 +44,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: `${service.name} | Premium Pet Care GTA`,
-    description: service.summary,
+    description: service.description,
     openGraph: {
       title: `${service.name} by DTdogs.ca`,
-      description: service.summary,
+      description: service.description,
       images: service.images[0]?.url ? [service.images[0].url] : undefined,
     },
   };
@@ -45,7 +55,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = await getService(normalizeServiceSlug(slug));
+  const resolved = normalizeServiceSlug(slug);
+  if (serviceAliases[slug]) redirect(`/services/${resolved}`);
+
+  const service = await getService(resolved);
   if (!service) notFound();
 
   const allServices = await getServices();
