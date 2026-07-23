@@ -242,6 +242,7 @@ const serviceHeroImages: Record<string, ImageAsset> = {
   boarding: asset("service-boarding-hero", "Boarding", "Comfortable resting dogs in calm overnight care", "/images/services/service-boarding.png"),
   "nail-trim": asset("service-nail-trim-hero", "Nail Trim", "Gentle nail trimming image for tidy paws", "/images/services/service-bath-and-nails.png"),
   "behaviour-training": asset("service-behaviour-training-hero", "Behaviour Training", "Training interaction between caregiver and dog", "/images/services/service-training.png"),
+  "pet-dental-cleaning": asset("service-pet-dental-cleaning-hero", "Pet Dental Cleaning", "Professional pet dental care and teeth brushing", "/images/services/pet-cleaning.png"),
 };
 
 function servicePrimaryImage(service: Service) {
@@ -915,17 +916,15 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             <ImageCollage images={[homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story]} />
           </Reveal>
         </div>
-        <div className="mx-auto mt-10 max-w-7xl px-4 md:mt-12 md:px-8">
-          <TestimonialsPreview testimonials={testimonials} embedded />
-        </div>
       </section>
+
+      <ReviewImageSlider />
 
       <ProcessSection />
       <SunnyismSection />
       <GalleryPreview images={[homeSupportingImages.gallery, ...homePage.galleryImages]} />
       <ShopPreview products={products} />
       <BrandMarquee dark />
-      <TestimonialsSlider testimonials={testimonials} />
       <BookingCTA image={homeSupportingImages.booking} />
     </PageEnter>
   );
@@ -957,7 +956,7 @@ export function StandardPage({
       {page.slug === "pricing" ? <PricingGrid pricing={pricing} /> : null}
       {page.slug === "gallery" ? <GalleryGrid images={page.blocks[0]?.images ?? []} /> : null}
       {page.slug === "treats" ? <TreatsGallery images={page.blocks[0]?.images ?? []} /> : null}
-      {page.slug === "testimonials" ? <TestimonialsPreview testimonials={testimonials} full /> : null}
+      {page.slug === "testimonials" ? <ReviewImageSlider /> : null}
       {page.slug === "faq" ? <GroupedFaqPage faqs={faqs} images={page.hero.images} /> : null}
       {page.slug === "blog" ? <BlogGrid posts={blogPosts} /> : null}
       {page.slug === "booking" ? (
@@ -1090,7 +1089,7 @@ function Hero({ page }: { page: PageContent }) {
             ) : null}
           </motion.div>
         </div>
-        {heroImages.length && page.slug !== "booking" ? (
+        {legacyHeroImages.length > 0 && page.slug !== "booking" ? (
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, x: 72, y: 24 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
@@ -1278,10 +1277,10 @@ export function ServiceDetail({ service, related }: { service: Service; related:
             <Reveal from="up">
               <SectionHeading eyebrow="Pricing by size" title="Transparent rates for every dog size." />
             </Reveal>
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-5">
+            <div className="mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
               {service.priceTiers.map((tier, index) => (
                 <Reveal key={tier.label} from={directions[index % directions.length]} delay={index * 0.08}>
-                  <div className="rounded-[1.25rem] border border-forest/10 bg-cream p-4 text-center shadow-lg shadow-black/5 sm:rounded-[1.5rem] sm:p-5">
+                  <div className="w-[calc(50%-0.375rem)] rounded-[1.25rem] border border-forest/10 bg-cream p-4 text-center shadow-lg shadow-black/5 sm:w-auto sm:min-w-[200px] sm:rounded-[1.5rem] sm:p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-burgundy sm:text-xs sm:tracking-[0.18em]">{tier.label}</p>
                     <p className="mt-2 font-serif text-2xl text-forest sm:mt-3 sm:text-4xl">{tier.priceLabel}</p>
                   </div>
@@ -1324,22 +1323,23 @@ export function ServiceDetail({ service, related }: { service: Service; related:
               </Reveal>
             ))}
           </div>
-          <ImageRibbon images={heroImages} />
         </div>
       </section>
       <FaqList faqs={service.faqs.map((faq, index) => ({ slug: `${service.slug}-${index}`, category: service.name, ...faq }))} />
-      <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-        <Reveal from="up">
-          <SectionHeading eyebrow="Related services" title="Care that pairs well with this service." />
-        </Reveal>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {related.map((item, index) => (
-            <Reveal key={item.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-              <ServiceCard service={item} />
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {related && related.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
+          <Reveal from="up">
+            <SectionHeading eyebrow="Related services" title="Care that pairs well with this service." />
+          </Reveal>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {related.map((item, index) => (
+              <Reveal key={item.slug} from={directions[index % directions.length]} delay={index * 0.1}>
+                <ServiceCard service={item} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
       {!comingSoon ? <BookingCTA image={heroImages[0]} /> : null}
     </PageEnter>
   );
@@ -2567,6 +2567,9 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
     <section id="team" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <Reveal from="up">
         <SectionHeading eyebrow="Our Team" title="Experienced hands, calm energy, genuine care." />
+        <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+          Meet our trusted partners in pet care across the GTA — professionals who bring genuine care and expertise to every interaction.
+        </p>
       </Reveal>
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {team.map((member, index) => (
@@ -2580,10 +2583,113 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
                 <div className="mt-5 flex flex-wrap gap-2">
                   {member.credentials.map((credential) => <span key={credential} className="rounded-full bg-sage px-3 py-1 text-xs">{credential}</span>)}
                 </div>
+                {member.instagram ? (
+                  <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
+                    @{member.instagram.split('/').filter(Boolean).pop()}
+                  </a>
+                ) : null}
               </div>
             </article>
           </Reveal>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function ReviewImageSlider() {
+  const total = 22;
+  const images = Array.from({ length: total }, (_, i) => `/images/reviews/${i + 1}.png`);
+  const [current, setCurrent] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const timer = setInterval(() => setCurrent((prev) => (prev + 1) % total), 3500);
+    return () => clearInterval(timer);
+  }, [reducedMotion]);
+
+  const prev = () => setCurrent((c) => (c - 1 + total) % total);
+  const next = () => setCurrent((c) => (c + 1) % total);
+
+  return (
+    <section className="relative overflow-hidden bg-cream py-14 md:py-20">
+      <div className="animate-float pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-gradient-to-br from-coral/10 to-transparent blur-3xl" />
+      <div className="animate-float-delayed pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-gradient-to-tl from-burgundy/10 to-transparent blur-3xl" />
+      <div className="relative mx-auto max-w-4xl px-4 md:px-8">
+        <Reveal from="up">
+          <SectionHeading eyebrow="Trusted care" title="We are a team of #petpeople and #petparents." />
+        </Reveal>
+
+        <div className="relative mt-12">
+          {/* Slides */}
+          <div className="overflow-hidden rounded-[2rem] shadow-2xl shadow-black/10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Image
+                  src={images[current]}
+                  alt={`Client review ${current + 1}`}
+                  width={900}
+                  height={600}
+                  className="w-full object-contain"
+                  priority={current === 0}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Prev / Next arrows */}
+          <button
+            onClick={prev}
+            className="absolute -left-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white shadow-lg transition hover:bg-sage sm:-left-6"
+            aria-label="Previous review"
+          >
+            <ChevronDown className="h-5 w-5 rotate-90 text-forest" />
+          </button>
+          <button
+            onClick={next}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white shadow-lg transition hover:bg-sage sm:-right-6"
+            aria-label="Next review"
+          >
+            <ChevronDown className="h-5 w-5 -rotate-90 text-forest" />
+          </button>
+        </div>
+
+        {/* Dots */}
+        <div className="mt-6 flex flex-wrap justify-center gap-1.5">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={cx("h-2 rounded-full transition-all duration-300", i === current ? "w-6 bg-coral" : "w-2 bg-forest/20")}
+              aria-label={`Go to review ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Counter */}
+        <p className="mt-3 text-center text-xs text-ink/45">{current + 1} / {total}</p>
+
+        {/* Book Now CTA */}
+        <Reveal from="up" delay={0.1}>
+          <div className="mt-8 flex justify-center">
+            <Link
+              href="/services/meet-and-greet"
+              className="btn-gradient group inline-flex items-center gap-2 rounded-full py-2 pl-6 pr-2 font-bold text-white shadow-lg transition hover:-translate-y-0.5"
+            >
+              Book Now
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-white text-burgundy transition group-hover:scale-110">
+                <PawPrint className="h-5 w-5" />
+              </span>
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -2995,7 +3101,6 @@ function ImageRibbon({ images }: { images: ImageAsset[] }) {
             <div className="overflow-hidden">
               <Image className="h-52 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-72" {...imageProps(image, "320px")} alt={image.alt} loading="lazy" />
             </div>
-            <figcaption className="p-3.5 text-sm text-ink/65 sm:p-4">{image.caption ?? image.title}</figcaption>
           </figure>
         </Reveal>
       ))}

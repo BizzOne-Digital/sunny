@@ -9,10 +9,12 @@ import {
   blogPosts,
   faqs,
   getCollection,
+  getFaqs,
   getPage,
   getPricingPackages,
   getProducts,
   getServices,
+  getTeamMembers,
   getTestimonials,
   pages,
   team,
@@ -49,11 +51,11 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers] = await Promise.all([
     getServices(),
     slug === "pricing" ? getPricingPackages() : Promise.resolve([]),
-    getCollection<Faq>("faqs", faqs),
+    getFaqs(),
     getTestimonials(),
     getCollection<BlogPost>("blog", blogPosts),
     getProducts(),
-    getCollection<TeamMember>("team", team),
+    getTeamMembers(),
   ]);
 
   return (
