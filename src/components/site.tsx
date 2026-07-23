@@ -2961,8 +2961,7 @@ function SunnyismSection() {
           <p className="mt-5 max-w-xl text-sm leading-7 text-white/85 sm:text-base sm:leading-8">
             At Hand &amp; Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you&apos;re away. Since 2021 we have built trust through consistent nurturing services for your pet&apos;s well-being in Greater Toronto area.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button href="/about">My Photo & Story</Button>
+          <div className="mt-7">
             <Button href="/our-vision" variant="light">Our Vision</Button>
           </div>
         </Reveal>
