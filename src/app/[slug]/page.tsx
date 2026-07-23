@@ -16,6 +16,7 @@ import {
   getServices,
   getTeamMembers,
   getTestimonials,
+  getTreatImages,
   pages,
   team,
 } from "@/lib/site";
@@ -48,7 +49,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   if (!page) notFound();
 
   // Keep CMS/seed page content as-is; only pricing packages use the confirmed package list.
-  const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers] = await Promise.all([
+  const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers, treatImages] = await Promise.all([
     getServices(),
     slug === "pricing" ? getPricingPackages() : Promise.resolve([]),
     getFaqs(),
@@ -56,6 +57,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
     getCollection<BlogPost>("blog", blogPosts),
     getProducts(),
     getTeamMembers(),
+    slug === "treats" ? getTreatImages() : Promise.resolve([]),
   ]);
 
   return (
@@ -68,6 +70,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
       blogPosts={posts}
       products={shopProducts}
       team={teamMembers}
+      treatImages={treatImages}
     />
   );
 }

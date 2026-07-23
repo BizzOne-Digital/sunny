@@ -84,7 +84,7 @@ const localImageUrls: Record<string, string> = {
   training: "/images/services/servicestraining.webp",
   excursion: "/images/services/servicesexcursion.webp",
   "about-founder": "/images/about/about-founder.webp",
-  "about-1": "/images/about/about-1.png",
+  "about-1": "/images/about/about-1.jpg",
   "about-2": "/images/about/about-2.png",
   "about-3": "/images/about/about-3.png",
   "structured-routines-card": "/images/about/Structured-Routines-Card.jpg",
@@ -174,7 +174,7 @@ const homePage = {
 };
 
 const aboutStoryImages = [
-  asset("about-1", "Founder care portrait", "Pet-care professional sitting with a happy dog in a bright care space", "/images/about/about-1.png"),
+  asset("about-1", "Founder care portrait", "Pet-care professional sitting with a happy dog in a bright care space", "/images/about/about-1.jpg"),
   asset("about-2", "Clean care environment", "Bright clean dog-care environment with calm dogs resting", "/images/about/about-2.png"),
   asset("about-3", "Toronto pet lifestyle", "Dog handler walking a happy dog through a leafy neighbourhood", "/images/about/about-3.png"),
 ];
@@ -939,6 +939,7 @@ export function StandardPage({
   blogPosts,
   products,
   team,
+  treatImages = [],
 }: {
   page: PageContent;
   services: Service[];
@@ -948,6 +949,7 @@ export function StandardPage({
   blogPosts: BlogPost[];
   products: Product[];
   team: TeamMember[];
+  treatImages?: ImageAsset[];
 }) {
   return (
     <PageEnter pageKey={page.slug}>
@@ -955,7 +957,7 @@ export function StandardPage({
       {page.slug === "services" ? <ServiceGrid services={services} /> : null}
       {page.slug === "pricing" ? <PricingGrid pricing={pricing} /> : null}
       {page.slug === "gallery" ? <GalleryGrid images={page.blocks[0]?.images ?? []} /> : null}
-      {page.slug === "treats" ? <TreatsGallery images={page.blocks[0]?.images ?? []} /> : null}
+      {page.slug === "treats" ? <TreatsGallery images={treatImages.length ? treatImages : page.blocks[0]?.images ?? []} /> : null}
       {page.slug === "testimonials" ? <ReviewImageSlider /> : null}
       {page.slug === "faq" ? <GroupedFaqPage faqs={faqs} images={page.hero.images} /> : null}
       {page.slug === "blog" ? <BlogGrid posts={blogPosts} /> : null}
@@ -1750,8 +1752,7 @@ function TreatsGallery({ images }: { images: ImageAsset[] }) {
           <p className="mt-5 leading-8 text-ink/65">
             Upload treat photography in the Media Library, assign it to the Treats page, and use captions for flavour, ingredients or availability notes.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button href="/admin/media" variant="outline">Manage Images</Button>
+          <div className="mt-7">
             <Button href="/contact">Ask About Treats</Button>
           </div>
         </div>

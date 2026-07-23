@@ -884,37 +884,43 @@ export const galleryImages: ImageAsset[] = [
 
 export const treatImages: ImageAsset[] = [
   {
-    ...img("policy-care"),
-    id: "treats-flat-lay",
-    title: "Treats flat lay placeholder",
-    alt: "Premium dog treats arranged on a warm cream surface",
-    caption: "Replace with approved DTdogs treat photography.",
-    url: "/images/treats/treat-large.jpg",
+    id: "treat-1",
+    title: "Dog Treats",
+    alt: "Premium dog treats",
+    caption: "",
+    url: "/images/treats/treat-1.JPG",
+    width: 800,
+    height: 600,
     page: "treats",
     tags: ["Treats", "Product"],
     order: 1,
+    status: "published",
   },
   {
-    ...img("floating-pup"),
-    id: "happy-dog-treat",
-    title: "Happy dog treat moment",
-    alt: "Happy dog enjoying a treat moment in warm natural light",
-    caption: "Use this slot for a dog enjoying one of the treats.",
-    url: "/images/treats/treat-topright.jpg",
+    id: "treat-2",
+    title: "Dog Treats",
+    alt: "Dog treats",
+    caption: "",
+    url: "/images/treats/treat-2.JPG",
+    width: 800,
+    height: 600,
     page: "treats",
     tags: ["Treats", "Happy Clients"],
     order: 2,
+    status: "published",
   },
   {
-    ...img("shop-mom"),
-    id: "packaged-treat-slot",
-    title: "Packaged treat placeholder",
-    alt: "Editable product photography slot for packaged dog treats",
-    caption: "Upload packaging or product shots here once available.",
-    url: "/images/treats/treat-bottomright.jpg",
+    id: "treat-3",
+    title: "Dog Treats",
+    alt: "Packaged dog treats",
+    caption: "",
+    url: "/images/treats/treat-3.JPG",
+    width: 800,
+    height: 600,
     page: "treats",
     tags: ["Treats", "Product"],
     order: 3,
+    status: "published",
   },
 ];
 
@@ -1470,7 +1476,7 @@ export const pages: PageContent[] = [
     seoTitle: "Dog Treats | DTdogs.ca",
     metaDescription: "A warm editorial gallery for DTdogs dog treats, product details and treat photography.",
     hero: {
-      eyebrow: "Treats for the DTdogs clan",
+      eyebrow: "Treats for the Dogs",
       title: "A curated treat gallery for happy dogs.",
       body: "This page is ready for your treat photos, captions, ingredients, availability notes and product imagery.",
       primaryCta: { label: "Ask About Treats", href: "/contact" },
@@ -1568,9 +1574,9 @@ export const pages: PageContent[] = [
       body: `${brand.email} | ${brand.phone} | ${brand.hours}`,
       primaryCta: { label: "Book Now", href: "/booking" },
       secondaryCta: { label: "Email Us", href: `mailto:${brand.email}` },
-      images: [img("contact-dog"), img("toronto-lifestyle"), img("facility"), img("pet-visit"), img("booking-bg")],
+      images: [],
     },
-    blocks: [{ type: "story", title: "Contact details", body: `Hours: ${brand.hours}. ${brand.boardingNote} Public service locations must be confirmed before launch.`, images: [img("contact-dog"), img("policy-care"), img("floating-pup"), img("trust-full"), img("walk-toronto")] }],
+    blocks: [],
   },
   {
     slug: "shop",
@@ -1797,7 +1803,7 @@ export async function getCollection<T>(collection: CollectionName, fallback: T[]
 
 export async function getPage(slug: string) {
   // Always use seed data for these pages to avoid stale DB content
-  const seedOnlySlugs = ["our-vision", "policy", "gallery", "gift-cards", "testimonials", "blog", "team", "faq", "services"];
+  const seedOnlySlugs = ["our-vision", "policy", "gallery", "gift-cards", "testimonials", "blog", "team", "faq", "services", "treats", "contact"];
   if (seedOnlySlugs.includes(slug)) {
     return pages.find((page) => page.slug === slug && page.status !== "draft");
   }
@@ -1833,6 +1839,11 @@ export async function getTestimonials() {
 export async function getGalleryImages() {
   // Public gallery always uses the confirmed named + categorized image set.
   return galleryImages.filter((image) => image.status !== "draft");
+}
+
+export async function getTreatImages() {
+  // Public treats page always uses the confirmed treat image set.
+  return treatImages;
 }
 
 export async function getService(slug: string) {
