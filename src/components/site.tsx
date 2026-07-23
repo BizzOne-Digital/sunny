@@ -2864,7 +2864,7 @@ function ShopPreview({ products }: { products: Product[] }) {
                 >
                   <div className={cx("overflow-hidden rounded-[1.5rem]", !imageFirst && "lg:order-2")}>
                     <Image
-                      className="h-64 w-full object-cover transition duration-700 group-hover:scale-105 sm:h-80"
+                      className="h-64 w-full object-contain transition duration-700 group-hover:scale-105 sm:h-80"
                       {...imageProps(product.images[0])}
                       alt={product.images[0].alt}
                     />
