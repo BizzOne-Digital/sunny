@@ -1121,7 +1121,7 @@ function ContentBlock({ block, pageSlug, blockIndex }: { block: PageContent["blo
           {items.map((item, itemIndex) => (
             <Reveal key={item.title} from={directions[itemIndex % directions.length]} delay={itemIndex * 0.1}>
               <motion.article
-                className="group h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15"
+                className="group h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15"
                 whileHover={{ y: -6 }}
               >
                 {item.image ? (
@@ -1317,7 +1317,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {service.process.map((step, index) => (
               <Reveal key={step} from={directions[index % directions.length]} delay={index * 0.1}>
-                <div className="group relative h-full overflow-hidden rounded-[2rem] bg-white p-7 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15">
+                <div className="group relative h-full overflow-hidden rounded-[2rem] bg-white p-7 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15">
                   <div className="absolute inset-x-0 top-0 h-1.5 origin-left scale-x-0 bg-gradient-to-r from-coral to-burgundy transition-transform duration-500 group-hover:scale-x-100" />
                   <span className="text-gradient font-serif text-4xl sm:text-5xl">0{index + 1}</span>
                   <p className="mt-4 font-semibold leading-7">{step}</p>
@@ -1545,7 +1545,7 @@ function ServiceCard({ service }: { service: Service }) {
   const whatsappHref = `${brand.whatsapp}?text=${encodeURIComponent(`Hi DTdogs.ca — I'd like to ask about ${service.name}.`)}`;
 
   return (
-    <article className="group relative overflow-hidden rounded-[1.75rem] bg-white shadow-xl shadow-black/5 transition duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/20 sm:rounded-[2rem]">
+    <article className="group relative overflow-hidden rounded-[1.75rem] bg-white shadow-xl shadow-black/5 transition duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/20 sm:rounded-[2rem]">
       <div className="pointer-events-none absolute inset-0 z-10 rounded-[1.75rem] opacity-0 ring-2 ring-inset ring-coral/50 transition-opacity duration-500 group-hover:opacity-100 sm:rounded-[2rem]" />
       <Link href={`/services/${service.slug}`} className="relative block h-52 overflow-hidden sm:h-64">
         <Image className="h-full w-full object-cover transition duration-700 group-hover:scale-105" {...imageProps(cardImage)} alt={cardImage.alt} />
@@ -1707,7 +1707,7 @@ function GalleryGrid({ images }: { images: ImageAsset[] }) {
       <div className="mt-12 columns-1 gap-5 sm:columns-2 lg:columns-3">
         {visible.map((image, index) => (
           <Reveal key={`${image.id}-${index}`} from={(["left", "up", "right", "down"] as const)[index % 4]} delay={(index % 6) * 0.06} className="mb-5 break-inside-avoid">
-          <button onClick={() => setActive(image)} className="group block w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-burgundy/15">
+          <button onClick={() => setActive(image)} className="group block w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-coral/15">
             <div className="overflow-hidden">
               <Image className="h-auto w-full object-cover transition duration-700 group-hover:scale-110" {...imageProps(image, "(min-width: 1024px) 33vw, 100vw")} alt={image.alt} loading={index < 3 ? "eager" : "lazy"} />
             </div>
@@ -1772,7 +1772,7 @@ function TreatsGallery({ images }: { images: ImageAsset[] }) {
 
       <div className="mt-12 columns-1 gap-5 sm:columns-2 lg:columns-3">
         {treatImages.map((image, index) => (
-          <button key={`treat-${image.id}-${index}`} type="button" onClick={() => setActive(image)} className="group mb-5 block w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-burgundy/15">
+          <button key={`treat-${image.id}-${index}`} type="button" onClick={() => setActive(image)} className="group mb-5 block w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-coral/15">
             <div className="overflow-hidden">
               <Image className="h-auto w-full object-cover transition duration-700 group-hover:scale-110" {...imageProps(image, "(min-width: 1024px) 33vw, 100vw")} alt={image.alt} loading={index < 3 ? "eager" : "lazy"} />
             </div>
@@ -2289,12 +2289,12 @@ function BookingForm({ services }: { services: Service[] }) {
                   setStatus(null);
                   setStep(Math.min(steps.length - 1, step + 1));
                 }}
-                className="btn-gradient rounded-full px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25"
+                className="btn-gradient rounded-full px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25"
               >
                 <span className="relative z-10">Continue</span>
               </button>
             ) : (
-              <button type="submit" className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25"><span className="relative z-10">Submit Booking Request</span></button>
+              <button type="submit" className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25"><span className="relative z-10">Submit Booking Request</span></button>
             )}
           </div>
           {status ? <p className="font-semibold text-burgundy">{status}</p> : null}
@@ -2346,7 +2346,7 @@ function BlogGrid({ posts, title = "Latest from The Paw Journal" }: { posts: Blo
       <div className="mt-12 grid gap-6 md:grid-cols-2">
         {posts.map((post, index) => (
           <Reveal key={post.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-            <Link href={`/blog/${post.slug}`} className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15">
+            <Link href={`/blog/${post.slug}`} className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15">
               <div className="relative overflow-hidden">
                 <Image className="h-64 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-80" {...imageProps(post.featuredImage)} alt={post.featuredImage.alt} />
                 <div className="absolute inset-0 bg-gradient-to-t from-forest/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
@@ -2380,7 +2380,7 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
                 <Reveal key={product.slug} from={imageFirst ? "left" : "right"} delay={index * 0.08}>
                   <Link
                     href={`/shop/${product.slug}`}
-                    className="group grid items-center gap-8 overflow-hidden rounded-[2rem] bg-white p-4 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-burgundy/10 sm:p-6 lg:grid-cols-2 lg:gap-12"
+                    className="group grid items-center gap-8 overflow-hidden rounded-[2rem] bg-white p-4 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-coral/10 sm:p-6 lg:grid-cols-2 lg:gap-12"
                   >
                     <div className={cx("overflow-hidden rounded-[1.5rem]", !imageFirst && "lg:order-2")}>
                       <Image
@@ -2425,7 +2425,7 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
                   <Reveal key={product.slug} from={index % 2 === 0 ? "left" : "right"} delay={index * 0.1}>
                     <Link
                       href="/gift-cards#gift-card-form"
-                      className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15"
+                      className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15"
                     >
                       <div className="relative overflow-hidden">
                         <Image
@@ -2464,7 +2464,7 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
           const primaryImage = productImages(product)[0];
           return (
           <Reveal key={product.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-          <Link href={`/shop/${product.slug}`} className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15">
+          <Link href={`/shop/${product.slug}`} className="group block h-full overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15">
             <div className="relative overflow-hidden">
               <Image className="h-80 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-[32rem]" {...imageProps(primaryImage)} alt={primaryImage.alt} />
               <div className="absolute inset-0 bg-gradient-to-t from-forest/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
@@ -2554,7 +2554,7 @@ function GiftCardForm() {
         <div className="md:col-span-2">
           <Field label="Gift message" name="message" textarea />
         </div>
-        <button className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-burgundy/25 md:col-span-2"><span className="relative z-10">Save Gift Card Request</span></button>
+        <button className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25 md:col-span-2"><span className="relative z-10">Save Gift Card Request</span></button>
         {status ? <p className="font-semibold text-burgundy md:col-span-2">{status}</p> : null}
       </form>
       </Reveal>
@@ -2575,7 +2575,7 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {team.map((member, index) => (
           <Reveal key={member.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-            <article className="group h-full rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:p-7">
+            <article className="group h-full rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:p-7">
               <div className="mb-6 h-1.5 w-16 rounded-full bg-gradient-to-r from-coral to-burgundy transition-all duration-500 group-hover:w-28" />
               <div className="p-5 sm:p-7">
                 <h2 className="font-serif text-3xl text-forest sm:text-4xl">{member.name}</h2>
@@ -2860,7 +2860,7 @@ function ShopPreview({ products }: { products: Product[] }) {
               <Reveal key={product.slug} from={imageFirst ? "left" : "right"} delay={index * 0.12}>
                 <Link
                   href={`/shop/${product.slug}`}
-                  className="group grid items-center gap-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cream to-peach/40 p-4 shadow-lg shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-burgundy/15 sm:p-6 lg:grid-cols-2 lg:gap-10"
+                  className="group grid items-center gap-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cream to-peach/40 p-4 shadow-lg shadow-black/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-coral/15 sm:p-6 lg:grid-cols-2 lg:gap-10"
                 >
                   <div className={cx("overflow-hidden rounded-[1.5rem]", !imageFirst && "lg:order-2")}>
                     <Image
@@ -2927,7 +2927,7 @@ function ProcessSection() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {steps.map((step, index) => (
             <Reveal key={step.title} from={directions[index % directions.length]} delay={index * 0.1}>
-              <div className="group relative h-full overflow-hidden rounded-[1.5rem] bg-white p-6 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:rounded-[2rem] sm:p-7">
+              <div className="group relative h-full overflow-hidden rounded-[1.5rem] bg-white p-6 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:rounded-[2rem] sm:p-7">
                 <div className="absolute inset-x-0 top-0 h-1.5 origin-left scale-x-0 bg-gradient-to-r from-coral to-burgundy transition-transform duration-500 group-hover:scale-x-100" />
                 <span className="text-gradient font-serif text-4xl sm:text-5xl">0{index + 1}</span>
                 <h3 className="mt-4 font-serif text-xl text-forest sm:text-2xl">{step.title}</h3>
@@ -3023,7 +3023,7 @@ function ContactPanel() {
 
 function InfoCard({ icon, title, body, href }: { icon: React.ReactNode; title: string; body: string; href?: string }) {
   const content = (
-    <div className="group h-full rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:p-8">
+    <div className="group h-full rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:p-8">
       <div className="mb-6 grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-forest to-burgundy text-white shadow-lg shadow-forest/20 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">{icon}</div>
       <h2 className="text-gradient-forest font-serif text-3xl sm:text-4xl">{title}</h2>
       <p className="mt-3 leading-7 text-ink/65">{body}</p>
@@ -3097,7 +3097,7 @@ function ImageRibbon({ images }: { images: ImageAsset[] }) {
     <div className={cx("-mx-4 mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:mt-12 sm:gap-5 sm:px-0", images.length <= 3 && "sm:justify-center")}>
       {images.map((image, index) => (
         <Reveal key={`${image.id}-${index}`} from={directions[index % directions.length]} delay={(index % 5) * 0.08} className="w-[78vw] max-w-sm shrink-0 snap-start sm:w-auto sm:min-w-[18rem]">
-          <figure className="group overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-burgundy/15 sm:rounded-[2rem]">
+          <figure className="group overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:rounded-[2rem]">
             <div className="overflow-hidden">
               <Image className="h-52 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-72" {...imageProps(image, "320px")} alt={image.alt} loading="lazy" />
             </div>
@@ -3149,9 +3149,9 @@ function Button({
       href={href}
       className={cx(
         "group/btn inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-center font-bold transition duration-300 hover:-translate-y-1 hover:scale-[1.02] active:scale-95 sm:w-auto",
-        variant === "solid" && "btn-gradient text-white shadow-lg shadow-burgundy/25 hover:shadow-2xl hover:shadow-coral/40",
+        variant === "solid" && "btn-gradient text-white shadow-lg shadow-coral/25 hover:shadow-2xl hover:shadow-coral/40",
         variant === "light" && "border border-white/30 bg-white/10 text-white backdrop-blur transition-colors hover:border-coral/60 hover:bg-white/20",
-        variant === "outline" && "border border-forest/20 bg-transparent text-forest hover:border-transparent hover:bg-gradient-to-r hover:from-burgundy hover:to-coral hover:text-white hover:shadow-xl hover:shadow-burgundy/25",
+        variant === "outline" && "border border-forest/20 bg-transparent text-forest hover:border-transparent hover:bg-gradient-to-r hover:from-[#e89373] hover:to-[#e07a55] hover:text-white hover:shadow-xl hover:shadow-coral/25",
         className,
       )}
     >
@@ -3468,3 +3468,4 @@ function FooterColumn({
     </div>
   );
 }
+

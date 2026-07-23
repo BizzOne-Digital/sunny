@@ -966,7 +966,7 @@ export const services: Service[] = [
   },
   {
     slug: "grooming",
-    name: "Grooming",
+    name: "Pet Grooming",
     eyebrow: "Clean & polished",
     summary: "grooming photo",
     description:
