@@ -5,7 +5,7 @@ import { CollectionName, collectionDefaults, collectionModelMap, getCollection }
 
 export async function generateStaticParams() {
   return Object.keys(collectionModelMap)
-    .filter((collection) => !["media", "testimonials"].includes(collection))
+    .filter((collection) => !["media"].includes(collection))
     .map((collection) => ({ collection }));
 }
 
@@ -15,7 +15,7 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
 
   const { collection: rawCollection } = await params;
   const collection = rawCollection as CollectionName;
-  if (!collectionModelMap[collection] || collection === "media" || collection === "testimonials") redirect("/admin");
+  if (!collectionModelMap[collection] || collection === "media") redirect("/admin");
 
   const fallback = collectionDefaults[collection] as unknown[];
   const items = await getCollection(collection, fallback);

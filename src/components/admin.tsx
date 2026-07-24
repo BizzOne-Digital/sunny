@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BarChart3, FileImage, LayoutDashboard, LogOut, PawPrint, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import type { CollectionName, ImageAsset } from "@/lib/site";
@@ -12,7 +12,6 @@ const collections: { label: string; name: CollectionName }[] = [
   { label: "Pages", name: "pages" },
   { label: "Services", name: "services" },
   { label: "Pricing", name: "pricing" },
-  { label: "Gallery / Media", name: "media" },
   { label: "FAQs", name: "faqs" },
   { label: "Blog", name: "blog" },
   { label: "Products", name: "products" },
@@ -22,6 +21,8 @@ const collections: { label: string; name: CollectionName }[] = [
 function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
+
+type EditableRecord = Record<string, unknown>;
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   async function logout() {
@@ -42,12 +43,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <nav className="mt-5 grid gap-2">
             <AdminLink href="/admin" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
-            <AdminLink href="/admin/bookings" icon={<BarChart3 className="h-4 w-4" />} label="Bookings" />
-            <AdminLink href="/admin/gallery" icon={<FileImage className="h-4 w-4" />} label="Gallery" />
             <AdminLink href="/admin/media" icon={<FileImage className="h-4 w-4" />} label="Media Library" />
-            <AdminLink href="/admin/gift-cards" icon={<BarChart3 className="h-4 w-4" />} label="Gift Cards" />
-            <AdminLink href="/admin/policies" icon={<BarChart3 className="h-4 w-4" />} label="Policies" />
-            {collections.filter((item) => item.name !== "media").map((item) => (
+            {collections.map((item) => (
               <AdminLink key={item.name} href={`/admin/${item.name}`} icon={<BarChart3 className="h-4 w-4" />} label={item.label} />
             ))}
             <button onClick={logout} className="mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-white/75 hover:bg-white/10">
@@ -62,8 +59,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 }
 
 function AdminLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  const pathname = usePathname();
+  const active = href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
+
   return (
-    <Link href={href} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-white/75 hover:bg-white/10 hover:text-white">
+    <Link
+      href={href}
+      className={cx(
+        "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
+        active ? "bg-white/15 text-white" : "text-white/75 hover:bg-white/10 hover:text-white",
+      )}
+    >
       {icon} {label}
     </Link>
   );
@@ -112,12 +118,26 @@ export function LoginForm() {
 }
 
 export function Dashboard({ stats }: { stats: { label: string; value: number | string }[] }) {
+  const [syncStatus, setSyncStatus] = useState("");
+
+  async function syncSiteContent() {
+    if (!window.confirm("Sync all site content to the admin database? This replaces services, FAQs, pricing, products, team, blog and pages with the current site defaults.")) return;
+    setSyncStatus("Syncing...");
+    const response = await fetch("/api/admin/sync", { method: "POST" });
+    const data = await response.json();
+    setSyncStatus(response.ok ? "Site content synced. Refresh collection pages to see updates." : data.error ?? "Sync failed.");
+  }
+
   return (
     <AdminShell>
       <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
         <p className="text-sm uppercase tracking-[0.3em] text-burgundy">CMS Dashboard</p>
         <h1 className="mt-3 font-serif text-6xl text-forest">Manage the DTdogs experience.</h1>
-        <p className="mt-4 max-w-3xl leading-8 text-ink/65">Bookings, services, pages, media, pricing, products, blog, team and FAQs are connected to MongoDB. Use the friendly collection forms for content updates and the media library for Cloudinary uploads.</p>
+        <p className="mt-4 max-w-3xl leading-8 text-ink/65">Bookings, services, pages, media, pricing, products, blog, team and FAQs are connected to MongoDB. Edits here update the live site. Use Sync Site Content if the admin panel is out of date.</p>
+        <button onClick={syncSiteContent} className="mt-6 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
+          Sync Site Content
+        </button>
+        {syncStatus ? <p className="mt-3 text-sm text-burgundy">{syncStatus}</p> : null}
       </div>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {stats.map((stat) => (
@@ -142,11 +162,17 @@ export function Dashboard({ stats }: { stats: { label: string; value: number | s
   );
 }
 
+function itemKey(item: EditableRecord, index = 0) {
+  return String(item.slug ?? item.id ?? `item-${index}`);
+}
+
 export function ContentManager({ collection, initialItems }: { collection: CollectionName; initialItems: unknown[] }) {
   const [items, setItems] = useState<EditableRecord[]>(initialItems as EditableRecord[]);
-  const [selected, setSelected] = useState(0);
+  const [selectedKey, setSelectedKey] = useState(() => itemKey((initialItems[0] ?? {}) as EditableRecord, 0));
   const [status, setStatus] = useState("");
-  const current = items[selected] ?? {};
+  const [formKey, setFormKey] = useState(0);
+  const selectedIndex = items.findIndex((item, index) => itemKey(item, index) === selectedKey);
+  const current = selectedIndex >= 0 ? items[selectedIndex] : items[0] ?? {};
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -160,14 +186,15 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
     const next = await response.json();
     setStatus(response.ok ? "Saved." : next.error ?? "Unable to save.");
     if (response.ok) {
+      const key = (body.slug ?? body.id) as string;
       setItems((current) => {
-        const key = (body.slug ?? body.id) as string;
-        const index = current.findIndex((item) => ((item as Record<string, unknown>).slug ?? (item as Record<string, unknown>).id) === key);
+        const index = current.findIndex((item, itemIndex) => itemKey(item, itemIndex) === selectedKey || itemKey(item, itemIndex) === key);
         if (index === -1) return [body, ...current];
         const copy = [...current];
         copy[index] = body;
         return copy;
       });
+      setSelectedKey(key);
     }
   }
 
@@ -182,9 +209,10 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
     });
     const next = await response.json();
     if (response.ok) {
-      const remaining = items.filter((item) => (item.slug ?? item.id) !== key);
+      const remaining = items.filter((item, index) => itemKey(item, index) !== key);
       setItems(remaining);
-      setSelected(0);
+      setSelectedKey(itemKey(remaining[0] ?? {}, 0));
+      setFormKey((prev) => prev + 1);
       setStatus("Deleted.");
     } else {
       setStatus(next.error ?? "Unable to delete.");
@@ -194,12 +222,14 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
   function createNew() {
     const template = createTemplate(collection);
     setItems([template, ...items]);
-    setSelected(0);
+    setSelectedKey(itemKey(template));
+    setFormKey((prev) => prev + 1);
   }
 
-  function selectItem(index: number) {
-    setSelected(index);
+  function selectItem(key: string) {
+    setSelectedKey(key);
     setStatus("");
+    setFormKey((prev) => prev + 1);
   }
 
   return (
@@ -219,14 +249,15 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
           {items.map((item, index) => {
             const record = item as Record<string, unknown>;
             const label = String(record.title ?? record.name ?? record.question ?? record.slug ?? record.id ?? `Item ${index + 1}`);
+            const key = itemKey(item, index);
             return (
-              <button key={`${label}-${index}`} onClick={() => selectItem(index)} className={cx("mb-2 block w-full rounded-2xl px-4 py-3 text-left text-sm", selected === index ? "bg-forest text-white" : "bg-cream hover:bg-sage")}>
+              <button key={key} onClick={() => selectItem(key)} className={cx("mb-2 block w-full rounded-2xl px-4 py-3 text-left text-sm", selectedKey === key ? "bg-forest text-white" : "bg-cream hover:bg-sage")}>
                 {label}
               </button>
             );
           })}
         </div>
-        <form onSubmit={save} className="rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5">
+        <form onSubmit={save} key={formKey} className="rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5">
           <div className="grid gap-5 md:grid-cols-2">
             {getFields(collection).map((field) => (
               <AdminFormField key={field.path} field={field} value={getPath(current, field.path)} />
@@ -249,7 +280,6 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
   );
 }
 
-type EditableRecord = Record<string, unknown>;
 type FieldKind = "text" | "textarea" | "select" | "checkbox" | "number" | "date" | "list";
 type FieldConfig = {
   path: string;
@@ -264,6 +294,7 @@ const collectionLabels: Partial<Record<CollectionName, string>> = {
   pages: "Pages",
   services: "Services",
   pricing: "Pricing",
+  testimonials: "Testimonials",
   faqs: "FAQs",
   blog: "Blog",
   products: "Products",
@@ -333,7 +364,7 @@ function getFields(collection: CollectionName): FieldConfig[] {
       { path: "date", label: "Publish Date", type: "date" },
       { path: "body", label: "Post Body", type: "textarea", wide: true },
       { path: "featuredImage.title", label: "Featured Image Title" },
-      { path: "featuredImage.url", label: "Featured Image URL", wide: true },
+      { path: "featuredImage.url", label: "Featured Image URL (paste Cloudinary link)", wide: true },
       { path: "featuredImage.alt", label: "Featured Image Alt Text", wide: true },
     ],
     products: [
@@ -341,9 +372,10 @@ function getFields(collection: CollectionName): FieldConfig[] {
       ...common,
       { path: "description", label: "Description", type: "textarea", wide: true },
       { path: "priceLabel", label: "Price Label" },
+      { path: "compareAtPriceLabel", label: "Compare At Price (optional)" },
       { path: "inventory", label: "Inventory", type: "number" },
-      { path: "sizes", label: "Sizes", type: "list", help: "One size per line." },
-      { path: "colors", label: "Colours", type: "list", help: "One colour per line." },
+      { path: "sizes", label: "Sizes", type: "list", help: "One size per line (e.g., S, M, L, XL)." },
+      { path: "colors", label: "Colors", type: "list", help: "One color per line." },
     ],
     team: [
       { path: "name", label: "Name" },
@@ -352,8 +384,21 @@ function getFields(collection: CollectionName): FieldConfig[] {
       { path: "bio", label: "Bio", type: "textarea", wide: true },
       { path: "credentials", label: "Credentials", type: "list", wide: true, help: "One credential per line." },
       { path: "image.title", label: "Portrait Title" },
-      { path: "image.url", label: "Portrait Image URL", wide: true },
+      { path: "image.url", label: "Portrait Image URL (paste Cloudinary link)", wide: true },
       { path: "image.alt", label: "Portrait Alt Text", wide: true },
+    ],
+    testimonials: [
+      { path: "reviewer", label: "Reviewer Name" },
+      ...common,
+      { path: "petName", label: "Pet Name" },
+      { path: "service", label: "Service" },
+      { path: "rating", label: "Rating (1-5)", type: "number" },
+      { path: "quote", label: "Testimonial Quote", type: "textarea", wide: true },
+      { path: "location", label: "Location" },
+      { path: "sample", label: "Sample Testimonial", type: "checkbox" },
+      { path: "image.title", label: "Photo Title" },
+      { path: "image.url", label: "Photo Image URL (paste Cloudinary link)", wide: true },
+      { path: "image.alt", label: "Photo Alt Text", wide: true },
     ],
   };
 
@@ -477,15 +522,17 @@ function createTemplate(collection: CollectionName): EditableRecord {
   const base = { slug, status: "draft" };
   switch (collection) {
     case "services":
-      return { ...base, name: "New Service", eyebrow: "", summary: "", description: "", forWhom: "", benefits: [], includes: [], process: [], related: [], faqs: [] };
+      return { ...base, name: "New Service", eyebrow: "", summary: "", description: "", forWhom: "", benefits: [], includes: [], process: [], related: [], faqs: [], images: [] };
     case "pricing":
       return { ...base, service: "New Service", name: "New Package", priceLabel: "Request Pricing", duration: "", features: [], featured: false };
+    case "testimonials":
+      return { ...base, reviewer: "New Reviewer", petName: "", service: "", rating: 5, quote: "", location: "", sample: false, image: { title: "", url: "", alt: "" } };
     case "faqs":
       return { ...base, question: "New Question", answer: "", category: "General" };
     case "blog":
       return { ...base, title: "New Blog Post", excerpt: "", category: "", author: "DTdogs.ca", date: new Date().toISOString().slice(0, 10), body: "", featuredImage: { title: "", url: "", alt: "" } };
     case "products":
-      return { ...base, title: "New Product", description: "", priceLabel: "Price to be confirmed", sizes: [], colors: [], inventory: 0 };
+      return { ...base, title: "New Product", description: "", priceLabel: "Price to be confirmed", sizes: [], colors: [], inventory: 0, images: [] };
     case "team":
       return { ...base, name: "New Team Member", role: "", bio: "", credentials: [], image: { title: "", url: "", alt: "" } };
     default:
@@ -549,15 +596,16 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("Uploading...");
+    const form = event.currentTarget;
     const response = await fetch("/api/media", {
       method: "POST",
-      body: new FormData(event.currentTarget),
+      body: new FormData(form),
     });
     const data = await response.json();
     if (response.ok) {
       setItems([data.asset, ...items]);
-      setStatus("Uploaded and saved.");
-      event.currentTarget.reset();
+      setStatus(data.message ? `Uploaded (${data.storage}). ${data.message}` : "Uploaded and saved.");
+      if (form) form.reset();
     } else {
       setStatus(data.error ?? "Upload failed.");
     }

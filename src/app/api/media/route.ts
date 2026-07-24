@@ -16,7 +16,10 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log('Starting Cloudinary upload for file:', file.name);
     const upload = await uploadToCloudinary(file);
+    console.log('Cloudinary upload successful:', upload.secure_url);
+    
     const title = String(form.get("title") ?? file.name);
     const asset: ImageAsset = {
       id: `${slugify(title, { lower: true, strict: true })}-${Date.now()}`,
@@ -39,10 +42,15 @@ export async function POST(request: Request) {
       },
     };
 
+    console.log('Saving asset to MongoDB...');
     await Models.MediaAsset().updateOne({ id: asset.id }, { $set: asset }, { upsert: true });
+    console.log('Asset saved successfully');
 
     return NextResponse.json({ asset });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed." }, { status: 500 });
+    console.error('Upload error details:', error);
+    const errorMessage = error instanceof Error ? error.message : "Upload failed.";
+    console.error('Error message:', errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

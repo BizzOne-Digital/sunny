@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Cloudinary Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-container {
+            border: 2px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Image Load Test</h1>
+    
+    <div class="test-container">
+        <h2>Test 1: Cloudinary Image from Blog Post</h2>
+        <p><strong>URL:</strong> https://res.cloudinary.com/dpp3nig3n/image/upload/v1784898184/nv2nvzhpy5n7xv2cora3_eazko9.png</p>
+        <img 
+            src="https://res.cloudinary.com/dpp3nig3n/image/upload/v1784898184/nv2nvzhpy5n7xv2cora3_eazko9.png" 
+            alt="Blog post image test"
+            onload="document.getElementById('status1').innerHTML = '✅ Image loaded successfully!'; document.getElementById('status1').className = 'success';"
+            onerror="document.getElementById('status1').innerHTML = '❌ Image failed to load - Check URL or Cloudinary settings'; document.getElementById('status1').className = 'error';"
+        />
+        <p id="status1">Loading...</p>
+    </div>
+
+    <div class="test-container">
+        <h2>Test 2: Local Image</h2>
+        <p><strong>URL:</strong> /images/services/serviceschauffeur.webp</p>
+        <img 
+            src="/images/services/serviceschauffeur.webp" 
+            alt="Local image test"
+            onload="document.getElementById('status2').innerHTML = '✅ Image loaded successfully!'; document.getElementById('status2').className = 'success';"
+            onerror="document.getElementById('status2').innerHTML = '❌ Image failed to load - File missing'; document.getElementById('status2').className = 'error';"
+        />
+        <p id="status2">Loading...</p>
+    </div>
+
+    <div class="test-container">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Open this file in browser: <code>http://localhost:3000/test-image.html</code></li>
+            <li>Check if images load</li>
+            <li>If Cloudinary image fails:
+                <ul>
+                    <li>Check if URL is correct (copy directly from Cloudinary)</li>
+                    <li>Check browser console for CORS errors</li>
+                    <li>Verify image exists in Cloudinary dashboard</li>
+                </ul>
+            </li>
+            <li>If local image fails:
+                <ul>
+                    <li>Check if file exists in public/images/services/</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+</body>
+</html>

@@ -1,7 +1,9 @@
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ServiceDetail } from "@/components/site";
-import { getService, getServices, services } from "@/lib/site";
+import { getService, getServices } from "@/lib/site";
 
 const serviceAliases: Record<string, string> = {
   "dog-walking-1-hour": "dog-walking",
@@ -34,7 +36,8 @@ function normalizeServiceSlug(slug: string) {
 }
 
 export async function generateStaticParams() {
-  return [...services.map((service) => ({ slug: service.slug })), ...Object.keys(serviceAliases).map((slug) => ({ slug }))];
+  const allServices = await getServices();
+  return [...allServices.map((service) => ({ slug: service.slug })), ...Object.keys(serviceAliases).map((slug) => ({ slug }))];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -48,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${service.name} by DTdogs.ca`,
       description: service.description,
-      images: service.images[0]?.url ? [service.images[0].url] : undefined,
+      images: service.images?.[0]?.url ? [service.images[0].url] : undefined,
     },
   };
 }

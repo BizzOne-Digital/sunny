@@ -131,7 +131,8 @@ function productImages(product: Product) {
     "gift-card-150": asset("gift-card-100-image", "DTdogs $150 gift card", "Premium DTdogs digital gift card product image for CAD $150", "/images/shop/gift100.png"),
   };
   const primary = giftCardImages[product.slug];
-  return primary ? [primary, ...product.images.filter((image) => image.id !== primary.id)] : product.images;
+  const images = product.images || [];
+  return primary ? [primary, ...images.filter((image) => image.id !== primary.id)] : images;
 }
 
 const asset = (id: string, title: string, alt: string, url: string, page?: string, order?: number): ImageAsset => ({
@@ -246,13 +247,13 @@ const serviceHeroImages: Record<string, ImageAsset> = {
 };
 
 function servicePrimaryImage(service: Service) {
-  return serviceHeroImages[service.slug] ?? service.images[0];
+  return serviceHeroImages[service.slug] ?? (service.images && service.images[0]);
 }
 
 function serviceDisplayImages(service: Service) {
   const hero = serviceHeroImages[service.slug];
-  if (!hero) return service.images;
-  return [hero, ...service.images.filter((image) => image.id !== hero.id && image.url !== hero.url)];
+  if (!hero) return service.images || [];
+  return [hero, ...(service.images || []).filter((image) => image.id !== hero.id && image.url !== hero.url)];
 }
 
 const homeSupportingImages = {
@@ -285,8 +286,9 @@ function cx(...classes: Array<string | false | undefined>) {
 }
 
 function imageProps(image: ImageAsset, sizes = "(min-width: 1024px) 50vw, 100vw") {
+  const src = localImageUrl(image);
   return {
-    src: localImageUrl(image),
+    src: src || "/images/brand/logo.png",
     alt: image.alt,
     width: image.width ?? 1400,
     height: image.height ?? 1000,
@@ -628,7 +630,7 @@ function Navigation({ services }: { services: Service[] }) {
   );
 }
 
-export function HomePage({ services, testimonials, products }: { services: Service[]; testimonials: Testimonial[]; products: Product[] }) {
+export function HomePage({ page, services, testimonials, products }: { page?: PageContent; services: Service[]; testimonials: Testimonial[]; products: Product[] }) {
   const heroRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   // Always start false so SSR HTML matches the client's first paint.
@@ -670,7 +672,11 @@ export function HomePage({ services, testimonials, products }: { services: Servi
     { label: "Downtown, Toronto", icon: Heart },
     { label: "#petpeople & #petparents", icon: Users },
   ];
-  const stats = [
+  const stats = page?.blocks?.find(b => b.type === "stats")?.items?.map((item, index) => ({
+    label: item.body || "",
+    value: item.title || "",
+    icon: [PawPrint, Users, CalendarDays, ShieldCheck][index] || PawPrint,
+  })) ?? [
     { label: "Happy Pets & Counting", value: "Happy Pets", icon: PawPrint },
     { label: "Hundreds of petparents and counting", value: "Pet Parents", icon: Users },
     { label: "4+ years of serving across GTA and counting", value: "Experience", icon: CalendarDays },
@@ -756,7 +762,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               >
                 <PawPrint className="h-4 w-4 shrink-0" />
               </motion.span>
-              Structured pet care · Downtown Toronto & GTA
+              {page?.hero?.eyebrow ?? "Structured pet care · Downtown Toronto & GTA"}
             </motion.p>
 
             <h1 className="font-serif text-[2.15rem] leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.25rem]">
@@ -766,15 +772,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
                 animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -56 }}
                 transition={{ duration: 0.95, delay: enter ? 0.18 : 0, ease }}
               >
-                Welcome to
-              </motion.span>{" "}
-              <motion.span
-                className="relative inline-block"
-                initial={reducedMotion ? false : { opacity: 0, x: -48, scale: 0.96 }}
-                animate={enter ? { opacity: 1, x: 0, scale: 1 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -48, scale: reducedMotion ? 1 : 0.96 }}
-                transition={{ duration: 1.05, delay: enter ? 0.32 : 0, ease }}
-              >
-                <span className="text-white">DT<span className="text-gradient">d</span>ogs.ca</span>
+                {page?.hero?.title ?? "Welcome to DTdogs.ca"}
               </motion.span>
             </h1>
             <motion.p
@@ -783,11 +781,11 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               animate={enter ? { opacity: 1 } : { opacity: reducedMotion ? 1 : 0 }}
               transition={{ duration: 0.7, delay: enter ? 0.38 : 0 }}
             >
-              (Formerly Known As{" "}
+              {page?.hero?.subtitle ?? "(Formerly Known As "}{" "}
               <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.ca</a>
               {" / "}
               <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.in</a>
-              )
+              {page?.hero?.subtitle ? "" : ")"}
             </motion.p>
 
             <motion.p
@@ -796,7 +794,7 @@ export function HomePage({ services, testimonials, products }: { services: Servi
               animate={enter ? { opacity: 1, x: 0 } : { opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : -40 }}
               transition={{ duration: 0.9, delay: enter ? 0.42 : 0, ease }}
             >
-              Professional, structured pet care in Downtown Toronto, proudly serving the GTA year-round. We are team of #petpeople and #petparents.
+              {page?.hero?.body ?? "Professional, structured pet care in Downtown Toronto, proudly serving the GTA year-round. We are team of #petpeople and #petparents."}
             </motion.p>
 
             <motion.div
@@ -878,13 +876,21 @@ export function HomePage({ services, testimonials, products }: { services: Servi
         <div className="relative grid items-center gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
           <Reveal from="left">
             <div className="overflow-hidden rounded-[2rem] shadow-2xl shadow-forest/15 sm:rounded-[2.5rem]">
-              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(homeSupportingImages.story)} alt={homeSupportingImages.story.alt} />
+              {page?.blocks?.find(b => b.type === "story")?.images?.[0] ? (
+                <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(page.blocks.find(b => b.type === "story")!.images![0])} alt={page.blocks.find(b => b.type === "story")!.images![0].alt} />
+              ) : (
+                <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(homeSupportingImages.story)} alt={homeSupportingImages.story.alt} />
+              )}
             </div>
           </Reveal>
           <Reveal from="right" delay={0.1}>
-            <SectionHeading eyebrow="Our Vision" title="Professional and structured pet care in Downtown Toronto, serving across the GTA in every season." align="left" />
+            <SectionHeading 
+              eyebrow={page?.blocks?.find(b => b.type === "story")?.eyebrow ?? "Our Vision"} 
+              title={page?.blocks?.find(b => b.type === "story")?.title ?? "Professional and structured pet care in Downtown Toronto, serving across the GTA in every season."} 
+              align="left" 
+            />
             <p className="mt-5 max-w-3xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
-              DTdogs.ca {brand.formerlyShort} offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you&apos;re away.
+              {page?.blocks?.find(b => b.type === "story")?.body ?? `DTdogs.ca ${brand.formerlyShort} offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you're away.`}
             </p>
             <div className="mt-6">
               <Button href="/our-vision" variant="outline">Read Our Vision</Button>
@@ -893,14 +899,20 @@ export function HomePage({ services, testimonials, products }: { services: Servi
         </div>
       </section>
 
-      <ServiceGrid services={services} preview />
+      <ServiceGrid services={services} preview page={page} />
 
       <section className="bg-white py-12 md:py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 md:px-8 lg:grid-cols-2 xl:gap-12">
           <Reveal from="left">
-            <SectionHeading eyebrow="Why choose us" title="Uncompromised care for your pet's happiness." align="left" />
+            <SectionHeading 
+              eyebrow={page?.blocks?.find(b => b.type === "features")?.eyebrow ?? "Why choose us"} 
+              title={page?.blocks?.find(b => b.type === "features")?.title ?? "Uncompromised care for your pet's happiness."} 
+              align="left" 
+            />
             <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
-              {["Food safety and hygiene monitored", "Comfortable, adjusted temperature", "Certified first-aid and canine behaviour knowledge", "24/7 CCTV surveillance", "Controlled group sizes", "Secure handling and calm routines"].map((item, index) => (
+              {(page?.blocks?.find(b => b.type === "features")?.items?.map(item => item.title) ?? 
+                ["Food safety and hygiene monitored", "Comfortable, adjusted temperature", "Certified first-aid and canine behaviour knowledge", "24/7 CCTV surveillance", "Controlled group sizes", "Secure handling and calm routines"]
+              ).map((item, index) => (
                 <Reveal key={item} from={index % 2 === 0 ? "left" : "right"} delay={index * 0.06}>
                   <div className="group rounded-[1.25rem] bg-gradient-to-br from-sage/70 to-sage/35 p-4 transition-all duration-500 hover:-translate-y-1 hover:from-peach/60 hover:to-sage/40 hover:shadow-xl hover:shadow-forest/10 sm:rounded-[1.5rem] sm:p-5">
                     <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-forest to-burgundy text-white shadow-lg shadow-forest/20 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
@@ -913,17 +925,21 @@ export function HomePage({ services, testimonials, products }: { services: Servi
             </div>
           </Reveal>
           <Reveal from="right" delay={0.15}>
-            <ImageCollage images={[homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story]} />
+            <ImageCollage images={
+              page?.blocks?.find(b => b.type === "features")?.images?.length ? 
+                [page.blocks.find(b => b.type === "features")!.images![0], page.blocks.find(b => b.type === "features")!.images![1], homeSupportingImages.story] : 
+                [homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story]
+            } />
           </Reveal>
         </div>
       </section>
 
       <ReviewImageSlider />
 
-      <ProcessSection />
-      <SunnyismSection />
-      <GalleryPreview images={[homeSupportingImages.gallery, ...homePage.galleryImages]} />
-      <ShopPreview products={products} />
+      <ProcessSection page={page} />
+      <SunnyismSection page={page} />
+      <GalleryPreview images={[homeSupportingImages.gallery, ...homePage.galleryImages]} page={page} />
+      <ShopPreview products={products} page={page} />
       <BrandMarquee dark />
       <BookingCTA image={homeSupportingImages.booking} />
     </PageEnter>
@@ -955,7 +971,7 @@ export function StandardPage({
     <PageEnter pageKey={page.slug}>
       <Hero page={page} />
       {page.slug === "services" ? <ServiceGrid services={services} /> : null}
-      {page.slug === "pricing" ? <PricingGrid pricing={pricing} /> : null}
+      {page.slug === "pricing" ? <PricingGrid pricing={pricing} page={page} /> : null}
       {page.slug === "gallery" ? <GalleryGrid images={page.blocks[0]?.images ?? []} /> : null}
       {page.slug === "treats" ? <TreatsGallery images={treatImages.length ? treatImages : page.blocks[0]?.images ?? []} /> : null}
       {page.slug === "testimonials" ? <ReviewImageSlider /> : null}
@@ -966,7 +982,7 @@ export function StandardPage({
           <BookingForm services={services} />
         </Suspense>
       ) : null}
-      {page.slug === "team" || page.slug === "our-vision" ? <TeamGrid team={team} /> : null}
+      {page.slug === "team" || page.slug === "our-vision" ? <TeamGrid team={team} page={page} /> : null}
       {page.slug === "gift-cards" ? <GiftCardForm /> : null}
       {page.slug === "shop" ? <ProductGrid products={products} merchLayout /> : null}
       {page.slug === "contact" ? <ContactPanel /> : null}
@@ -1106,10 +1122,14 @@ function Hero({ page }: { page: PageContent }) {
 }
 
 function ContentBlock({ block, pageSlug, blockIndex }: { block: PageContent["blocks"][number]; pageSlug: string; blockIndex: number }) {
-  if (block.type === "gallery" || block.type === "faq" || block.type === "shop" || block.type === "testimonials") return null;
+  // Skip these block types EXCEPT gallery on our-vision page (which is the final vision section)
+  const skipGallery = block.type === "gallery" && pageSlug !== "our-vision";
+  if (skipGallery || block.type === "faq" || block.type === "shop" || block.type === "testimonials" || block.type === "stats" || block.type === "features" || block.type === "process" || block.type === "founder") return null;
+  
   const items = pageSlug === "about" && blockIndex === 1 ? aboutGuideItems : block.items;
   const images = pageSlug === "about" && blockIndex === 0 ? aboutStoryImages : pageSlug === "about" && blockIndex === 2 ? aboutBrandImages : block.images;
   const directions = ["left", "up", "right", "down"] as const;
+  
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
       <Reveal from={blockIndex % 2 === 0 ? "left" : "right"}>
@@ -1513,14 +1533,23 @@ export function ProductDetail({ product }: { product: Product }) {
   );
 }
 
-function ServiceGrid({ services, preview = false }: { services: Service[]; preview?: boolean }) {
+function ServiceGrid({ services, preview = false, page }: { services: Service[]; preview?: boolean; page?: PageContent }) {
   const directions = ["left", "up", "right", "down"] as const;
   const visibleServices = preview ? services.filter((s) => s.status !== "coming-soon").slice(0, 9) : services;
+  const servicesBlock = page?.blocks?.find(b => b.type === "cards");
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
       <Reveal from="up">
-        <SectionHeading eyebrow="Our services" title="Structured care options for every season in the GTA." />
+        <SectionHeading 
+          eyebrow={servicesBlock?.eyebrow ?? "Our services"} 
+          title={servicesBlock?.title ?? "Structured care options for every season in the GTA."} 
+        />
+        {servicesBlock?.body ? (
+          <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+            {servicesBlock.body}
+          </p>
+        ) : null}
       </Reveal>
       <div className="mt-8 grid gap-5 md:mt-10 md:grid-cols-2 lg:grid-cols-3">
         {visibleServices.map((service, index) => (
@@ -1583,16 +1612,28 @@ function ServiceCard({ service }: { service: Service }) {
   );
 }
 
-function PricingGrid({ pricing }: { pricing: PricingPackage[] }) {
+function PricingGrid({ pricing, page }: { pricing: PricingPackage[]; page?: PageContent }) {
   const packages = pricing.filter((item) => item.status !== "hidden");
   const directions = ["left", "up", "right", "down"] as const;
+  
+  // Find pricing section block (if exists)
+  const pricingBlock = page?.blocks?.find(b => b.type === "cards");
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <Reveal from="up">
         <div className="mb-10 text-center md:mb-14">
-          <p className="text-xs font-semibold tracking-wide text-burgundy">Dog daycare, boarding & dog walks</p>
-          <h2 className="mt-3 font-serif text-3xl text-forest sm:text-4xl md:text-5xl">Choose your package</h2>
+          <p className="text-xs font-semibold tracking-wide text-burgundy">
+            {pricingBlock?.eyebrow ?? "Dog daycare, boarding & dog walks"}
+          </p>
+          <h2 className="mt-3 font-serif text-3xl text-forest sm:text-4xl md:text-5xl">
+            {pricingBlock?.title ?? "Choose your package"}
+          </h2>
+          {pricingBlock?.body ? (
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+              {pricingBlock.body}
+            </p>
+          ) : null}
         </div>
       </Reveal>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -2374,7 +2415,10 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
         <section id="products" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
           <div className="grid gap-12 md:gap-16">
             {merch.map((product, index) => {
-              const primaryImage = productImages(product)[0];
+              const images = productImages(product);
+              const primaryImage = images.length > 0 ? images[0] : (product.images && product.images.length > 0 ? product.images[0] : null);
+              if (!primaryImage) return null;
+              
               const imageFirst = index % 2 === 0;
               return (
                 <Reveal key={product.slug} from={imageFirst ? "left" : "right"} delay={index * 0.08}>
@@ -2420,7 +2464,10 @@ function ProductGrid({ products, merchLayout = false }: { products: Product[]; m
             </Reveal>
             <div className="mx-auto mt-10 grid max-w-xl gap-6">
               {giftCards.map((product, index) => {
-                const primaryImage = productImages(product)[0];
+                const images = productImages(product);
+                const primaryImage = images.length > 0 ? images[0] : (product.images && product.images.length > 0 ? product.images[0] : null);
+                if (!primaryImage) return null;
+                
                 return (
                   <Reveal key={product.slug} from={index % 2 === 0 ? "left" : "right"} delay={index * 0.1}>
                     <Link
@@ -2562,14 +2609,19 @@ function GiftCardForm() {
   );
 }
 
-function TeamGrid({ team }: { team: TeamMember[] }) {
+function TeamGrid({ team, page }: { team: TeamMember[]; page?: PageContent }) {
   const directions = ["left", "up", "right"] as const;
+  const teamBlock = page?.blocks?.find(b => b.type === "cards");
+  
   return (
     <section id="team" className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
       <Reveal from="up">
-        <SectionHeading eyebrow="Our Team" title="Experienced hands, calm energy, genuine care." />
+        <SectionHeading 
+          eyebrow={teamBlock?.eyebrow ?? "Our Team"} 
+          title={teamBlock?.title ?? "Experienced hands, calm energy, genuine care."} 
+        />
         <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
-          Meet our trusted partners in pet care across the GTA — professionals who bring genuine care and expertise to every interaction.
+          {teamBlock?.body ?? "Meet our trusted partners in pet care across the GTA — professionals who bring genuine care and expertise to every interaction."}
         </p>
       </Reveal>
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -2599,7 +2651,7 @@ function TeamGrid({ team }: { team: TeamMember[] }) {
 }
 
 function ReviewImageSlider() {
-  const total = 22;
+  const total = 11;
   const images = Array.from({ length: total }, (_, i) => `/images/reviews/${i + 1}.png`);
   const [current, setCurrent] = useState(0);
   const reducedMotion = useReducedMotion();
@@ -2617,7 +2669,7 @@ function ReviewImageSlider() {
     <section className="relative overflow-hidden bg-cream py-14 md:py-20">
       <div className="animate-float pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-gradient-to-br from-coral/10 to-transparent blur-3xl" />
       <div className="animate-float-delayed pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-gradient-to-tl from-burgundy/10 to-transparent blur-3xl" />
-      <div className="relative mx-auto max-w-4xl px-4 md:px-8">
+      <div className="relative mx-auto max-w-2xl px-4 md:px-8">
         <Reveal from="up">
           <SectionHeading eyebrow="Trusted care" title="We are a team of #petpeople and #petparents." />
         </Reveal>
@@ -2636,8 +2688,8 @@ function ReviewImageSlider() {
                 <Image
                   src={images[current]}
                   alt={`Client review ${current + 1}`}
-                  width={900}
-                  height={600}
+                  width={600}
+                  height={400}
                   className="w-full object-contain"
                   priority={current === 0}
                 />
@@ -2829,15 +2881,27 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
   );
 }
 
-function GalleryPreview({ images }: { images: ImageAsset[] }) {
+function GalleryPreview({ images, page }: { images: ImageAsset[]; page?: PageContent }) {
+  const galleryBlock = page?.blocks?.find(b => b.type === "gallery");
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-24">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <Reveal from="left">
-          <SectionHeading eyebrow="Gallery preview" title="A warm visual rhythm of walks, stays and care details." align="left" />
+          <SectionHeading 
+            eyebrow={galleryBlock?.eyebrow ?? "Gallery preview"} 
+            title={galleryBlock?.title ?? "A warm visual rhythm of walks, stays and care details."} 
+            align="left" 
+          />
+          {galleryBlock?.body ? (
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+              {galleryBlock.body}
+            </p>
+          ) : null}
         </Reveal>
         <Reveal from="right" delay={0.1}>
-          <Button href="/gallery" variant="outline">Open Gallery</Button>
+          <Button href="/gallery" variant="outline">
+            {galleryBlock?.primaryCta?.label ?? "Open Gallery"}
+          </Button>
         </Reveal>
       </div>
       <ImageRibbon images={images.slice(0, 10)} />
@@ -2845,13 +2909,22 @@ function GalleryPreview({ images }: { images: ImageAsset[] }) {
   );
 }
 
-function ShopPreview({ products }: { products: Product[] }) {
+function ShopPreview({ products, page }: { products: Product[]; page?: PageContent }) {
   const merch = products.filter((product) => !product.slug.includes("gift-card")).slice(0, 2);
+  const shopBlock = page?.blocks?.find(b => b.type === "shop");
   return (
     <section className="bg-white py-14 md:py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <Reveal from="up">
-          <SectionHeading eyebrow="Boutique preview" title="Dog Dad and Dog Mom merch — coming soon in 2026." />
+          <SectionHeading 
+            eyebrow={shopBlock?.eyebrow ?? "Boutique preview"} 
+            title={shopBlock?.title ?? "Dog Dad and Dog Mom merch — coming soon in 2026."} 
+          />
+          {shopBlock?.body ? (
+            <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
+              {shopBlock.body}
+            </p>
+          ) : null}
         </Reveal>
         <div className="mt-12 grid gap-10">
           {merch.map((product, index) => {
@@ -2908,8 +2981,13 @@ function BrandMarquee({ dark }: { dark?: boolean }) {
   );
 }
 
-function ProcessSection() {
-  const steps = [
+function ProcessSection({ page }: { page?: PageContent }) {
+  const processBlock = page?.blocks?.find(b => b.type === "process");
+  const steps = processBlock?.items?.map(item => ({
+    title: item.title,
+    body: item.body,
+    highlight: undefined,
+  })) ?? [
     { title: "Choose Your Service", body: "Browse our services and select the care your pet needs." },
     { title: "Pick a Date & Time", body: "Pick a date & time with your service provider and preferred location." },
     { title: "Confirm & Pay", body: "Secure your booking by completing the payment process online, in store or Interac." },
@@ -2922,7 +3000,10 @@ function ProcessSection() {
       <div className="animate-float absolute right-0 top-10 h-72 w-72 rounded-full bg-gradient-to-bl from-coral/15 to-transparent blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <Reveal from="up">
-          <SectionHeading eyebrow="How booking works" title="Four calm steps from hello to care." />
+          <SectionHeading 
+            eyebrow={processBlock?.eyebrow ?? "How booking works"} 
+            title={processBlock?.title ?? "Four calm steps from hello to care."} 
+          />
         </Reveal>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {steps.map((step, index) => (
@@ -2942,7 +3023,8 @@ function ProcessSection() {
   );
 }
 
-function SunnyismSection() {
+function SunnyismSection({ page }: { page?: PageContent }) {
+  const founderBlock = page?.blocks?.find(b => b.type === "founder");
   return (
     <section className="relative overflow-hidden py-12 text-white md:py-16">
       <div className="bg-gradient-animated absolute inset-0" />
@@ -2950,17 +3032,21 @@ function SunnyismSection() {
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 md:grid-cols-[0.9fr_1.1fr] md:gap-12 md:px-8">
         <Reveal from="left">
           <div className="overflow-hidden rounded-[1.75rem] border border-white/15 shadow-2xl sm:rounded-[2rem]">
-            <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(aboutStoryImages[0])} alt="Sunnyism.Pro #DogDad" />
+            {founderBlock?.images?.[0] ? (
+              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(founderBlock.images[0])} alt={founderBlock.images[0].alt} />
+            ) : (
+              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(aboutStoryImages[0])} alt="Sunnyism.Pro #DogDad" />
+            )}
           </div>
         </Reveal>
         <Reveal from="right" delay={0.1}>
-          <p className="text-xs font-semibold tracking-wide text-peach sm:text-sm">Trusted care</p>
+          <p className="text-xs font-semibold tracking-wide text-peach sm:text-sm">{founderBlock?.eyebrow ?? "Trusted care"}</p>
           <h2 className="mt-3 font-serif text-[1.75rem] leading-[1.12] tracking-tight sm:text-3xl md:text-4xl">
-            Meet Sunnyism.Pro <span className="text-gradient italic">#DogDad</span>
+            {founderBlock?.title ?? <>Meet Sunnyism.Pro <span className="text-gradient italic">#DogDad</span></>}
           </h2>
           <p className="mt-2 text-sm text-white/70">Thoughts, vision, and the journey ahead.</p>
           <p className="mt-5 max-w-xl text-sm leading-7 text-white/85 sm:text-base sm:leading-8">
-            At Hand &amp; Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you&apos;re away. Since 2021 we have built trust through consistent nurturing services for your pet&apos;s well-being in Greater Toronto area.
+            {founderBlock?.body ?? "At Hand & Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you're away. Since 2021 we have built trust through consistent nurturing services for your pet's well-being in Greater Toronto area."}
           </p>
           <div className="mt-7">
             <Button href="/our-vision" variant="light">Our Vision</Button>

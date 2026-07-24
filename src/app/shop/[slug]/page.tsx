@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: product.title,
       description: product.description,
-      images: product.images[0]?.url ? [product.images[0].url] : undefined,
+      images: product.images?.[0]?.url ? [product.images[0].url] : undefined,
     },
   };
 }

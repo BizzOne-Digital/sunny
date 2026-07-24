@@ -43,12 +43,13 @@ export type Service = {
 };
 
 export type PageBlock = {
-  type: "story" | "imageGrid" | "cards" | "process" | "faq" | "cta" | "gallery" | "shop" | "testimonials";
+  type: "story" | "imageGrid" | "cards" | "process" | "faq" | "cta" | "gallery" | "shop" | "testimonials" | "stats" | "features" | "founder";
   eyebrow?: string;
   title: string;
   body?: string;
-  items?: { title: string; body: string; image?: ImageAsset; href?: string }[];
+  items?: { title: string; body: string; image?: ImageAsset; href?: string; icon?: string; number?: string }[];
   images?: ImageAsset[];
+  primaryCta?: { label: string; href: string };
 };
 
 export type PageContent = {
@@ -60,10 +61,12 @@ export type PageContent = {
   hero: {
     eyebrow: string;
     title: string;
+    subtitle?: string;
     body: string;
     primaryCta?: { label: string; href: string };
     secondaryCta?: { label: string; href: string };
     images: ImageAsset[];
+    badge?: { title: string; subtitle: string };
   };
   blocks: PageBlock[];
   status?: "published" | "draft";
@@ -1254,38 +1257,134 @@ export const pricingPackages: PricingPackage[] = [
 
 export const testimonials: Testimonial[] = [
   {
-    slug: "gta-boarding-calm",
-    reviewer: "Aisha R.",
-    petName: "Milo",
-    service: "Dog Boarding",
+    slug: "review-1",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
     rating: 5,
-    quote: "Milo settled in quickly and we got calm updates throughout. It felt like structured home care, not a kennel.",
-    location: "Downtown Toronto",
-    image: img("boarding-home"),
-    status: "published",
-    sample: false,
-  },
-  {
-    slug: "gta-walking-routine",
-    reviewer: "Jordan K.",
-    petName: "Nala",
-    service: "Dog Walking",
-    rating: 5,
-    quote: "Reliable midday walks with clear timing. Nala comes home settled and we trust the routine every workday.",
-    location: "Greater Toronto Area",
-    image: img("walk-toronto"),
-    status: "published",
-    sample: false,
-  },
-  {
-    slug: "gta-grooming-tidy",
-    reviewer: "Priya S.",
-    petName: "Bean",
-    service: "Dog Grooming",
-    rating: 5,
-    quote: "Gentle grooming and tidy nails without stress. The team explained every step and Bean looked fantastic.",
+    quote: "Amazing service and care for our furry friend!",
     location: "Toronto",
-    image: img("grooming"),
+    image: { id: "review-1", title: "Review 1", alt: "Client testimonial", url: "/images/reviews/1.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-2",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Excellent experience with professional care!",
+    location: "Toronto",
+    image: { id: "review-2", title: "Review 2", alt: "Client testimonial", url: "/images/reviews/2.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-3",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Highly recommend their services!",
+    location: "Toronto",
+    image: { id: "review-3", title: "Review 3", alt: "Client testimonial", url: "/images/reviews/3.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-4",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Outstanding pet care services!",
+    location: "Toronto",
+    image: { id: "review-4", title: "Review 4", alt: "Client testimonial", url: "/images/reviews/4.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-5",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Very professional and caring team!",
+    location: "Toronto",
+    image: { id: "review-5", title: "Review 5", alt: "Client testimonial", url: "/images/reviews/5.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-6",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Trusted care for our beloved pets!",
+    location: "Toronto",
+    image: { id: "review-6", title: "Review 6", alt: "Client testimonial", url: "/images/reviews/6.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-7",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Fantastic service, will use again!",
+    location: "Toronto",
+    image: { id: "review-7", title: "Review 7", alt: "Client testimonial", url: "/images/reviews/7.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-8",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Best pet care in Toronto!",
+    location: "Toronto",
+    image: { id: "review-8", title: "Review 8", alt: "Client testimonial", url: "/images/reviews/8.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-9",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Love the attention and care provided!",
+    location: "Toronto",
+    image: { id: "review-9", title: "Review 9", alt: "Client testimonial", url: "/images/reviews/9.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-10",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Professional and reliable service!",
+    location: "Toronto",
+    image: { id: "review-10", title: "Review 10", alt: "Client testimonial", url: "/images/reviews/10.png", width: 800, height: 800, status: "published" },
+    status: "published",
+    sample: false,
+  },
+  {
+    slug: "review-11",
+    reviewer: "Client Review",
+    petName: "Happy Pet",
+    service: "Pet Care",
+    rating: 5,
+    quote: "Exceptional care for our furry family!",
+    location: "Toronto",
+    image: { id: "review-11", title: "Review 11", alt: "Client testimonial", url: "/images/reviews/11.png", width: 800, height: 800, status: "published" },
     status: "published",
     sample: false,
   },
@@ -1803,7 +1902,7 @@ export async function getCollection<T>(collection: CollectionName, fallback: T[]
 
 export async function getPage(slug: string) {
   // Always use seed data for these pages to avoid stale DB content
-  const seedOnlySlugs = ["our-vision", "policy", "gallery", "gift-cards", "testimonials", "blog", "team", "faq", "services", "treats", "contact"];
+  const seedOnlySlugs = ["policy", "gift-cards", "treats", "contact"];
   if (seedOnlySlugs.includes(slug)) {
     return pages.find((page) => page.slug === slug && page.status !== "draft");
   }
@@ -1812,28 +1911,28 @@ export async function getPage(slug: string) {
 }
 
 export async function getServices() {
-  // Public site always uses the confirmed service catalog.
-  return services.filter((service) => service.status !== "draft");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<Service>("services", services.filter((service) => service.status !== "draft"));
 }
 
 export async function getTeamMembers() {
-  // Public site always uses the confirmed team list.
-  return team.filter((member) => member.status !== "draft");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<TeamMember>("team", team.filter((member) => member.status !== "draft"));
 }
 
 export async function getFaqs() {
-  // Public site always uses the confirmed FAQ list.
-  return faqs.filter((faq) => faq.status !== "draft");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<Faq>("faqs", faqs.filter((faq) => faq.status !== "draft"));
 }
 
 export async function getProducts() {
-  // Public shop uses the confirmed merch + gift-card catalog.
-  return products.filter((product) => product.status !== "draft");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<Product>("products", products.filter((product) => product.status !== "draft"));
 }
 
 export async function getTestimonials() {
-  // Public site always uses the confirmed review list (skips stale CMS sample entries).
-  return testimonials.filter((item) => item.status !== "draft" && !item.sample);
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<Testimonial>("testimonials", testimonials.filter((item) => item.status !== "draft" && !item.sample));
 }
 
 export async function getGalleryImages() {
@@ -1847,51 +1946,74 @@ export async function getTreatImages() {
 }
 
 export async function getService(slug: string) {
-  return services.find((service) => service.slug === slug);
+  const all = await getServices();
+  return all.find((service) => service.slug === slug && service.status !== "draft");
+}
+
+async function syncCollectionItems(collection: CollectionName, items: Record<string, unknown>[], replaceAll = true) {
+  const db = await connectMongo();
+  if (!db) return false;
+
+  const ModelCtor = collectionModelMap[collection]() as unknown as Model<Record<string, unknown>>;
+  if (replaceAll) await ModelCtor.deleteMany({});
+  for (const item of items) {
+    const key = item.slug ? { slug: item.slug } : { id: item.id };
+    await ModelCtor.updateOne(key, { $set: item }, { upsert: true });
+  }
+  return true;
 }
 
 export async function syncServices() {
-  const db = await connectMongo();
-  if (!db) return getServices();
-
-  const ModelCtor = Models.Service() as unknown as Model<Record<string, unknown>>;
-  await ModelCtor.deleteMany({});
-  for (const item of services) {
-    await ModelCtor.updateOne({ slug: item.slug }, { $set: item }, { upsert: true });
-  }
+  await syncCollectionItems("services", services as unknown as Record<string, unknown>[]);
   return getServices();
 }
 
-export async function syncPricingPackages() {
-  const db = await connectMongo();
-  if (!db) return pricingPackages.filter((item) => item.status !== "hidden");
+export async function syncFaqs() {
+  await syncCollectionItems("faqs", faqs as unknown as Record<string, unknown>[]);
+  return getFaqs();
+}
 
-  const ModelCtor = Models.PricingPackage() as unknown as Model<Record<string, unknown>>;
-  await ModelCtor.deleteMany({});
-  for (const item of pricingPackages) {
-    await ModelCtor.updateOne({ slug: item.slug }, { $set: item }, { upsert: true });
+export async function syncProducts() {
+  await syncCollectionItems("products", products as unknown as Record<string, unknown>[]);
+  return getProducts();
+}
+
+export async function syncTeam() {
+  await syncCollectionItems("team", team as unknown as Record<string, unknown>[]);
+  return getTeamMembers();
+}
+
+export async function syncAllContent() {
+  const db = await connectMongo();
+  if (!db) throw new Error("MONGODB_URI is required to sync content.");
+
+  const replaceCollections: CollectionName[] = ["services", "pricing", "faqs", "products", "team", "blog", "pages"];
+  for (const collection of replaceCollections) {
+    const data = collectionDefaults[collection] as Record<string, unknown>[];
+    await syncCollectionItems(collection, data);
   }
+}
+
+export async function syncPricingPackages() {
+  await syncCollectionItems("pricing", pricingPackages as unknown as Record<string, unknown>[]);
   return pricingPackages.filter((item) => item.status !== "hidden");
 }
 
 /** Public pricing always uses the confirmed daycare/boarding package list. */
 export async function getPricingPackages(): Promise<PricingPackage[]> {
-  return pricingPackages.filter((item) => item.status !== "hidden");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  return await getCollection<PricingPackage>("pricing", pricingPackages.filter((item) => item.status !== "hidden"));
 }
 
 export async function seedDatabase() {
+  await syncAllContent();
+
   const db = await connectMongo();
   if (!db) throw new Error("MONGODB_URI is required to seed the database.");
 
-  const entries = Object.entries(collectionDefaults) as [CollectionName, unknown[]][];
-  for (const [collection, data] of entries) {
-    const ModelCtor = collectionModelMap[collection]() as unknown as Model<Record<string, unknown>>;
-    if (collection === "pricing" || collection === "services") {
-      await ModelCtor.deleteMany({});
-    }
-    for (const item of data as Record<string, unknown>[]) {
-      const key = item.slug ? { slug: item.slug } : { id: item.id };
-      await ModelCtor.updateOne(key, { $set: item }, { upsert: true });
-    }
+  const mergeCollections: CollectionName[] = ["media", "testimonials"];
+  for (const collection of mergeCollections) {
+    const data = collectionDefaults[collection] as Record<string, unknown>[];
+    await syncCollectionItems(collection, data, false);
   }
 }
