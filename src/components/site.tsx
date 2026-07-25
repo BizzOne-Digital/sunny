@@ -120,7 +120,8 @@ function treatImageUrl(order?: number) {
   return urls[order - 1];
 }
 
-function localImageUrl(image: ImageAsset) {
+function localImageUrl(image: ImageAsset | undefined) {
+  if (!image || !image.id) return "/images/brand/logo.png"; // Fallback to logo
   if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   return localImageUrls[image.id] ?? image.url;
@@ -130,9 +131,9 @@ function productImages(product: Product) {
   const giftCardImages: Record<string, ImageAsset> = {
     "gift-card-150": asset("gift-card-100-image", "DTdogs $150 gift card", "Premium DTdogs digital gift card product image for CAD $150", "/images/shop/gift100.png"),
   };
-  const primary = giftCardImages[product.slug];
-  const images = product.images || [];
-  return primary ? [primary, ...images.filter((image) => image.id !== primary.id)] : images;
+  const primary = giftCardImages[product?.slug];
+  const images = product?.images || [];
+  return primary ? [primary, ...images.filter((image) => image?.id !== primary?.id)] : images;
 }
 
 const asset = (id: string, title: string, alt: string, url: string, page?: string, order?: number): ImageAsset => ({
@@ -285,11 +286,20 @@ function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function imageProps(image: ImageAsset, sizes = "(min-width: 1024px) 50vw, 100vw") {
+function imageProps(image: ImageAsset | undefined, sizes = "(min-width: 1024px) 50vw, 100vw") {
+  if (!image) {
+    return {
+      src: "/images/brand/logo.png",
+      alt: "DTdogs.ca",
+      width: 1400,
+      height: 1000,
+      sizes,
+    };
+  }
   const src = localImageUrl(image);
   return {
     src: src || "/images/brand/logo.png",
-    alt: image.alt,
+    alt: image.alt || "DTdogs.ca",
     width: image.width ?? 1400,
     height: image.height ?? 1000,
     sizes,
@@ -410,14 +420,6 @@ function IntroWrapper() {
                   )}
                 </motion.div>
                 <div>
-                  <motion.p
-                    className="text-xs font-medium tracking-wide text-peach sm:text-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 0.4 }}
-                  >
-                    DTdogs.ca {brand.formerlyShort}
-                  </motion.p>
                   <h1 className="mt-3 font-serif text-4xl italic sm:text-5xl md:text-8xl">
                     {"Care begins with trust.".split(" ").map((word, index) => (
                       <motion.span
@@ -444,7 +446,7 @@ function IntroWrapper() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, delay: 1.2 }}
                 >
-                  Care, Comfort & Companionship
+                  Dog Daycare, Boarding and Pet Grooming
                 </motion.p>
               </motion.div>
             </>
@@ -500,7 +502,6 @@ function BrandLogo({ inverted = false }: { inverted?: boolean }) {
           </span>
           <span className="leading-tight">
             <span className={cx("block text-sm font-extrabold tracking-tight", inverted ? "text-white" : "text-forest")}>DTdogs.ca</span>
-            <span className={cx("block text-[10px] font-medium", inverted ? "text-white/70" : "text-ink/55")}>{brand.formerlyShort}</span>
           </span>
         </>
       )}
@@ -762,7 +763,7 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
               >
                 <PawPrint className="h-4 w-4 shrink-0" />
               </motion.span>
-              {page?.hero?.eyebrow ?? "Structured pet care · Downtown Toronto & GTA"}
+              {page?.hero?.eyebrow ?? "Structured pet care in Downtown Toronto, serving across GTA"}
             </motion.p>
 
             <h1 className="font-serif text-[2.15rem] leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.25rem]">
@@ -775,18 +776,6 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
                 {page?.hero?.title ?? "Welcome to DTdogs.ca"}
               </motion.span>
             </h1>
-            <motion.p
-              className="mt-1.5 text-[13px] font-normal leading-snug text-white/70 sm:text-sm"
-              initial={reducedMotion ? false : { opacity: 0 }}
-              animate={enter ? { opacity: 1 } : { opacity: reducedMotion ? 1 : 0 }}
-              transition={{ duration: 0.7, delay: enter ? 0.38 : 0 }}
-            >
-              {page?.hero?.subtitle ?? "(Formerly Known As "}{" "}
-              <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.ca</a>
-              {" / "}
-              <a href="https://dtdogs.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-white/90">Handandpaw.in</a>
-              {page?.hero?.subtitle ? "" : ")"}
-            </motion.p>
 
             <motion.p
               className="mt-5 max-w-lg text-sm leading-7 text-white/85 sm:mt-6 sm:text-base sm:leading-8"
@@ -890,7 +879,7 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
               align="left" 
             />
             <p className="mt-5 max-w-3xl text-sm leading-7 text-ink/70 sm:text-base sm:leading-8">
-              {page?.blocks?.find(b => b.type === "story")?.body ?? `DTdogs.ca ${brand.formerlyShort} offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you're away.`}
+              {page?.blocks?.find(b => b.type === "story")?.body ?? `DTdogs.ca offers structured pet care for discerning pet parents. Located in Downtown, Toronto — serving across GTA and operating all season. We are a team of #petpeople and #petparents. Our vision is simple: safe, professional care in a calm, home-style environment — with clear updates while you're away.`}
             </p>
             <div className="mt-6">
               <Button href="/our-vision" variant="outline">Read Our Vision</Button>
@@ -1505,9 +1494,6 @@ export function ProductDetail({ product }: { product: Product }) {
         </Reveal>
         <Reveal from="right" delay={0.12}>
           <div className="self-center">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-burgundy sm:text-sm sm:tracking-[0.34em]">
-              {comingSoon ? "Coming Soon #2026" : "Catalogue / Inquiry mode"}
-            </p>
             <h1 className="mt-4 font-serif text-[2.35rem] leading-[1.05] text-forest sm:mt-5 sm:text-6xl">{product.title}</h1>
             <p className="mt-6 text-base leading-8 text-ink/70 sm:text-xl">{product.description}</p>
             <div className="mt-6 flex flex-wrap items-end gap-3">
@@ -1519,11 +1505,9 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <InfoPill title="Sizes" value={product.sizes.join(", ")} />
             <InfoPill title="Colours" value={product.colors.join(", ")} />
-            <InfoPill title="Inventory" value={`${product.inventory ?? 0} editable in CMS`} />
-            <InfoPill title="Status" value={comingSoon ? "Coming Soon" : product.status} />
           </div>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button href="/contact">{comingSoon ? "Notify Me" : "Ask About This Product"}</Button>
+            <Button href="/contact">{comingSoon ? "Ask About This Product" : "Ask About This Product"}</Button>
             <Button href="/shop" variant="outline">Back to Shop</Button>
           </div>
           </div>
@@ -2053,7 +2037,11 @@ function BookingCalendar({
 
 function BookingForm({ services }: { services: Service[] }) {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState(0);
+  const packageName = searchParams.get("package");
+  const packagePrice = searchParams.get("price");
+  const isBundle = Boolean(packageName && packagePrice);
+  
+  const [step, setStep] = useState(isBundle ? 3 : 0); // Start at Contact (step 3) for bundles
   const [status, setStatus] = useState<string | null>(null);
   const steps = ["Service Selection", "Pet & Hooman", "Date & Time", "Contact", "Pet Details", "Checkout / Deposit", "Confirmation"];
   const bookableServices = useMemo(() => services.filter((service) => service.status !== "coming-soon"), [services]);
@@ -2080,6 +2068,13 @@ function BookingForm({ services }: { services: Service[] }) {
     if (searchParams.get("addon") === "1") setIncludeAddon(true);
     const size = searchParams.get("size");
     if (size) setSizeLabel(size);
+    
+    // If bundle is selected, start at Contact step
+    const pkg = searchParams.get("package");
+    const price = searchParams.get("price");
+    if (pkg && price) {
+      setStep(3); // Contact tab
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from query string
   }, [searchParams]);
 
@@ -2096,26 +2091,33 @@ function BookingForm({ services }: { services: Service[] }) {
   const basePrice = getServiceBasePrice(selectedService, sizeLabel);
   const total = basePrice === null ? null : basePrice + (includeAddon ? serviceAddOn.priceAmount : 0);
   const packageSelection = [sizeLabel ? `Size: ${sizeLabel}` : null, includeAddon ? `Add-On (+${serviceAddOn.priceLabel})` : "No add-on"].filter(Boolean).join(" · ");
-  const bookingServiceLabel = selectedService
+  const bookingServiceLabel = isBundle 
+    ? packageName || "Bundle Package"
+    : selectedService
     ? serviceBookingLabel(selectedService, bookableServices)
     : "";
+  
+  const displayPrice = isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("Submitting...");
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
+    
+    const submissionData = {
+      ...data,
+      service: bookingServiceLabel,
+      packageSelection: isBundle ? `Bundle: ${packageName}` : packageSelection,
+      addonSelected: isBundle ? false : includeAddon,
+      estimatedTotal: isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total)),
+      policyAgreement: data.policyAgreement === "on",
+    };
+    
     const response = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...data,
-        service: bookingServiceLabel,
-        packageSelection,
-        addonSelected: includeAddon,
-        estimatedTotal: total === null ? selectedService?.priceLabel ?? "" : formatMoney(total),
-        policyAgreement: data.policyAgreement === "on",
-      }),
+      body: JSON.stringify(submissionData),
     });
     setStatus(response.ok ? "Booking request received. We will contact you soon." : "Something went wrong. Please review the form and try again.");
     if (response.ok) form.reset();
@@ -2136,36 +2138,79 @@ function BookingForm({ services }: { services: Service[] }) {
         className="tech-panel rounded-[1.75rem] p-3.5 shadow-2xl shadow-black/10 sm:rounded-[2rem] sm:p-5 md:rounded-[2.5rem] md:p-8"
       >
         <input type="hidden" name="service" value={bookingServiceLabel} />
-        <input type="hidden" name="packageSelection" value={packageSelection} />
-        <input type="hidden" name="addonSelected" value={includeAddon ? "true" : "false"} />
-        <input type="hidden" name="estimatedTotal" value={total === null ? selectedService?.priceLabel ?? "" : formatMoney(total)} />
+        <input type="hidden" name="packageSelection" value={isBundle ? `Bundle: ${packageName}` : packageSelection} />
+        <input type="hidden" name="addonSelected" value={isBundle ? "false" : (includeAddon ? "true" : "false")} />
+        <input type="hidden" name="estimatedTotal" value={isBundle ? packagePrice || "" : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total))} />
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
-          {steps.map((label, index) => (
-            <button key={label} type="button" onClick={() => setStep(index)} className={cx("shrink-0 rounded-full px-3.5 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm", step === index ? "btn-gradient text-white shadow-md shadow-coral/25" : "bg-sage text-ink")}>
-              <span className="sm:hidden">{index + 1}</span>
-              <span className="hidden sm:inline">{index + 1}. {label}</span>
-            </button>
-          ))}
+          {steps.map((label, index) => {
+            const isDisabledForBundle = isBundle && index < 3;
+            return (
+              <button 
+                key={label} 
+                type="button" 
+                onClick={() => !isDisabledForBundle && setStep(index)} 
+                disabled={isDisabledForBundle}
+                className={cx(
+                  "shrink-0 rounded-full px-3.5 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm", 
+                  isDisabledForBundle 
+                    ? "cursor-not-allowed opacity-30 bg-sage/50 text-ink/30" 
+                    : step === index 
+                    ? "btn-gradient text-white shadow-md shadow-coral/25" 
+                    : "bg-sage text-ink"
+                )}
+              >
+                <span className="sm:hidden">{isDisabledForBundle ? "—" : index + 1}</span>
+                <span className="hidden sm:inline">{isDisabledForBundle ? "—" : index + 1}. {label}</span>
+              </button>
+            );
+          })}
         </div>
         <div className="mb-5 rounded-[1.5rem] bg-cream p-4 lg:hidden">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-burgundy">Booking summary</p>
               <p className="mt-1 truncate font-serif text-lg text-forest">{bookingServiceLabel || "Select a service"}</p>
-              <p className="mt-0.5 text-xs text-ink/55">{sizeLabel ? `Size: ${sizeLabel}` : selectedService?.duration ?? ""}</p>
+              <p className="mt-0.5 text-xs text-ink/55">
+                {isBundle 
+                  ? "Bundle Package" 
+                  : sizeLabel 
+                  ? `Size: ${sizeLabel}` 
+                  : selectedService?.duration ?? ""}
+              </p>
             </div>
-            <p className="shrink-0 font-serif text-2xl font-bold text-burgundy">{total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total)}</p>
+            <p className="shrink-0 font-serif text-2xl font-bold text-burgundy">{displayPrice}</p>
           </div>
         </div>
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr_18rem]">
           <aside className="hidden rounded-[2rem] bg-forest p-4 text-white lg:block">
-            {steps.map((label, index) => (
-              <button key={label} type="button" onClick={() => setStep(index)} className={cx("mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm", step === index ? "btn-gradient text-white shadow-md shadow-coral/25" : index < step ? "bg-white/10 text-white" : "text-white/55")}>
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 text-xs">{index < step ? "✓" : index + 1}</span>
-                {label}
-              </button>
-            ))}
+            {steps.map((label, index) => {
+              // For bundles, disable steps 0, 1, 2 (Service Selection, Pet & Hooman, Date & Time)
+              const isDisabledForBundle = isBundle && index < 3;
+              return (
+                <button 
+                  key={label} 
+                  type="button" 
+                  onClick={() => !isDisabledForBundle && setStep(index)} 
+                  disabled={isDisabledForBundle}
+                  className={cx(
+                    "mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm", 
+                    isDisabledForBundle 
+                      ? "cursor-not-allowed opacity-30 text-white/30" 
+                      : step === index 
+                      ? "btn-gradient text-white shadow-md shadow-coral/25" 
+                      : index < step 
+                      ? "bg-white/10 text-white" 
+                      : "text-white/55"
+                  )}
+                >
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 text-xs">
+                    {isDisabledForBundle ? "—" : index < step ? "✓" : index + 1}
+                  </span>
+                  {label}
+                </button>
+              );
+            })}
           </aside>
 
           <div className="grid gap-5 md:grid-cols-2">
@@ -2174,7 +2219,7 @@ function BookingForm({ services }: { services: Service[] }) {
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Choose a service</h3>
                 <p className="mt-2 text-sm text-ink/60">Select your care option, then optionally add the +{serviceAddOn.priceLabel} add-on.</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 md:col-span-2">
+              <div className="grid gap-3 md:col-span-2">
                 {bookableServices.map((service) => {
                   const thumb = servicePrimaryImage(service);
                   const active = selectedServiceSlug === service.slug;
@@ -2288,7 +2333,11 @@ function BookingForm({ services }: { services: Service[] }) {
             <div className={cx("md:col-span-2", step === 5 ? "block" : "hidden")}>
               <div className="rounded-[2rem] bg-sage/70 p-6">
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Checkout / Deposit</h3>
-                <p className="mt-3 leading-7 text-ink/70">Estimated total: <strong>{total === null ? selectedService?.priceLabel ?? "Quote on confirmation" : formatMoney(total)}</strong>{includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : ""}. Payments stay pending until confirmation.</p>
+                <p className="mt-3 leading-7 text-ink/70">
+                  Estimated total: <strong>{isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "Quote on confirmation" : formatMoney(total))}</strong>
+                  {isBundle ? " (Bundle Package)" : (includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : "")}. 
+                  Payments stay pending until confirmation.
+                </p>
                 <div className="mt-4 rounded-[1.25rem] bg-white/70 p-4">
                   <PaymentLogos light />
                 </div>
@@ -2307,18 +2356,42 @@ function BookingForm({ services }: { services: Service[] }) {
           <aside className="hidden h-fit rounded-[2rem] bg-cream p-5 shadow-inner lg:block">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-burgundy">Booking summary</p>
             <h3 className="mt-3 font-serif text-2xl text-forest">{bookingServiceLabel || "Select a service"}</h3>
-            <p className="mt-2 text-sm text-ink/60">{selectedService?.duration ?? "Duration confirmed at booking"}</p>
-            <div className="mt-5 space-y-2 border-t border-forest/10 pt-4 text-sm">
-              <div className="flex justify-between gap-3"><span>Service</span><span className="font-semibold">{basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}</span></div>
-              <div className="flex justify-between gap-3"><span>Add-on</span><span className="font-semibold">{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0"}</span></div>
-              <div className="flex justify-between gap-3 border-t border-forest/10 pt-3 text-base font-bold text-forest"><span>Total</span><span>{total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total)}</span></div>
-            </div>
+            <p className="mt-2 text-sm text-ink/60">
+              {isBundle 
+                ? "Bundle Package" 
+                : selectedService?.duration ?? "Duration confirmed at booking"}
+            </p>
+            {isBundle ? (
+              <div className="mt-5 space-y-2 border-t border-forest/10 pt-4 text-sm">
+                <div className="flex justify-between gap-3 text-base font-bold text-forest">
+                  <span>Package Total</span>
+                  <span>{packagePrice}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-2 border-t border-forest/10 pt-4 text-sm">
+                <div className="flex justify-between gap-3"><span>Service</span><span className="font-semibold">{basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}</span></div>
+                <div className="flex justify-between gap-3"><span>Add-on</span><span className="font-semibold">{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0"}</span></div>
+                <div className="flex justify-between gap-3 border-t border-forest/10 pt-3 text-base font-bold text-forest"><span>Total</span><span>{total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total)}</span></div>
+              </div>
+            )}
             <p className="mt-4 text-xs leading-6 text-ink/55">Final confirmation remains admin-controlled for capacity and timing.</p>
           </aside>
         </div>
         <div className="mt-8 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => setStep(Math.max(0, step - 1))} className="rounded-full border border-forest/20 px-5 py-3 font-bold">Back</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                // For bundles, don't go back before Contact step (step 3)
+                const minStep = isBundle ? 3 : 0;
+                setStep(Math.max(minStep, step - 1));
+              }} 
+              className="rounded-full border border-forest/20 px-5 py-3 font-bold"
+              disabled={isBundle && step === 3}
+            >
+              Back
+            </button>
             {step < steps.length - 1 ? (
               <button
                 type="button"
@@ -2346,7 +2419,7 @@ function BookingForm({ services }: { services: Service[] }) {
   );
 }
 
-function Field({ label, name, type = "text", required, textarea, as, options }: { label: string; name: string; type?: string; required?: boolean; textarea?: boolean; as?: "select"; options?: string[] }) {
+function Field({ label, name, type = "text", required, textarea, as, options, rows }: { label: string; name: string; type?: string; required?: boolean; textarea?: boolean; as?: "select"; options?: string[]; rows?: number }) {
   const className = "mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-base outline-none ring-forest/20 transition focus:ring-4";
   return (
     <label className="block text-sm font-bold text-ink/70">
@@ -2357,7 +2430,7 @@ function Field({ label, name, type = "text", required, textarea, as, options }: 
           {options?.map((option, index) => <option key={`${name}-${option}-${index}`}>{option}</option>)}
         </select>
       ) : textarea ? (
-        <textarea name={name} required={required} className={cx(className, "min-h-32")} />
+        <textarea name={name} required={required} rows={rows} className={cx(className, !rows && "min-h-32")} />
       ) : (
         <input name={name} type={type} required={required} className={className} />
       )}
@@ -2929,6 +3002,18 @@ function ShopPreview({ products, page }: { products: Product[]; page?: PageConte
         <div className="mt-12 grid gap-10">
           {merch.map((product, index) => {
             const imageFirst = index % 2 === 0;
+            const primaryImage = product.images && product.images.length > 0 ? product.images[0] : null;
+            
+            // Create placeholder for coming soon products
+            const displayImage = primaryImage || {
+              id: `placeholder-${product.slug}`,
+              url: product.slug.includes('dad') ? '/images/shop/shop-dad.webp' : '/images/shop/shop-mom.webp',
+              alt: product.title,
+              title: product.title,
+              width: 1200,
+              height: 1400,
+            };
+            
             return (
               <Reveal key={product.slug} from={imageFirst ? "left" : "right"} delay={index * 0.12}>
                 <Link
@@ -2938,8 +3023,8 @@ function ShopPreview({ products, page }: { products: Product[]; page?: PageConte
                   <div className={cx("overflow-hidden rounded-[1.5rem]", !imageFirst && "lg:order-2")}>
                     <Image
                       className="h-64 w-full object-contain transition duration-700 group-hover:scale-105 sm:h-80"
-                      {...imageProps(product.images[0])}
-                      alt={product.images[0].alt}
+                      {...imageProps(displayImage)}
+                      alt={displayImage.alt}
                     />
                   </div>
                   <div className={cx("px-2 sm:px-4", !imageFirst && "lg:order-1")}>
@@ -3049,7 +3134,7 @@ function SunnyismSection({ page }: { page?: PageContent }) {
             {founderBlock?.body ?? "At Hand & Paw, we offer structured services for pets of discerning pet owners. Our mission is simple: to provide safe and professional care that ensures a calm environment and comfort for your pets while you're away. Since 2021 we have built trust through consistent nurturing services for your pet's well-being in Greater Toronto area."}
           </p>
           <div className="mt-7">
-            <Button href="/our-vision" variant="light">Our Vision</Button>
+            <Button href="/our-vision" variant="light">Read More</Button>
           </div>
         </Reveal>
       </div>
@@ -3092,18 +3177,95 @@ function BookingCTA({ image = homePage.storyImages[4] }: { image?: ImageAsset })
 }
 
 function ContactPanel() {
+  const [status, setStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setStatus(null);
+
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setStatus("Message sent successfully! We'll get back to you soon.");
+        form.reset();
+      } else {
+        setStatus("Something went wrong. Please try again or email us directly.");
+      }
+    } catch (error) {
+      setStatus("Something went wrong. Please try again or email us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-3">
-      <Reveal from="left" delay={0}>
-        <InfoCard icon={<Phone />} title="Phone" body={brand.phone} href={`tel:${brand.phone}`} />
-      </Reveal>
-      <Reveal from="up" delay={0.1}>
-        <InfoCard icon={<CalendarDays />} title="Hours" body={`${brand.hours}. ${brand.boardingNote}`} />
-      </Reveal>
-      <Reveal from="right" delay={0.2}>
-        <InfoCard icon={<PawPrint />} title="Email" body={brand.email} href={`mailto:${brand.email}`} />
-      </Reveal>
-    </section>
+    <>
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-3">
+        <Reveal from="left" delay={0}>
+          <InfoCard 
+            icon={
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+            } 
+            title="WhatsApp Us" 
+            body={brand.phone} 
+            href="https://wa.me/14379375112"
+          />
+        </Reveal>
+        <Reveal from="up" delay={0.1}>
+          <InfoCard icon={<CalendarDays />} title="Hours" body={`${brand.hours}. ${brand.boardingNote}`} />
+        </Reveal>
+        <Reveal from="right" delay={0.2}>
+          <InfoCard icon={<PawPrint />} title="Email" body={brand.email} href={`mailto:${brand.email}`} />
+        </Reveal>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-4 pb-14 md:px-8 md:pb-20">
+        <Reveal from="up">
+          <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 md:p-8">
+            <div className="mb-6">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-burgundy">Get in Touch</p>
+              <h2 className="mt-2 font-serif text-3xl text-forest sm:text-4xl">Send us a message</h2>
+              <p className="mt-3 text-sm text-ink/60">
+                Have a question about our services? Fill out the form below and we'll get back to you as soon as possible.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="grid gap-5">
+              <Field label="Your Name" name="name" required />
+              <Field label="Your Email" name="email" type="email" required />
+              <Field label="Your Message" name="message" textarea required rows={6} />
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "Sending..." : "Send Message"}
+                </button>
+                {status && (
+                  <p className={cx("text-sm font-semibold", status.includes("success") ? "text-forest" : "text-burgundy")}>
+                    {status}
+                  </p>
+                )}
+              </div>
+            </form>
+          </div>
+        </Reveal>
+      </section>
+    </>
   );
 }
 
@@ -3346,7 +3508,7 @@ function Footer({ services }: { services: Service[] }) {
           <div className="max-w-xl">
             {/* Eyebrow */}
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-peach">
-              <PawPrint className="h-3.5 w-3.5" /> Structured pet care · Downtown Toronto &amp; GTA
+              <PawPrint className="h-3.5 w-3.5" /> Structured pet care in Downtown Toronto, serving across GTA
             </p>
             {/* Logo + Welcome heading */}
             <div className="flex items-center gap-4">
@@ -3368,7 +3530,7 @@ function Footer({ services }: { services: Service[] }) {
             </div>
             {/* Description */}
             <p className="mt-5 max-w-md text-sm leading-7 text-white/85">
-              Professional, structured pet care in Downtown Toronto, proudly serving the GTA year-round. We are a team of #petpeople and #petparents.
+              Structured pet care in Downtown Toronto, serving across GTA - Team of #petpeople and #petparents
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -3376,7 +3538,7 @@ function Footer({ services }: { services: Service[] }) {
               href="/booking"
               className="btn-gradient inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white shadow-lg shadow-coral/30 transition hover:-translate-y-0.5"
             >
-              Book appointment <ArrowRight className="h-4 w-4" />
+              Book now <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href={`${brand.whatsapp}?text=${encodeURIComponent("Hi DTdogs.ca — I'd like to message about booking.")}`}
@@ -3474,7 +3636,12 @@ function Footer({ services }: { services: Service[] }) {
           </div>
           <FooterColumn title="Services" links={serviceLinks} />
           <FooterColumn title="Explore" links={[{ label: "Our Vision", href: "/our-vision" }, { label: "Bundle", href: "/pricing" }, { label: "Gallery", href: "/gallery" }, { label: "Shop", href: "/shop" }, { label: "FAQ", href: "/faq" }, { label: "Blogs", href: "/blog" }, { label: "Contact", href: "/contact" }]} />
-          <FooterColumn title="Policy and Community" links={[{ label: "Policy", href: "/policy" }]} footer="#PetPeople" />
+          <div>
+            <FooterColumn title="Policy and Community" links={[{ label: "Policy", href: "/policy" }]} footer="#PetPeople" />
+            <div className="mt-3 text-xs font-medium tracking-wide text-white/70">
+              #petparents #petpro #petpeople
+            </div>
+          </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">

@@ -43,7 +43,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <nav className="mt-5 grid gap-2">
             <AdminLink href="/admin" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
-            <AdminLink href="/admin/media" icon={<FileImage className="h-4 w-4" />} label="Media Library" />
+            <AdminLink href="/admin/gallery" icon={<FileImage className="h-4 w-4" />} label="Gallery" />
+            <AdminLink href="/admin/pages-media" icon={<FileImage className="h-4 w-4" />} label="Pages Media" />
             {collections.map((item) => (
               <AdminLink key={item.name} href={`/admin/${item.name}`} icon={<BarChart3 className="h-4 w-4" />} label={item.label} />
             ))}
@@ -743,6 +744,423 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
             <div className="mt-6 flex flex-wrap gap-3">
               <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
                 <Save className="h-4 w-4" /> Save Image
+              </button>
+              <button type="button" onClick={() => setEditing(null)} className="rounded-full border border-forest/20 px-5 py-3 font-bold">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </AdminShell>
+  );
+}
+
+// Gallery Manager - manages only gallery page images
+export function GalleryManager() {
+  const [items, setItems] = useState<ImageAsset[]>([]);
+  const [editing, setEditing] = useState<ImageAsset | null>(null);
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Fetch gallery images on mount
+  useState(() => {
+    async function fetchGallery() {
+      try {
+        const response = await fetch("/api/gallery");
+        const data = await response.json();
+        if (response.ok && data) {
+          setItems(Array.isArray(data) ? data : []);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching gallery:", error);
+        setLoading(false);
+      }
+    }
+    fetchGallery();
+  });
+
+  async function upload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("Uploading...");
+    const form = event.currentTarget;
+    const response = await fetch("/api/media", {
+      method: "POST",
+      body: new FormData(form),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      // After upload, save to gallery
+      const galleryResponse = await fetch("/api/gallery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: data.asset.id,
+          title: data.asset.title,
+          alt: data.asset.alt,
+          caption: data.asset.caption || "",
+          url: data.asset.url,
+          width: data.asset.width || 1400,
+          height: data.asset.height || 1000,
+          tags: data.asset.tags || [],
+          status: "published",
+          order: items.length + 1,
+        }),
+      });
+      
+      if (galleryResponse.ok) {
+        const galleryData = await galleryResponse.json();
+        setItems([galleryData.gallery, ...items]);
+        setStatus("Uploaded to gallery!");
+        if (form) form.reset();
+      } else {
+        setStatus("Uploaded but failed to add to gallery.");
+      }
+    } else {
+      setStatus(data.error ?? "Upload failed.");
+    }
+  }
+
+  async function saveGallery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editing) return;
+    setStatus("Saving...");
+    const form = new FormData(event.currentTarget);
+    const next: ImageAsset = {
+      ...editing,
+      title: String(form.get("title") ?? editing.title),
+      alt: String(form.get("alt") ?? editing.alt),
+      caption: String(form.get("caption") ?? ""),
+      tags: String(form.get("tags") ?? "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      status: String(form.get("status") ?? "published") as ImageAsset["status"],
+      order: Number(form.get("order") ?? editing.order ?? 0),
+    };
+    
+    const response = await fetch(`/api/gallery/${editing.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    });
+    
+    if (response.ok) {
+      setItems((current) => current.map((image) => (image.id === next.id ? next : image)));
+      setEditing(null);
+      setStatus("Gallery image updated.");
+    } else {
+      setStatus("Unable to update image.");
+    }
+  }
+
+  async function deleteGallery(image: ImageAsset) {
+    if (!window.confirm(`Delete "${image.title}" from gallery?`)) return;
+    setStatus("Deleting...");
+    const response = await fetch(`/api/gallery/${image.id}`, {
+      method: "DELETE",
+    });
+    
+    if (response.ok) {
+      setItems((current) => current.filter((item) => item.id !== image.id));
+      setStatus("Image deleted from gallery.");
+    } else {
+      setStatus("Unable to delete image.");
+    }
+  }
+
+  return (
+    <AdminShell>
+      <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
+        <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Gallery Management</p>
+        <h1 className="mt-3 font-serif text-6xl text-forest">Manage gallery page images.</h1>
+        <p className="mt-4 max-w-3xl leading-8 text-ink/65">Upload and manage images that appear on the /gallery page. Images are stored in Cloudinary and metadata in MongoDB.</p>
+      </div>
+      
+      <form onSubmit={upload} className="mt-6 grid gap-4 rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 md:grid-cols-3">
+        <input name="file" type="file" accept="image/*" required className="rounded-2xl bg-cream p-3" />
+        <input name="title" placeholder="Image title" required className="rounded-2xl bg-cream px-4 py-3" />
+        <input name="alt" placeholder="Alt text" required className="rounded-2xl bg-cream px-4 py-3" />
+        <input name="caption" placeholder="Caption" className="rounded-2xl bg-cream px-4 py-3 md:col-span-2" />
+        <input name="tags" placeholder="Tags (comma separated)" className="rounded-2xl bg-cream px-4 py-3" />
+        <button className="inline-flex items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white">
+          <Upload className="h-4 w-4" /> Upload to Gallery
+        </button>
+        {status ? <p className="md:col-span-3 text-sm text-burgundy">{status}</p> : null}
+      </form>
+      
+      {loading ? (
+        <div className="mt-6 text-center text-ink/60">Loading gallery images...</div>
+      ) : (
+        <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {items.length === 0 ? (
+            <div className="md:col-span-2 xl:col-span-3 rounded-[2rem] bg-white p-8 text-center text-ink/60">
+              No gallery images yet. Upload your first image above!
+            </div>
+          ) : (
+            items.filter(image => image && image.url).map((image) => (
+              <article key={image.id} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
+                <Image src={image.url} alt={image.alt || "Gallery image"} width={image.width ?? 800} height={image.height ?? 600} className="h-64 w-full object-cover" />
+                <div className="p-5">
+                  <h2 className="font-serif text-3xl text-forest">{image.title || "Untitled"}</h2>
+                  <dl className="mt-4 grid gap-2 text-sm text-ink/65">
+                    <div><dt className="font-bold text-ink">Alt</dt><dd>{image.alt || "No alt text"}</dd></div>
+                    {image.caption && <div><dt className="font-bold text-ink">Caption</dt><dd>{image.caption}</dd></div>}
+                    <div><dt className="font-bold text-ink">Tags</dt><dd>{image.tags?.join(", ") || "None"}</dd></div>
+                    <div><dt className="font-bold text-ink">Order</dt><dd>{image.order ?? 0}</dd></div>
+                    <div><dt className="font-bold text-ink">Status</dt><dd>{image.status ?? "published"}</dd></div>
+                  </dl>
+                  <div className="mt-5 flex gap-3">
+                    <button onClick={() => setEditing(image)} className="inline-flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-sm font-bold text-white transition hover:bg-burgundy">
+                      <Pencil className="h-4 w-4" /> Edit
+                    </button>
+                    <button onClick={() => deleteGallery(image)} className="inline-flex items-center gap-2 rounded-full border border-burgundy px-4 py-2 text-sm font-bold text-burgundy transition hover:bg-burgundy hover:text-white">
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      )}
+      
+      {editing ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
+          <form onSubmit={saveGallery} className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Edit Gallery Image</p>
+                <h2 className="mt-2 font-serif text-4xl text-forest">{editing.title}</h2>
+              </div>
+              <button type="button" onClick={() => setEditing(null)} className="grid h-10 w-10 place-items-center rounded-full bg-cream">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <Image src={editing.url} alt={editing.alt} width={editing.width ?? 800} height={editing.height ?? 600} className="mt-5 h-64 w-full rounded-[1.5rem] object-cover" />
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <MediaInput name="title" label="Title" defaultValue={editing.title} required />
+              <MediaInput name="alt" label="Alt Text" defaultValue={editing.alt} required />
+              <MediaInput name="caption" label="Caption" defaultValue={editing.caption ?? ""} wide />
+              <MediaInput name="tags" label="Tags" defaultValue={(editing.tags ?? []).join(", ")} />
+              <MediaInput name="order" label="Display Order" type="number" defaultValue={String(editing.order ?? 0)} />
+              <label className="block text-sm font-bold text-ink/70">
+                Status
+                <select name="status" defaultValue={editing.status ?? "published"} className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3">
+                  <option value="published">published</option>
+                  <option value="hidden">hidden</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
+                <Save className="h-4 w-4" /> Save
+              </button>
+              <button type="button" onClick={() => setEditing(null)} className="rounded-full border border-forest/20 px-5 py-3 font-bold">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </AdminShell>
+  );
+}
+
+// Pages Media Library - manages page-specific images
+export function PagesMediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
+  const [items, setItems] = useState<ImageAsset[]>(initialItems);
+  const [editing, setEditing] = useState<ImageAsset | null>(null);
+  const [status, setStatus] = useState("");
+  const [selectedPage, setSelectedPage] = useState<string>("all");
+
+  const pages = ["home", "about", "services", "pricing", "gallery", "shop", "testimonials", "blog", "contact", "team"];
+  const filteredItems = selectedPage === "all" ? items : items.filter(item => item.page === selectedPage);
+
+  async function upload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("Uploading...");
+    const form = event.currentTarget;
+    const response = await fetch("/api/media", {
+      method: "POST",
+      body: new FormData(form),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setItems([data.asset, ...items]);
+      setStatus(data.message ? `Uploaded. ${data.message}` : "Uploaded and saved.");
+      if (form) form.reset();
+    } else {
+      setStatus(data.error ?? "Upload failed.");
+    }
+  }
+
+  async function saveMedia(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editing) return;
+    setStatus("Saving...");
+    const form = new FormData(event.currentTarget);
+    const next: ImageAsset = {
+      ...editing,
+      title: String(form.get("title") ?? editing.title),
+      alt: String(form.get("alt") ?? editing.alt),
+      caption: String(form.get("caption") ?? ""),
+      page: String(form.get("page") ?? ""),
+      tags: String(form.get("tags") ?? "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      status: String(form.get("status") ?? "published") as ImageAsset["status"],
+    };
+    const response = await fetch("/api/admin/content/media", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    });
+    if (response.ok) {
+      setItems((current) => current.map((image) => (image.id === next.id ? next : image)));
+      setEditing(null);
+      setStatus("Image updated.");
+    } else {
+      setStatus("Unable to update image.");
+    }
+  }
+
+  async function deleteMedia(image: ImageAsset) {
+    if (!window.confirm(`Delete "${image.title}"?`)) return;
+    setStatus("Deleting...");
+    const response = await fetch("/api/admin/content/media", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: image.id }),
+    });
+    if (response.ok) {
+      setItems((current) => current.filter((item) => item.id !== image.id));
+      setStatus("Image deleted.");
+    } else {
+      setStatus("Unable to delete image.");
+    }
+  }
+
+  return (
+    <AdminShell>
+      <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
+        <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Pages Media Library</p>
+        <h1 className="mt-3 font-serif text-6xl text-forest">Page-specific image management.</h1>
+        <p className="mt-4 max-w-3xl leading-8 text-ink/65">Upload and manage images for specific pages. Assign images to pages for better organization.</p>
+      </div>
+
+      <div className="mt-6 rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5">
+        <label className="block text-sm font-bold text-ink/70">
+          Filter by Page
+          <select 
+            value={selectedPage} 
+            onChange={(e) => setSelectedPage(e.target.value)}
+            className="mt-2 w-full max-w-xs rounded-2xl border border-forest/15 bg-cream px-4 py-3"
+          >
+            <option value="all">All Pages ({items.length})</option>
+            {pages.map(page => {
+              const count = items.filter(item => item.page === page).length;
+              return (
+                <option key={page} value={page}>
+                  {page.charAt(0).toUpperCase() + page.slice(1)} ({count})
+                </option>
+              );
+            })}
+            <option value="">Unassigned ({items.filter(item => !item.page).length})</option>
+          </select>
+        </label>
+      </div>
+      
+      <form onSubmit={upload} className="mt-6 grid gap-4 rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 md:grid-cols-3">
+        <input name="file" type="file" accept="image/*,video/*" required className="rounded-2xl bg-cream p-3" />
+        <input name="title" placeholder="Image title" required className="rounded-2xl bg-cream px-4 py-3" />
+        <input name="alt" placeholder="Alt text" required className="rounded-2xl bg-cream px-4 py-3" />
+        <input name="caption" placeholder="Caption" className="rounded-2xl bg-cream px-4 py-3" />
+        <select name="page" className="rounded-2xl bg-cream px-4 py-3">
+          <option value="">Select page</option>
+          {pages.map(page => (
+            <option key={page} value={page}>{page.charAt(0).toUpperCase() + page.slice(1)}</option>
+          ))}
+        </select>
+        <input name="tags" placeholder="Tags (comma separated)" className="rounded-2xl bg-cream px-4 py-3" />
+        <button className="inline-flex items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white md:col-span-3">
+          <Upload className="h-4 w-4" /> Upload Image
+        </button>
+        {status ? <p className="md:col-span-3 text-sm text-burgundy">{status}</p> : null}
+      </form>
+      
+      <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {filteredItems.length === 0 ? (
+          <div className="md:col-span-2 xl:col-span-3 rounded-[2rem] bg-white p-8 text-center text-ink/60">
+            {selectedPage === "all" ? "No images yet." : `No images for ${selectedPage} page.`}
+          </div>
+        ) : (
+          filteredItems.filter(image => image && image.url).map((image) => (
+            <article key={image.id} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
+              <Image src={image.url} alt={image.alt || "Page image"} width={image.width ?? 800} height={image.height ?? 600} className="h-64 w-full object-cover" />
+              <div className="p-5">
+                <h2 className="font-serif text-3xl text-forest">{image.title || "Untitled"}</h2>
+                <dl className="mt-4 grid gap-2 text-sm text-ink/65">
+                  <div><dt className="font-bold text-ink">Alt</dt><dd>{image.alt || "No alt text"}</dd></div>
+                  <div><dt className="font-bold text-ink">Page</dt><dd>{image.page || "Unassigned"}</dd></div>
+                  <div><dt className="font-bold text-ink">Tags</dt><dd>{image.tags?.join(", ") || "None"}</dd></div>
+                  <div><dt className="font-bold text-ink">Status</dt><dd>{image.status ?? "published"}</dd></div>
+                </dl>
+                <div className="mt-5 flex gap-3">
+                  <button onClick={() => setEditing(image)} className="inline-flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-sm font-bold text-white transition hover:bg-burgundy">
+                    <Pencil className="h-4 w-4" /> Edit
+                  </button>
+                  <button onClick={() => deleteMedia(image)} className="inline-flex items-center gap-2 rounded-full border border-burgundy px-4 py-2 text-sm font-bold text-burgundy transition hover:bg-burgundy hover:text-white">
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+      
+      {editing ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
+          <form onSubmit={saveMedia} className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Edit Page Image</p>
+                <h2 className="mt-2 font-serif text-4xl text-forest">{editing.title}</h2>
+              </div>
+              <button type="button" onClick={() => setEditing(null)} className="grid h-10 w-10 place-items-center rounded-full bg-cream">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <Image src={editing.url} alt={editing.alt} width={editing.width ?? 800} height={editing.height ?? 600} className="mt-5 h-64 w-full rounded-[1.5rem] object-cover" />
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <MediaInput name="title" label="Title" defaultValue={editing.title} required />
+              <MediaInput name="alt" label="Alt Text" defaultValue={editing.alt} required />
+              <MediaInput name="caption" label="Caption" defaultValue={editing.caption ?? ""} wide />
+              <label className="block text-sm font-bold text-ink/70">
+                Assigned Page
+                <select name="page" defaultValue={editing.page ?? ""} className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3">
+                  <option value="">Unassigned</option>
+                  {pages.map(page => (
+                    <option key={page} value={page}>{page.charAt(0).toUpperCase() + page.slice(1)}</option>
+                  ))}
+                </select>
+              </label>
+              <MediaInput name="tags" label="Tags" defaultValue={(editing.tags ?? []).join(", ")} />
+              <label className="block text-sm font-bold text-ink/70">
+                Status
+                <select name="status" defaultValue={editing.status ?? "published"} className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3">
+                  <option value="published">published</option>
+                  <option value="hidden">hidden</option>
+                  <option value="draft">draft</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
+                <Save className="h-4 w-4" /> Save
               </button>
               <button type="button" onClick={() => setEditing(null)} className="rounded-full border border-forest/20 px-5 py-3 font-bold">
                 Cancel

@@ -12,6 +12,7 @@ import {
   faqs,
   getCollection,
   getFaqs,
+  getGalleryImages,
   getPage,
   getPricingPackages,
   getProducts,
@@ -51,7 +52,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   if (!page) notFound();
 
   // Keep CMS/seed page content as-is; only pricing packages use the confirmed package list.
-  const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers, treatImages] = await Promise.all([
+  const [services, pricing, allFaqs, reviews, posts, shopProducts, teamMembers, treatImages, galleryImages] = await Promise.all([
     getServices(),
     slug === "pricing" ? getPricingPackages() : Promise.resolve([]),
     getFaqs(),
@@ -60,7 +61,25 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
     getProducts(),
     getTeamMembers(),
     slug === "treats" ? getTreatImages() : Promise.resolve([]),
+    slug === "gallery" ? getGalleryImages() : Promise.resolve([]),
   ]);
+
+  // For gallery page, inject images into page blocks
+  if (slug === "gallery" && galleryImages.length > 0 && page.blocks[0]) {
+    // Convert Mongoose documents to plain objects
+    page.blocks[0].images = galleryImages.map(img => ({
+      id: img.id,
+      title: img.title,
+      alt: img.alt,
+      caption: img.caption,
+      url: img.url,
+      width: img.width,
+      height: img.height,
+      tags: img.tags,
+      status: img.status,
+      order: img.order,
+    }));
+  }
 
   return (
     <StandardPage

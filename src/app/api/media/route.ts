@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
+import { existsSync } from "fs";
 import slugify from "slugify";
 import { getAdminSession } from "@/lib/auth";
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectMongo, ImageAsset, Models } from "@/lib/site";
 
 export async function POST(request: Request) {
@@ -16,20 +18,45 @@ export async function POST(request: Request) {
   }
 
   try {
-    console.log('Starting Cloudinary upload for file:', file.name);
-    const upload = await uploadToCloudinary(file);
-    console.log('Cloudinary upload successful:', upload.secure_url);
+    console.log('Starting file upload for:', file.name);
     
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), 'public', 'uploads');
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
+      console.log('Created uploads directory');
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop();
+    const slugifiedName = slugify(file.name.replace(`.${fileExtension}`, ''), { 
+      lower: true, 
+      strict: true 
+    });
+    const filename = `${slugifiedName}-${timestamp}.${fileExtension}`;
+    const filepath = join(uploadsDir, filename);
+
+    // Convert file to buffer and save
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filepath, buffer);
+    console.log('File saved to:', filepath);
+
+    // Get image dimensions (basic estimation)
+    const width = 1400; // Default width
+    const height = 1000; // Default height
+
     const title = String(form.get("title") ?? file.name);
     const asset: ImageAsset = {
-      id: `${slugify(title, { lower: true, strict: true })}-${Date.now()}`,
+      id: `${slugifiedName}-${timestamp}`,
       title,
       alt: String(form.get("alt") ?? title),
       caption: String(form.get("caption") ?? ""),
-      url: upload.secure_url,
-      width: upload.width,
-      height: upload.height,
-      fileSize: upload.bytes,
+      url: `/uploads/${filename}`,
+      width,
+      height,
+      fileSize: file.size,
       page: String(form.get("page") ?? ""),
       tags: String(form.get("tags") ?? "")
         .split(",")
@@ -46,7 +73,11 @@ export async function POST(request: Request) {
     await Models.MediaAsset().updateOne({ id: asset.id }, { $set: asset }, { upsert: true });
     console.log('Asset saved successfully');
 
-    return NextResponse.json({ asset });
+    return NextResponse.json({ 
+      asset,
+      message: "File uploaded successfully to /uploads folder",
+      storage: "local"
+    });
   } catch (error) {
     console.error('Upload error details:', error);
     const errorMessage = error instanceof Error ? error.message : "Upload failed.";

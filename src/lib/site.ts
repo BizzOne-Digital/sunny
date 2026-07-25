@@ -1860,6 +1860,7 @@ export const Models = {
   Booking: () => getModel<BookingRequest>("Booking", new Schema<BookingRequest>({ customerName: String, fullName: String, email: String, phone: String, address: String, preferredContact: String, service: String, packageSelection: String, addonSelected: Boolean, estimatedTotal: String, preferredDate: String, preferredTime: String, pickupTime: String, dropoffTime: String, shuttleRequested: String, petName: String, petType: String, breed: String, age: String, weight: String, sex: String, spayNeuterStatus: String, temperament: String, specialNeeds: String, vaccinationStatus: String, medicalDetails: String, allergies: String, feedingInstructions: String, emergencyContact: String, veterinarian: String, behaviouralNotes: String, vaccinationUploadNote: String, giftCardCode: String, paymentNote: String, notes: String, policyAgreement: Boolean, paymentStatus: String, status: { type: String, default: "New" }, adminNotes: String }, { timestamps: true })),
   GiftCardOrder: () => getModel<GiftCardOrder>("GiftCardOrder", new Schema<GiftCardOrder>({ denomination: String, quantity: { type: Number, default: 1 }, recipientName: String, recipientEmail: String, senderName: String, senderEmail: String, message: String, deliveryDate: String, paymentStatus: { type: String, default: "Payment Pending" }, status: { type: String, default: "New" } }, { timestamps: true })),
   AdminUser: () => getModel<{ email: string; passwordHash: string; role: string }>("AdminUser", new Schema({ email: { type: String, unique: true }, passwordHash: String, role: { type: String, default: "Owner/Admin" } }, { timestamps: true })),
+  Gallery: () => getModel<ImageAsset>("Gallery", new Schema<ImageAsset>({ id: { type: String, unique: true }, title: String, alt: String, caption: String, url: String, width: Number, height: Number, tags: [String], status: String, order: Number }, { timestamps: true })),
 };
 
 export const collectionDefaults = {
@@ -1936,8 +1937,23 @@ export async function getTestimonials() {
 }
 
 export async function getGalleryImages() {
-  // Public gallery always uses the confirmed named + categorized image set.
-  return galleryImages.filter((image) => image.status !== "draft");
+  // Fetch from MongoDB, fallback to seed data if DB not available
+  try {
+    const db = await connectMongo();
+    if (!db) return galleryImages.filter((image) => image.status !== "draft");
+    
+    const GalleryModel = Models.Gallery();
+    const dbImages = await GalleryModel.find({ status: "published" }).sort({ order: 1 }).lean();
+    
+    if (dbImages && dbImages.length > 0) {
+      return dbImages as ImageAsset[];
+    }
+    
+    return galleryImages.filter((image) => image.status !== "draft");
+  } catch (error) {
+    console.error("Error fetching gallery images:", error);
+    return galleryImages.filter((image) => image.status !== "draft");
+  }
 }
 
 export async function getTreatImages() {
