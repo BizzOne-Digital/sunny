@@ -165,11 +165,11 @@ const homePage = {
   ],
   galleryImages: Array.from({ length: 10 }, (_, index) =>
     asset(
-      `gallery-slot-${String(index + 1).padStart(2, "0")}`,
-      `Gallery slot ${index + 1}`,
-      `DTdogs gallery image ${index + 1}`,
-      `/images/gallery/gallery-slot-${String(index + 1).padStart(2, "0")}.webp`,
-      "gallery",
+      `home-gallery-${String(index + 1).padStart(2, "0")}`,
+      `Home gallery image ${index + 1}`,
+      `DTdogs home gallery image ${index + 1}`,
+      `/images/home/home-gallery-${String(index + 1).padStart(2, "0")}.webp`,
+      "home",
       index + 1,
     ),
   ),

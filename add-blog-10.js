@@ -70,26 +70,7 @@ If you are unsure which tool is right for your dog, or you need help conditionin
     width: 1400,
     height: 900,
   },
-  inlineImages: [
-    {
-      id: "blog-10-inline-1",
-      title: "Front-Clip Harness Demonstration",
-      alt: "Dog wearing front-clip harness showing proper fit and attachment point",
-      caption: "Front-clip harnesses redirect pulling force back toward the handler",
-      url: "/images/blog/blog-front-clip-harness.webp",
-      width: 1200,
-      height: 800,
-    },
-    {
-      id: "blog-10-inline-2",
-      title: "Head Halter vs Standard Collar",
-      alt: "Side-by-side comparison of head halter and standard collar force distribution",
-      caption: "Different equipment distributes force differently across the dog's body",
-      url: "/images/blog/blog-equipment-comparison.webp",
-      width: 1200,
-      height: 800,
-    },
-  ],
+  inlineImages: [],
   status: "published",
 };
 
