@@ -1,100 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Gallery from "@/models/Gallery";
-import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import type { Model } from "mongoose";
+import { getAdminSession } from "@/lib/auth";
+import { Models, connectMongo } from "@/lib/site";
 
-// GET single gallery image by id (public)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await connectMongo())) return NextResponse.json({ error: "MONGODB_URI is required." }, { status: 500 });
+
   try {
     const { id } = await params;
-    await connectDB();
-    const image = await Gallery.findOne({ id });
-
-    if (!image) {
-      return NextResponse.json(
-        { error: "Image not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, image });
-  } catch (error) {
-    console.error("Get gallery image error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT update gallery image (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await requireAuth();
-    const { id } = await params;
-    await connectDB();
-
     const body = await request.json();
-    const image = await Gallery.findOneAndUpdate(
-      { id },
-      body,
-      { new: true, runValidators: true }
-    );
+    const GalleryModel = Models.Gallery() as unknown as Model<Record<string, unknown>>;
+    const existing = await GalleryModel.findOne({ id }).lean();
+    if (!existing) return NextResponse.json({ error: "Image not found." }, { status: 404 });
 
-    if (!image) {
-      return NextResponse.json(
-        { error: "Image not found" },
-        { status: 404 }
-      );
-    }
+    const next = {
+      ...JSON.parse(JSON.stringify(existing)),
+      ...body,
+      id,
+      tags: Array.isArray(body.tags)
+        ? body.tags
+        : String(body.tags ?? "")
+            .split(",")
+            .map((tag: string) => tag.trim())
+            .filter(Boolean),
+    };
 
-    return NextResponse.json({ success: true, image });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    await GalleryModel.updateOne({ id }, { $set: next });
+    revalidatePath("/gallery");
+    return NextResponse.json({ ok: true, gallery: next });
+  } catch (error) {
     console.error("Update gallery image error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Unable to update gallery image." }, { status: 500 });
   }
 }
 
-// DELETE gallery image (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await connectMongo())) return NextResponse.json({ error: "MONGODB_URI is required." }, { status: 500 });
+
   try {
-    await requireAuth();
     const { id } = await params;
-    await connectDB();
-
-    const image = await Gallery.findOneAndDelete({ id });
-
-    if (!image) {
-      return NextResponse.json(
-        { error: "Image not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, message: "Image deleted" });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const GalleryModel = Models.Gallery() as unknown as Model<Record<string, unknown>>;
+    await GalleryModel.deleteOne({ id });
+    revalidatePath("/gallery");
+    return NextResponse.json({ ok: true });
+  } catch (error) {
     console.error("Delete gallery image error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Unable to delete gallery image." }, { status: 500 });
   }
 }

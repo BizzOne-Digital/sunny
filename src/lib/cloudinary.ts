@@ -9,16 +9,22 @@ export function configureCloudinary() {
   const apiKey = readEnv("CLOUDINARY_API_KEY");
   const apiSecret = readEnv("CLOUDINARY_API_SECRET");
 
-  if (!cloudName || !apiKey || !apiSecret) {
+  if (!cloudName) {
+    throw new Error("Cloudinary credentials are required for media uploads. Missing: cloudName");
+  }
+
+  // Unsigned uploads only need cloud name + upload preset.
+  const uploadPreset = readEnv("CLOUDINARY_UPLOAD_PRESET");
+  if (!uploadPreset && (!apiKey || !apiSecret)) {
     throw new Error(
-      `Cloudinary credentials are required for media uploads. Missing: ${!cloudName ? "cloudName " : ""}${!apiKey ? "apiKey " : ""}${!apiSecret ? "apiSecret" : ""}`,
+      `Cloudinary credentials are required for media uploads. Missing: ${!apiKey ? "apiKey " : ""}${!apiSecret ? "apiSecret" : ""}`,
     );
   }
 
   cloudinary.config({
     cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
+    api_key: apiKey || undefined,
+    api_secret: apiSecret || undefined,
     secure: true,
   });
 
@@ -39,22 +45,26 @@ export async function uploadToCloudinary(file: File, folder = "dtdogs") {
   const cloudinaryInstance = configureCloudinary();
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+  const uploadPreset = readEnv("CLOUDINARY_UPLOAD_PRESET");
 
   try {
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = cloudinaryInstance.uploader.upload_stream(
-        {
-          folder,
-          resource_type: "image",
-          overwrite: false,
-        },
-        (error, uploadResult) => {
-          if (error) reject(error);
-          else if (uploadResult) resolve(uploadResult);
-          else reject(new Error("Cloudinary returned no upload result."));
-        },
-      );
-      stream.end(buffer);
+      const callback = (error: unknown, uploadResult?: UploadApiResponse) => {
+        if (error) reject(error);
+        else if (uploadResult) resolve(uploadResult);
+        else reject(new Error("Cloudinary returned no upload result."));
+      };
+
+      if (uploadPreset) {
+        // Works even when API key permissions block signed uploads (403).
+        // Folder and most options must be configured on the unsigned preset itself.
+        cloudinaryInstance.uploader.unsigned_upload_stream(uploadPreset, callback).end(buffer);
+        return;
+      }
+
+      cloudinaryInstance.uploader
+        .upload_stream({ folder, resource_type: "image", overwrite: false }, callback)
+        .end(buffer);
     });
 
     return result;

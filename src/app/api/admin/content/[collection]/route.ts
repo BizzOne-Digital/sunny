@@ -15,7 +15,10 @@ function revalidateForCollection(collection: CollectionName, body?: Record<strin
       if (typeof body?.slug === "string") revalidatePath(`/services/${body.slug}`);
       break;
     case "pages":
-      if (typeof body?.slug === "string") revalidatePath(`/${body.slug}`);
+      if (typeof body?.slug === "string") {
+        revalidatePath(`/${body.slug}`);
+        revalidatePath("/");
+      }
       break;
     case "pricing":
       revalidatePath("/pricing");

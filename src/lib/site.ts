@@ -117,6 +117,8 @@ export type TeamMember = {
   credentials: string[];
   image: ImageAsset;
   instagram?: string;
+  facebook?: string;
+  website?: string;
   status?: "published" | "draft";
 };
 
@@ -857,6 +859,20 @@ const gallerySlotMeta: Array<{ title: string; alt: string; caption: string; tags
   { title: "Seasonal winter stroll", alt: "Dog enjoying a calm winter neighbourhood stroll", caption: "Care continues through every season.", tags: ["Seasonal", "Toronto"] },
 ];
 
+export const gallerySlotImages: ImageAsset[] = gallerySlotMeta.map((meta, index) => ({
+  id: `gallery-slot-${String(index + 1).padStart(2, "0")}`,
+  title: meta.title,
+  alt: meta.alt,
+  caption: meta.caption,
+  url: `/images/gallery/gallery-slot-${String(index + 1).padStart(2, "0")}.webp`,
+  width: 1400,
+  height: 1000,
+  page: "gallery" as const,
+  tags: meta.tags,
+  order: index + 1,
+  status: "published" as const,
+}));
+
 export const galleryImages: ImageAsset[] = [
   ...mediaLibrary
     .filter((image) => image.status !== "draft")
@@ -870,19 +886,7 @@ export const galleryImages: ImageAsset[] = [
           .join(" "),
       ),
     })),
-  ...gallerySlotMeta.map((meta, index) => ({
-    id: `gallery-slot-${String(index + 1).padStart(2, "0")}`,
-    title: meta.title,
-    alt: meta.alt,
-    caption: meta.caption,
-    url: `/images/gallery/gallery-slot-${String(index + 1).padStart(2, "0")}.webp`,
-    width: 1400,
-    height: 1000,
-    page: "gallery" as const,
-    tags: meta.tags,
-    order: index + 1,
-    status: "published" as const,
-  })),
+  ...gallerySlotImages,
 ];
 
 export const treatImages: ImageAsset[] = [
@@ -1564,7 +1568,21 @@ export const pages: PageContent[] = [
       body: "Real moments from Downtown Toronto and across the GTA — walks, boarding, daycare and everyday care with our #petpeople.",
       primaryCta: { label: "Book Now", href: "/booking" },
       secondaryCta: { label: "View Services", href: "/services" },
-      images: [img("gallery-hero-1"), img("gallery-hero-2"), img("gallery-hero-3")],
+      images: [
+        {
+          id: "gallery-generated-hero",
+          title: "Gallery hero background",
+          alt: "Well-groomed dog enjoying a golden-hour Toronto courtyard walk",
+          url: "/images/gallery/gallery-hero.png",
+          width: 1800,
+          height: 1200,
+          page: "gallery",
+          status: "published",
+        },
+        img("gallery-hero-1"),
+        img("gallery-hero-2"),
+        img("gallery-hero-3"),
+      ],
     },
     blocks: [{ type: "gallery", title: "Filterable masonry gallery", images: galleryImages }],
   },
@@ -1854,7 +1872,7 @@ export const Models = {
   PricingPackage: () => getModel<PricingPackage>("PricingPackage", new Schema<PricingPackage>({ slug: { type: String, unique: true }, service: String, name: String, priceLabel: String, duration: String, features: [String], featured: Boolean, status: String }, { timestamps: true })),
   BlogPost: () => getModel<BlogPost>("BlogPost", new Schema<BlogPost>({ slug: { type: String, unique: true }, title: String, excerpt: String, category: String, author: String, date: String, body: String, featuredImage: imageSchema, inlineImages: [imageSchema], status: String }, { timestamps: true })),
   Product: () => getModel<Product>("Product", new Schema<Product>({ slug: { type: String, unique: true }, title: String, description: String, priceLabel: String, compareAtPriceLabel: String, status: String, images: [imageSchema], sizes: [String], colors: [String], inventory: Number }, { timestamps: true })),
-  TeamMember: () => getModel<TeamMember>("TeamMember", new Schema<TeamMember>({ slug: { type: String, unique: true }, name: String, role: String, bio: String, credentials: [String], image: imageSchema, instagram: String, status: String }, { timestamps: true })),
+  TeamMember: () => getModel<TeamMember>("TeamMember", new Schema<TeamMember>({ slug: { type: String, unique: true }, name: String, role: String, bio: String, credentials: [String], image: imageSchema, instagram: String, facebook: String, website: String, status: String }, { timestamps: true })),
   Testimonial: () => getModel<Testimonial>("Testimonial", new Schema<Testimonial>({ slug: { type: String, unique: true }, reviewer: String, petName: String, service: String, rating: Number, quote: String, location: String, image: imageSchema, status: String, sample: Boolean }, { timestamps: true })),
   Faq: () => getModel<Faq>("Faq", new Schema<Faq>({ slug: { type: String, unique: true }, question: String, answer: String, category: String, serviceSlug: String, status: String, order: Number }, { timestamps: true })),
   Booking: () => getModel<BookingRequest>("Booking", new Schema<BookingRequest>({ customerName: String, fullName: String, email: String, phone: String, address: String, preferredContact: String, service: String, packageSelection: String, addonSelected: Boolean, estimatedTotal: String, preferredDate: String, preferredTime: String, pickupTime: String, dropoffTime: String, shuttleRequested: String, petName: String, petType: String, breed: String, age: String, weight: String, sex: String, spayNeuterStatus: String, temperament: String, specialNeeds: String, vaccinationStatus: String, medicalDetails: String, allergies: String, feedingInstructions: String, emergencyContact: String, veterinarian: String, behaviouralNotes: String, vaccinationUploadNote: String, giftCardCode: String, paymentNote: String, notes: String, policyAgreement: Boolean, paymentStatus: String, status: { type: String, default: "New" }, adminNotes: String }, { timestamps: true })),
@@ -1902,11 +1920,7 @@ export async function getCollection<T>(collection: CollectionName, fallback: T[]
 }
 
 export async function getPage(slug: string) {
-  // Always use seed data for these pages to avoid stale DB content
-  const seedOnlySlugs = ["policy", "gift-cards", "treats", "contact"];
-  if (seedOnlySlugs.includes(slug)) {
-    return pages.find((page) => page.slug === slug && page.status !== "draft");
-  }
+  // Prefer MongoDB so admin page/content/image edits show on the live site.
   const allPages = await getCollection<PageContent>("pages", pages);
   return allPages.find((page) => page.slug === slug && page.status !== "draft") ?? pages.find((page) => page.slug === slug && page.status !== "draft");
 }
@@ -1937,23 +1951,51 @@ export async function getTestimonials() {
 }
 
 export async function getGalleryImages() {
-  // Fetch from MongoDB, fallback to seed data if DB not available
   try {
     const db = await connectMongo();
-    if (!db) return galleryImages.filter((image) => image.status !== "draft");
-    
-    const GalleryModel = Models.Gallery();
-    const dbImages = await GalleryModel.find({ status: "published" }).sort({ order: 1 }).lean();
-    
-    if (dbImages && dbImages.length > 0) {
-      return dbImages as ImageAsset[];
-    }
-    
-    return galleryImages.filter((image) => image.status !== "draft");
+    if (!db) return gallerySlotImages.filter((image) => image.status !== "draft");
+
+    const GalleryModel = Models.Gallery() as unknown as Model<Record<string, unknown>>;
+    const dbImages = await GalleryModel.find({ status: { $ne: "draft" } }).sort({ order: 1 }).lean();
+    const published = (JSON.parse(JSON.stringify(dbImages)) as ImageAsset[]).filter(
+      (image) => image.status !== "hidden" && image.status !== "draft",
+    );
+
+    if (published.length > 0) return published;
+    return gallerySlotImages.filter((image) => image.status !== "draft");
   } catch (error) {
     console.error("Error fetching gallery images:", error);
-    return galleryImages.filter((image) => image.status !== "draft");
+    return gallerySlotImages.filter((image) => image.status !== "draft");
   }
+}
+
+export async function getGalleryImagesForAdmin() {
+  try {
+    const db = await connectMongo();
+    if (!db) return gallerySlotImages;
+
+    const GalleryModel = Models.Gallery() as unknown as Model<Record<string, unknown>>;
+    const dbImages = await GalleryModel.find({}).sort({ order: 1 }).lean();
+    const items = JSON.parse(JSON.stringify(dbImages)) as ImageAsset[];
+    return items.length ? items : gallerySlotImages;
+  } catch (error) {
+    console.error("Error fetching admin gallery images:", error);
+    return gallerySlotImages;
+  }
+}
+
+export async function syncGalleryImages() {
+  const db = await connectMongo();
+  if (!db) return gallerySlotImages;
+
+  const GalleryModel = Models.Gallery() as unknown as Model<Record<string, unknown>>;
+  const existingCount = await GalleryModel.countDocuments();
+  if (existingCount === 0) {
+    for (const item of gallerySlotImages) {
+      await GalleryModel.updateOne({ id: item.id }, { $set: item }, { upsert: true });
+    }
+  }
+  return getGalleryImagesForAdmin();
 }
 
 export async function getTreatImages() {

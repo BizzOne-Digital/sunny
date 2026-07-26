@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { BarChart3, FileImage, LayoutDashboard, LogOut, PawPrint, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import type { CollectionName, ImageAsset } from "@/lib/site";
 import type { BookingRequest } from "@/lib/site";
@@ -44,7 +44,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <nav className="mt-5 grid gap-2">
             <AdminLink href="/admin" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
             <AdminLink href="/admin/gallery" icon={<FileImage className="h-4 w-4" />} label="Gallery" />
-            <AdminLink href="/admin/pages-media" icon={<FileImage className="h-4 w-4" />} label="Pages Media" />
             {collections.map((item) => (
               <AdminLink key={item.name} href={`/admin/${item.name}`} icon={<BarChart3 className="h-4 w-4" />} label={item.label} />
             ))}
@@ -266,6 +265,7 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
           </div>
           {collection === "pages" ? <PageSectionsEditor record={current} /> : null}
           {collection === "services" ? <ServiceFaqEditor record={current} /> : null}
+          {collection === "team" ? <TeamSocialLinksEditor record={current} /> : null}
           <div className="mt-7 flex flex-wrap items-center gap-4">
             <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
               <Save className="h-4 w-4" /> Save
@@ -384,9 +384,6 @@ function getFields(collection: CollectionName): FieldConfig[] {
       { path: "role", label: "Role" },
       { path: "bio", label: "Bio", type: "textarea", wide: true },
       { path: "credentials", label: "Credentials", type: "list", wide: true, help: "One credential per line." },
-      { path: "image.title", label: "Portrait Title" },
-      { path: "image.url", label: "Portrait Image URL (paste Cloudinary link)", wide: true },
-      { path: "image.alt", label: "Portrait Alt Text", wide: true },
     ],
     testimonials: [
       { path: "reviewer", label: "Reviewer Name" },
@@ -473,6 +470,29 @@ function ServiceFaqEditor({ record }: { record: EditableRecord }) {
   );
 }
 
+function TeamSocialLinksEditor({ record }: { record: EditableRecord }) {
+  return (
+    <div className="mt-8 rounded-[2rem] bg-sage/60 p-5">
+      <h2 className="font-serif text-3xl text-forest">Social Links</h2>
+      <p className="mt-2 text-sm text-ink/60">Optional profile links shown on the team page. Leave blank to hide.</p>
+      <div className="mt-5 grid gap-4 rounded-[1.5rem] bg-white p-5">
+        <AdminFormField
+          field={{ path: "instagram", label: "Instagram URL", wide: true, help: "e.g. https://www.instagram.com/username/" }}
+          value={record.instagram}
+        />
+        <AdminFormField
+          field={{ path: "facebook", label: "Facebook URL", wide: true, help: "e.g. https://www.facebook.com/username" }}
+          value={record.facebook}
+        />
+        <AdminFormField
+          field={{ path: "website", label: "Website URL", wide: true, help: "e.g. https://example.com" }}
+          value={record.website}
+        />
+      </div>
+    </div>
+  );
+}
+
 function formToRecord(form: HTMLFormElement, current: EditableRecord, collection: CollectionName) {
   const next = structuredClone(current) as EditableRecord;
   const data = new FormData(form);
@@ -497,6 +517,14 @@ function formToRecord(form: HTMLFormElement, current: EditableRecord, collection
         { path: `faqs.${index}.answer`, label: "Answer", type: "textarea" },
       );
     });
+  }
+
+  if (collection === "team") {
+    fields.push(
+      { path: "instagram", label: "Instagram URL", wide: true },
+      { path: "facebook", label: "Facebook URL", wide: true },
+      { path: "website", label: "Website URL", wide: true },
+    );
   }
 
   fields.forEach((field) => {
@@ -535,7 +563,7 @@ function createTemplate(collection: CollectionName): EditableRecord {
     case "products":
       return { ...base, title: "New Product", description: "", priceLabel: "Price to be confirmed", sizes: [], colors: [], inventory: 0, images: [] };
     case "team":
-      return { ...base, name: "New Team Member", role: "", bio: "", credentials: [], image: { title: "", url: "", alt: "" } };
+      return { ...base, name: "New Team Member", role: "", bio: "", credentials: [], image: { title: "", url: "", alt: "" }, instagram: "", facebook: "", website: "" };
     default:
       return { ...base, title: "New Page", navTitle: "New Page", seoTitle: "", metaDescription: "", hero: { eyebrow: "", title: "", body: "" }, blocks: [] };
   }
@@ -606,7 +634,11 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
     if (response.ok) {
       setItems([data.asset, ...items]);
       setStatus(data.message ? `Uploaded (${data.storage}). ${data.message}` : "Uploaded and saved.");
-      if (form) form.reset();
+      try {
+        form.reset();
+      } catch {
+        // Form may unmount during re-render after upload.
+      }
     } else {
       setStatus(data.error ?? "Upload failed.");
     }
@@ -757,29 +789,38 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
 }
 
 // Gallery Manager - manages only gallery page images
-export function GalleryManager() {
-  const [items, setItems] = useState<ImageAsset[]>([]);
+export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsset[] }) {
+  const [items, setItems] = useState<ImageAsset[]>(initialItems);
   const [editing, setEditing] = useState<ImageAsset | null>(null);
   const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialItems.length === 0);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const [replacingId, setReplacingId] = useState<string | null>(null);
 
-  // Fetch gallery images on mount
-  useState(() => {
+  useEffect(() => {
+    let active = true;
     async function fetchGallery() {
       try {
         const response = await fetch("/api/gallery");
         const data = await response.json();
-        if (response.ok && data) {
-          setItems(Array.isArray(data) ? data : []);
+        if (!active) return;
+        if (response.ok && Array.isArray(data)) {
+          setItems(data);
+        } else if (response.ok && Array.isArray(data?.images)) {
+          setItems(data.images);
         }
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching gallery:", error);
-        setLoading(false);
+        if (active) setStatus("Unable to load gallery images.");
+      } finally {
+        if (active) setLoading(false);
       }
     }
     fetchGallery();
-  });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -791,7 +832,6 @@ export function GalleryManager() {
     });
     const data = await response.json();
     if (response.ok) {
-      // After upload, save to gallery
       const galleryResponse = await fetch("/api/gallery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -803,22 +843,65 @@ export function GalleryManager() {
           url: data.asset.url,
           width: data.asset.width || 1400,
           height: data.asset.height || 1000,
-          tags: data.asset.tags || [],
+          tags: data.asset.tags || ["Gallery"],
           status: "published",
           order: items.length + 1,
         }),
       });
-      
+      const galleryData = await galleryResponse.json();
+
       if (galleryResponse.ok) {
-        const galleryData = await galleryResponse.json();
-        setItems([galleryData.gallery, ...items]);
+        setItems((current) => [galleryData.gallery, ...current]);
         setStatus("Uploaded to gallery!");
-        if (form) form.reset();
+        try {
+          form.reset();
+        } catch {
+          // Form may unmount during re-render after upload.
+        }
       } else {
-        setStatus("Uploaded but failed to add to gallery.");
+        setStatus(galleryData.error ?? "Uploaded but failed to add to gallery.");
       }
     } else {
       setStatus(data.error ?? "Upload failed.");
+    }
+  }
+
+  async function replaceImage(image: ImageAsset, file: File) {
+    setStatus("Replacing image...");
+    const form = new FormData();
+    form.set("file", file);
+    form.set("title", image.title);
+    form.set("alt", image.alt);
+    form.set("page", "gallery");
+    form.set("tags", (image.tags ?? []).join(", "));
+
+    const uploadResponse = await fetch("/api/media", { method: "POST", body: form });
+    const uploadData = await uploadResponse.json();
+    if (!uploadResponse.ok) {
+      setStatus(uploadData.error ?? "Upload failed.");
+      return;
+    }
+
+    const next: ImageAsset = {
+      ...image,
+      url: uploadData.asset.url,
+      width: uploadData.asset.width ?? image.width,
+      height: uploadData.asset.height ?? image.height,
+      fileSize: uploadData.asset.fileSize ?? image.fileSize,
+    };
+
+    const response = await fetch(`/api/gallery/${image.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setItems((current) => current.map((item) => (item.id === image.id ? next : item)));
+      if (editing?.id === image.id) setEditing(next);
+      setStatus("Gallery image replaced.");
+    } else {
+      setStatus(data.error ?? "Unable to replace image.");
     }
   }
 
@@ -839,19 +922,20 @@ export function GalleryManager() {
       status: String(form.get("status") ?? "published") as ImageAsset["status"],
       order: Number(form.get("order") ?? editing.order ?? 0),
     };
-    
+
     const response = await fetch(`/api/gallery/${editing.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),
     });
-    
+    const data = await response.json();
+
     if (response.ok) {
       setItems((current) => current.map((image) => (image.id === next.id ? next : image)));
       setEditing(null);
       setStatus("Gallery image updated.");
     } else {
-      setStatus("Unable to update image.");
+      setStatus(data.error ?? "Unable to update image.");
     }
   }
 
@@ -861,12 +945,13 @@ export function GalleryManager() {
     const response = await fetch(`/api/gallery/${image.id}`, {
       method: "DELETE",
     });
-    
+    const data = await response.json();
+
     if (response.ok) {
       setItems((current) => current.filter((item) => item.id !== image.id));
       setStatus("Image deleted from gallery.");
     } else {
-      setStatus("Unable to delete image.");
+      setStatus(data.error ?? "Unable to delete image.");
     }
   }
 
@@ -875,9 +960,12 @@ export function GalleryManager() {
       <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
         <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Gallery Management</p>
         <h1 className="mt-3 font-serif text-6xl text-forest">Manage gallery page images.</h1>
-        <p className="mt-4 max-w-3xl leading-8 text-ink/65">Upload and manage images that appear on the /gallery page. Images are stored in Cloudinary and metadata in MongoDB.</p>
+        <p className="mt-4 max-w-3xl leading-8 text-ink/65">
+          These images appear on the /gallery page. Replace existing photos, edit details, or upload new gallery images.
+        </p>
+        <p className="mt-2 text-sm text-ink/50">{items.length} images in gallery</p>
       </div>
-      
+
       <form onSubmit={upload} className="mt-6 grid gap-4 rounded-[2rem] bg-white p-6 shadow-xl shadow-black/5 md:grid-cols-3">
         <input name="file" type="file" accept="image/*" required className="rounded-2xl bg-cream p-3" />
         <input name="title" placeholder="Image title" required className="rounded-2xl bg-cream px-4 py-3" />
@@ -885,11 +973,25 @@ export function GalleryManager() {
         <input name="caption" placeholder="Caption" className="rounded-2xl bg-cream px-4 py-3 md:col-span-2" />
         <input name="tags" placeholder="Tags (comma separated)" className="rounded-2xl bg-cream px-4 py-3" />
         <button className="inline-flex items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white">
-          <Upload className="h-4 w-4" /> Upload to Gallery
+          <Upload className="h-4 w-4" /> Add New Gallery Image
         </button>
         {status ? <p className="md:col-span-3 text-sm text-burgundy">{status}</p> : null}
       </form>
-      
+
+      <input
+        ref={replaceInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          const target = items.find((item) => item.id === replacingId);
+          if (file && target) void replaceImage(target, file);
+          event.target.value = "";
+          setReplacingId(null);
+        }}
+      />
+
       {loading ? (
         <div className="mt-6 text-center text-ink/60">Loading gallery images...</div>
       ) : (
@@ -899,33 +1001,74 @@ export function GalleryManager() {
               No gallery images yet. Upload your first image above!
             </div>
           ) : (
-            items.filter(image => image && image.url).map((image) => (
-              <article key={image.id} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
-                <Image src={image.url} alt={image.alt || "Gallery image"} width={image.width ?? 800} height={image.height ?? 600} className="h-64 w-full object-cover" />
-                <div className="p-5">
-                  <h2 className="font-serif text-3xl text-forest">{image.title || "Untitled"}</h2>
-                  <dl className="mt-4 grid gap-2 text-sm text-ink/65">
-                    <div><dt className="font-bold text-ink">Alt</dt><dd>{image.alt || "No alt text"}</dd></div>
-                    {image.caption && <div><dt className="font-bold text-ink">Caption</dt><dd>{image.caption}</dd></div>}
-                    <div><dt className="font-bold text-ink">Tags</dt><dd>{image.tags?.join(", ") || "None"}</dd></div>
-                    <div><dt className="font-bold text-ink">Order</dt><dd>{image.order ?? 0}</dd></div>
-                    <div><dt className="font-bold text-ink">Status</dt><dd>{image.status ?? "published"}</dd></div>
-                  </dl>
-                  <div className="mt-5 flex gap-3">
-                    <button onClick={() => setEditing(image)} className="inline-flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-sm font-bold text-white transition hover:bg-burgundy">
-                      <Pencil className="h-4 w-4" /> Edit
-                    </button>
-                    <button onClick={() => deleteGallery(image)} className="inline-flex items-center gap-2 rounded-full border border-burgundy px-4 py-2 text-sm font-bold text-burgundy transition hover:bg-burgundy hover:text-white">
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </button>
+            items
+              .filter((image) => image && image.url)
+              .map((image) => (
+                <article key={image.id} className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-black/5">
+                  <Image
+                    src={image.url}
+                    alt={image.alt || "Gallery image"}
+                    width={image.width ?? 800}
+                    height={image.height ?? 600}
+                    className="h-64 w-full object-cover"
+                    unoptimized={image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/")}
+                  />
+                  <div className="p-5">
+                    <h2 className="font-serif text-3xl text-forest">{image.title || "Untitled"}</h2>
+                    <dl className="mt-4 grid gap-2 text-sm text-ink/65">
+                      <div>
+                        <dt className="font-bold text-ink">Alt</dt>
+                        <dd>{image.alt || "No alt text"}</dd>
+                      </div>
+                      {image.caption ? (
+                        <div>
+                          <dt className="font-bold text-ink">Caption</dt>
+                          <dd>{image.caption}</dd>
+                        </div>
+                      ) : null}
+                      <div>
+                        <dt className="font-bold text-ink">Tags</dt>
+                        <dd>{image.tags?.join(", ") || "None"}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-bold text-ink">Order</dt>
+                        <dd>{image.order ?? 0}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-bold text-ink">Status</dt>
+                        <dd>{image.status ?? "published"}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button
+                        onClick={() => {
+                          setReplacingId(image.id);
+                          replaceInputRef.current?.click();
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full bg-burgundy px-4 py-2 text-sm font-bold text-white transition hover:bg-forest"
+                      >
+                        <Upload className="h-4 w-4" /> Replace
+                      </button>
+                      <button
+                        onClick={() => setEditing(image)}
+                        className="inline-flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-sm font-bold text-white transition hover:bg-burgundy"
+                      >
+                        <Pencil className="h-4 w-4" /> Edit
+                      </button>
+                      <button
+                        onClick={() => deleteGallery(image)}
+                        className="inline-flex items-center gap-2 rounded-full border border-burgundy px-4 py-2 text-sm font-bold text-burgundy transition hover:bg-burgundy hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))
+                </article>
+              ))
           )}
         </div>
       )}
-      
+
       {editing ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
           <form onSubmit={saveGallery} className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-white p-6 shadow-2xl">
@@ -938,7 +1081,14 @@ export function GalleryManager() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <Image src={editing.url} alt={editing.alt} width={editing.width ?? 800} height={editing.height ?? 600} className="mt-5 h-64 w-full rounded-[1.5rem] object-cover" />
+            <Image
+              src={editing.url}
+              alt={editing.alt}
+              width={editing.width ?? 800}
+              height={editing.height ?? 600}
+              className="mt-5 h-64 w-full rounded-[1.5rem] object-cover"
+              unoptimized={editing.url.startsWith("/uploads/") || editing.url.startsWith("/api/media/file/")}
+            />
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <MediaInput name="title" label="Title" defaultValue={editing.title} required />
               <MediaInput name="alt" label="Alt Text" defaultValue={editing.alt} required />
@@ -990,7 +1140,11 @@ export function PagesMediaLibrary({ initialItems }: { initialItems: ImageAsset[]
     if (response.ok) {
       setItems([data.asset, ...items]);
       setStatus(data.message ? `Uploaded. ${data.message}` : "Uploaded and saved.");
-      if (form) form.reset();
+      try {
+        form.reset();
+      } catch {
+        // Form may unmount during re-render after upload.
+      }
     } else {
       setStatus(data.error ?? "Upload failed.");
     }

@@ -13,6 +13,8 @@ export interface ITeam {
     title: string;
   };
   instagram?: string;
+  facebook?: string;
+  website?: string;
   status: "published" | "draft";
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +48,8 @@ const teamSchema = new Schema<ITeam>(
       title: String,
     },
     instagram: String,
+    facebook: String,
+    website: String,
     status: {
       type: String,
       default: "published",

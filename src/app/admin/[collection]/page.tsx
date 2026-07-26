@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { ContentManager } from "@/components/admin";
+import { BlogsManager } from "@/components/admin-blog";
+import { PagesManager } from "@/components/admin-pages";
+import { ServicesManager } from "@/components/admin-services";
 import { getAdminSession } from "@/lib/auth";
 import { CollectionName, collectionDefaults, collectionModelMap, getCollection } from "@/lib/site";
 
@@ -19,6 +22,18 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
 
   const fallback = collectionDefaults[collection] as unknown[];
   const items = await getCollection(collection, fallback);
+
+  if (collection === "pages") {
+    return <PagesManager initialItems={items} />;
+  }
+
+  if (collection === "services") {
+    return <ServicesManager initialItems={items} />;
+  }
+
+  if (collection === "blog") {
+    return <BlogsManager initialItems={items} />;
+  }
 
   return <ContentManager collection={collection} initialItems={items} />;
 }

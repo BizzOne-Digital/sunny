@@ -120,8 +120,21 @@ function treatImageUrl(order?: number) {
   return urls[order - 1];
 }
 
+function isCmsUploadedUrl(url?: string) {
+  if (!url) return false;
+  return (
+    url.startsWith("/uploads/") ||
+    url.startsWith("/api/media/file/") ||
+    url.startsWith("https://res.cloudinary.com/") ||
+    url.startsWith("http://") ||
+    url.startsWith("https://")
+  );
+}
+
 function localImageUrl(image: ImageAsset | undefined) {
   if (!image || !image.id) return "/images/brand/logo.png"; // Fallback to logo
+  // Admin replacements (/uploads or Cloudinary) must win over hardcoded seed paths.
+  if (isCmsUploadedUrl(image.url)) return image.url;
   if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   return localImageUrls[image.id] ?? image.url;
@@ -248,13 +261,19 @@ const serviceHeroImages: Record<string, ImageAsset> = {
 };
 
 function servicePrimaryImage(service: Service) {
+  const cmsFirst = (service.images || []).find((image) => Boolean(image?.url));
+  if (cmsFirst) return cmsFirst;
   return serviceHeroImages[service.slug] ?? (service.images && service.images[0]);
 }
 
 function serviceDisplayImages(service: Service) {
+  const cmsImages = (service.images || []).filter((image) => Boolean(image?.url));
+  // Admin/CMS images win: [0] background + [1..3] hero cards.
+  if (cmsImages.length > 0) return cmsImages.slice(0, 4);
+
   const hero = serviceHeroImages[service.slug];
   if (!hero) return service.images || [];
-  return [hero, ...(service.images || []).filter((image) => image.id !== hero.id && image.url !== hero.url)];
+  return [hero, ...(service.images || []).filter((image) => image.id !== hero.id && image.url !== hero.url)].slice(0, 4);
 }
 
 const homeSupportingImages = {
@@ -303,6 +322,7 @@ function imageProps(image: ImageAsset | undefined, sizes = "(min-width: 1024px) 
     width: image.width ?? 1400,
     height: image.height ?? 1000,
     sizes,
+    unoptimized: Boolean(src?.startsWith("/uploads/") || src?.startsWith("/api/media/file/")),
   };
 }
 
@@ -710,7 +730,7 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
               alt="Friendly dog in a calm home-style care setting"
               fill
               priority
-              className="object-cover object-[88%_35%] md:object-[85%_30%]"
+              className="object-cover object-[88%_15%] md:object-[85%_12%]"
               sizes="100vw"
             />
           </div>
@@ -915,9 +935,11 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
           </Reveal>
           <Reveal from="right" delay={0.15}>
             <ImageCollage images={
-              page?.blocks?.find(b => b.type === "features")?.images?.length ? 
-                [page.blocks.find(b => b.type === "features")!.images![0], page.blocks.find(b => b.type === "features")!.images![1], homeSupportingImages.story] : 
-                [homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story]
+              (() => {
+                const featureImages = (page?.blocks?.find((b) => b.type === "features")?.images ?? []).filter((image) => Boolean(image?.url));
+                if (featureImages.length >= 3) return featureImages.slice(0, 3);
+                return [homeSupportingImages.whyA, homeSupportingImages.whyB, homeSupportingImages.story];
+              })()
             } />
           </Reveal>
         </div>
@@ -1000,13 +1022,20 @@ function heroBookingLabel(cta: { label: string; href: string }) {
 
 function Hero({ page }: { page: PageContent }) {
   const reducedMotion = useReducedMotion();
+  const cmsHeroImages = (page.hero?.images ?? []).filter((image) => Boolean(image?.url));
   const legacyHeroImages =
-    page.slug === "gallery" ? galleryHeroImages : page.slug === "shop" ? shopHeroImages : page.hero?.images ?? [];
+    page.slug === "gallery" ? galleryHeroImages : page.slug === "shop" ? shopHeroImages : cmsHeroImages;
   const generatedHero = pageHeroImages[page.slug];
-  const heroImages = generatedHero
-    ? [generatedHero, ...legacyHeroImages.filter((image) => image.id !== generatedHero.id)]
-    : legacyHeroImages;
+
+  // Admin/CMS: [0] = background, [1..3] = hero cards for every page.
+  const heroImages = cmsHeroImages.length
+    ? cmsHeroImages
+    : generatedHero
+      ? [generatedHero, ...legacyHeroImages.filter((image) => image.id !== generatedHero.id)]
+      : legacyHeroImages;
   const main = heroImages[0];
+  const backgroundOnlyHero = ["booking", "testimonials", "faq", "blog", "team", "pricing", "policy", "gift-cards"].includes(page.slug);
+  const collageImages = backgroundOnlyHero ? [] : heroImages.length >= 2 ? heroImages.slice(1, 4) : [];
   const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
@@ -1096,13 +1125,13 @@ function Hero({ page }: { page: PageContent }) {
             ) : null}
           </motion.div>
         </div>
-        {legacyHeroImages.length > 0 && page.slug !== "booking" ? (
+        {collageImages.length > 0 && page.slug !== "booking" ? (
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, x: 72, y: 24 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ duration: 1.05, delay: 0.2, ease }}
           >
-            <ImageCollage images={heroImages.slice(0, 5)} dark />
+            <ImageCollage images={collageImages} dark />
           </motion.div>
         ) : null}
       </div>
@@ -1164,18 +1193,20 @@ export function ServiceDetail({ service, related }: { service: Service; related:
   const ease = [0.22, 1, 0.36, 1] as const;
   const directions = ["left", "up", "right", "down"] as const;
   const heroImages = serviceDisplayImages(service);
+  const mainHero = heroImages[0];
+  const collageImages = heroImages.slice(1, 4);
 
   return (
     <PageEnter pageKey={service.slug}>
       <section className="relative overflow-hidden bg-forest pt-28 text-white md:pt-32">
-        {heroImages[0] ? (
+        {mainHero ? (
           <motion.div
             className="absolute inset-0"
             initial={reducedMotion ? false : { opacity: 0, scale: 1.1, x: 36 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             transition={{ duration: 1.25, ease }}
           >
-            <Image className="h-full w-full object-cover" priority {...imageProps(heroImages[0], "100vw")} alt={heroImages[0].alt} />
+            <Image className="h-full w-full object-cover" priority {...imageProps(mainHero, "100vw")} alt={mainHero.alt} />
           </motion.div>
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-r from-forest/75 via-forest/40 to-forest/25" />
@@ -1260,7 +1291,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ duration: 1.05, delay: 0.2, ease }}
           >
-            <ImageCollage images={heroImages} dark />
+            {collageImages.length > 0 ? <ImageCollage images={collageImages} dark /> : null}
           </motion.div>
         </div>
       </section>
@@ -1351,7 +1382,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
           </div>
         </section>
       )}
-      {!comingSoon ? <BookingCTA image={heroImages[0]} /> : null}
+      {!comingSoon ? <BookingCTA image={mainHero} /> : null}
     </PageEnter>
   );
 }
@@ -2709,10 +2740,24 @@ function TeamGrid({ team, page }: { team: TeamMember[]; page?: PageContent }) {
                 <div className="mt-5 flex flex-wrap gap-2">
                   {member.credentials.map((credential) => <span key={credential} className="rounded-full bg-sage px-3 py-1 text-xs">{credential}</span>)}
                 </div>
-                {member.instagram ? (
-                  <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
-                    @{member.instagram.split('/').filter(Boolean).pop()}
-                  </a>
+                {(member.instagram || member.facebook || member.website) ? (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {member.instagram ? (
+                      <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
+                        Instagram
+                      </a>
+                    ) : null}
+                    {member.facebook ? (
+                      <a href={member.facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
+                        Facebook
+                      </a>
+                    ) : null}
+                    {member.website ? (
+                      <a href={member.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
+                        Website
+                      </a>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             </article>
@@ -2956,6 +3001,9 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
 
 function GalleryPreview({ images, page }: { images: ImageAsset[]; page?: PageContent }) {
   const galleryBlock = page?.blocks?.find(b => b.type === "gallery");
+  const cmsImages = (galleryBlock?.images ?? []).filter((image) => Boolean(image?.url));
+  // Prefer CMS only when it has the full 10-card home slider set; otherwise keep the live home images.
+  const sliderImages = cmsImages.length >= 10 ? cmsImages : images;
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-24">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -2977,7 +3025,7 @@ function GalleryPreview({ images, page }: { images: ImageAsset[]; page?: PageCon
           </Button>
         </Reveal>
       </div>
-      <ImageRibbon images={images.slice(0, 10)} />
+      <ImageRibbon images={sliderImages.slice(0, 10)} />
     </section>
   );
 }

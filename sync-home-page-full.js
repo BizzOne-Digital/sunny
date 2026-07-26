@@ -173,6 +173,15 @@ const homePageFull = {
           width: 600,
           height: 400,
           status: "published"
+        },
+        {
+          id: "home-story",
+          title: "Care connection",
+          alt: "Caregiver sharing a calm outdoor moment with a dog",
+          url: "/images/home/home-story.png",
+          width: 600,
+          height: 400,
+          status: "published"
         }
       ]
     },
@@ -251,35 +260,20 @@ const homePageFull = {
       body: "",
       primaryCta: { label: "Open Gallery", href: "/gallery" },
       items: [],
-      images: [
-        {
-          id: "gallery-1",
-          url: "/images/gallery/gallery-1.png",
-          alt: "Dog walk",
-          title: "Gallery preview 1",
-          width: 400,
-          height: 400,
-          status: "published"
-        },
-        {
-          id: "gallery-2",
-          url: "/images/gallery/gallery-2.png",
-          alt: "Dog care",
-          title: "Gallery preview 2",
-          width: 400,
-          height: 400,
-          status: "published"
-        },
-        {
-          id: "gallery-3",
-          url: "/images/gallery/gallery-3.png",
-          alt: "Dog daycare",
-          title: "Gallery preview 3",
-          width: 400,
-          height: 400,
-          status: "published"
-        }
-      ]
+      images: Array.from({ length: 10 }, (_, index) => {
+        const n = String(index + 1).padStart(2, "0");
+        return {
+          id: `home-gallery-${n}`,
+          url: `/images/home/home-gallery-${n}.webp`,
+          alt: `DTdogs home gallery image ${index + 1}`,
+          title: `Home gallery image ${index + 1}`,
+          width: 1200,
+          height: 1500,
+          page: "home",
+          order: index + 1,
+          status: "published",
+        };
+      }),
     },
     
     // Shop Preview Section
@@ -318,11 +312,11 @@ async function syncHomePageFull() {
     console.log('  ✓ Stats cards (4 items)');
     console.log('  ✓ Our Vision section (with image)');
     console.log('  ✓ Services preview');
-    console.log('  ✓ Why Choose Us (6 features + 2 images)');
+    console.log('  ✓ Why Choose Us (6 features + 3 images)');
     console.log('  ✓ Trusted care section');
     console.log('  ✓ How booking works (4 steps)');
     console.log('  ✓ Meet Founder section (with image)');
-    console.log('  ✓ Gallery preview (3 images)');
+    console.log('  ✓ Gallery preview (10 images)');
     console.log('  ✓ Shop preview section');
     
     console.log('\n✅ Home page fully synced!');
