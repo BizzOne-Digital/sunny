@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { BarChart3, FileImage, LayoutDashboard, LogOut, PawPrint, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import type { CollectionName, ImageAsset } from "@/lib/site";
 import type { BookingRequest } from "@/lib/site";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 const collections: { label: string; name: CollectionName }[] = [
   { label: "Pages", name: "pages" },
@@ -266,6 +267,18 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
           {collection === "pages" ? <PageSectionsEditor record={current} /> : null}
           {collection === "services" ? <ServiceFaqEditor record={current} /> : null}
           {collection === "team" ? <TeamSocialLinksEditor record={current} /> : null}
+          {collection === "products" ? (
+            <ProductImagesEditor
+              record={current}
+              onImagesChange={(images) => {
+                setItems((list) =>
+                  list.map((item, itemIndex) =>
+                    itemKey(item, itemIndex) === selectedKey ? { ...item, images } : item,
+                  ),
+                );
+              }}
+            />
+          ) : null}
           <div className="mt-7 flex flex-wrap items-center gap-4">
             <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
               <Save className="h-4 w-4" /> Save
@@ -488,6 +501,59 @@ function TeamSocialLinksEditor({ record }: { record: EditableRecord }) {
           field={{ path: "website", label: "Website URL", wide: true, help: "e.g. https://example.com" }}
           value={record.website}
         />
+      </div>
+    </div>
+  );
+}
+
+function ProductImagesEditor({
+  record,
+  onImagesChange,
+}: {
+  record: EditableRecord;
+  onImagesChange: (images: ImageAsset[]) => void;
+}) {
+  const images = Array.isArray(record.images) ? ([...record.images] as ImageAsset[]) : [];
+  while (images.length < 3) {
+    images.push({
+      id: `product-image-${images.length + 1}-${Date.now()}`,
+      title: `Product Image ${images.length + 1}`,
+      alt: `Product Image ${images.length + 1}`,
+      url: "",
+      status: "published",
+    });
+  }
+
+  function setImageUrl(index: number, url: string) {
+    const next = images.map((image, imageIndex) =>
+      imageIndex === index
+        ? {
+            ...image,
+            id: image.id || `product-image-${index + 1}-${Date.now()}`,
+            title: image.title || `Product Image ${index + 1}`,
+            alt: image.alt || `Product Image ${index + 1}`,
+            url,
+            status: "published" as const,
+          }
+        : image,
+    );
+    onImagesChange(next.filter((image) => Boolean(image.url)).length ? next : next.slice(0, 3));
+  }
+
+  return (
+    <div className="mt-8 rounded-[2rem] bg-sage/60 p-5">
+      <h2 className="font-serif text-3xl text-forest">Product Images</h2>
+      <p className="mt-2 text-sm text-ink/60">Upload images to MongoDB. These URLs are stored on the product and work after Vercel deploy.</p>
+      <div className="mt-5 grid gap-4">
+        {images.slice(0, 3).map((image, index) => (
+          <ImageUploadField
+            key={`${image.id}-${index}`}
+            label={`Product Image ${index + 1}`}
+            folder="products"
+            value={image.url || ""}
+            onChange={(url) => setImageUrl(index, url)}
+          />
+        ))}
       </div>
     </div>
   );
@@ -826,24 +892,27 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
     event.preventDefault();
     setStatus("Uploading...");
     const form = event.currentTarget;
-    const response = await fetch("/api/media", {
+    const formData = new FormData(form);
+    formData.set("folder", "gallery");
+    const response = await fetch("/api/upload", {
       method: "POST",
-      body: new FormData(form),
+      body: formData,
     });
     const data = await response.json();
     if (response.ok) {
+      const title = String(formData.get("title") ?? "Gallery image");
       const galleryResponse = await fetch("/api/gallery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: data.asset.id,
-          title: data.asset.title,
-          alt: data.asset.alt,
-          caption: data.asset.caption || "",
-          url: data.asset.url,
-          width: data.asset.width || 1400,
-          height: data.asset.height || 1000,
-          tags: data.asset.tags || ["Gallery"],
+          id: `gallery-${Date.now()}`,
+          title,
+          alt: String(formData.get("alt") ?? title),
+          caption: String(formData.get("caption") ?? ""),
+          url: data.url,
+          width: 1400,
+          height: 1000,
+          tags: ["Gallery"],
           status: "published",
           order: items.length + 1,
         }),
@@ -870,12 +939,9 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
     setStatus("Replacing image...");
     const form = new FormData();
     form.set("file", file);
-    form.set("title", image.title);
-    form.set("alt", image.alt);
-    form.set("page", "gallery");
-    form.set("tags", (image.tags ?? []).join(", "));
+    form.set("folder", "gallery");
 
-    const uploadResponse = await fetch("/api/media", { method: "POST", body: form });
+    const uploadResponse = await fetch("/api/upload", { method: "POST", body: form });
     const uploadData = await uploadResponse.json();
     if (!uploadResponse.ok) {
       setStatus(uploadData.error ?? "Upload failed.");
@@ -884,10 +950,8 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
 
     const next: ImageAsset = {
       ...image,
-      url: uploadData.asset.url,
-      width: uploadData.asset.width ?? image.width,
-      height: uploadData.asset.height ?? image.height,
-      fileSize: uploadData.asset.fileSize ?? image.fileSize,
+      url: uploadData.url,
+      fileSize: uploadData.size ?? image.fileSize,
     };
 
     const response = await fetch(`/api/gallery/${image.id}`, {
@@ -1011,7 +1075,7 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
                     width={image.width ?? 800}
                     height={image.height ?? 600}
                     className="h-64 w-full object-cover"
-                    unoptimized={image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/")}
+                    unoptimized={image.url.startsWith("/api/uploads/") || image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/") || image.url.startsWith("data:image/")}
                   />
                   <div className="p-5">
                     <h2 className="font-serif text-3xl text-forest">{image.title || "Untitled"}</h2>
@@ -1087,7 +1151,7 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
               width={editing.width ?? 800}
               height={editing.height ?? 600}
               className="mt-5 h-64 w-full rounded-[1.5rem] object-cover"
-              unoptimized={editing.url.startsWith("/uploads/") || editing.url.startsWith("/api/media/file/")}
+              unoptimized={editing.url.startsWith("/api/uploads/") || editing.url.startsWith("/uploads/") || editing.url.startsWith("/api/media/file/") || editing.url.startsWith("data:image/")}
             />
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <MediaInput name="title" label="Title" defaultValue={editing.title} required />

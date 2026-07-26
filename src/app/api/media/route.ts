@@ -4,6 +4,9 @@ import { getAdminSession } from "@/lib/auth";
 import { uploadMediaFile } from "@/lib/media-upload";
 import { connectMongo, ImageAsset, Models } from "@/lib/site";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +19,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const upload = await uploadMediaFile(file, "dtdogs/pages");
+    const page = String(form.get("page") ?? "pages");
+    const tags = String(form.get("tags") ?? "");
+    const folderHint = page || tags || "pages";
+    const upload = await uploadMediaFile(file, folderHint);
     const title = String(form.get("title") ?? file.name);
     const asset: ImageAsset = {
       id: `${slugify(title, { lower: true, strict: true })}-${Date.now()}`,
@@ -27,8 +33,8 @@ export async function POST(request: Request) {
       width: upload.width ?? 1400,
       height: upload.height ?? 1000,
       fileSize: upload.bytes ?? file.size,
-      page: String(form.get("page") ?? ""),
-      tags: String(form.get("tags") ?? "")
+      page,
+      tags: tags
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
@@ -44,12 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       asset,
       storage: upload.storage,
-      message:
-        upload.storage === "cloudinary"
-          ? "Uploaded to Cloudinary."
-          : upload.storage === "mongo"
-            ? "Saved to MongoDB. Works after deploy (Atlas)."
-            : "Saved locally (dev only).",
+      message: "Saved to MongoDB (Vercel-safe).",
     });
   } catch (error) {
     console.error("Upload error details:", error);

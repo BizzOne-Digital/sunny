@@ -122,10 +122,12 @@ function treatImageUrl(order?: number) {
 
 function isCmsUploadedUrl(url?: string) {
   if (!url) return false;
+  // Legacy disk paths are broken on Vercel — never treat them as valid CMS URLs.
+  if (url.startsWith("/uploads/")) return false;
   return (
-    url.startsWith("data:image/") ||
-    url.startsWith("/uploads/") ||
+    url.startsWith("/api/uploads/") ||
     url.startsWith("/api/media/file/") ||
+    url.startsWith("data:image/") ||
     url.startsWith("https://res.cloudinary.com/") ||
     url.startsWith("http://") ||
     url.startsWith("https://")
@@ -134,12 +136,20 @@ function isCmsUploadedUrl(url?: string) {
 
 function localImageUrl(image: ImageAsset | undefined) {
   if (!image) return "/images/brand/logo.png";
-  // Admin replacements must win over hardcoded seed paths — even when id is missing.
-  if (isCmsUploadedUrl(image.url)) return image.url;
-  if (!image.id) return image.url || "/images/brand/logo.png";
-  if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
-  if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
-  return localImageUrls[image.id] ?? image.url;
+  const url = image.url || "";
+
+  // New Mongo folder uploads (Vercel-safe).
+  if (url.startsWith("/api/uploads/")) return url;
+  // Legacy mongo / data URLs.
+  if (url.startsWith("/api/media/file/") || url.startsWith("data:image/")) return url;
+  // Legacy local disk paths — fall back to default static image.
+  if (url.startsWith("/uploads/")) return "/images/brand/logo.png";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/images/")) return url;
+
+  if (!image.id) return url || "/images/brand/logo.png";
+  if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? url;
+  if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? url;
+  return localImageUrls[image.id] ?? (url || "/images/brand/logo.png");
 }
 
 function productImages(product: Product) {
@@ -310,8 +320,8 @@ function cx(...classes: Array<string | false | undefined>) {
 function needsUnoptimized(src?: string) {
   if (!src) return false;
   return (
+    src.startsWith("/api/uploads/") ||
     src.startsWith("data:image/") ||
-    src.startsWith("/uploads/") ||
     src.startsWith("/api/media/file/")
   );
 }

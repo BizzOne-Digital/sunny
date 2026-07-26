@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import { FormEvent, useRef, useState, type ReactNode } from "react";
-import { Save, Trash2, Upload } from "lucide-react";
+import { FormEvent, useState, type ReactNode } from "react";
+import { Save, Trash2 } from "lucide-react";
 import type { BlogPost, ImageAsset } from "@/lib/site";
 import { AdminShell } from "@/components/admin";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 type EditablePost = BlogPost & Record<string, unknown>;
 
@@ -40,20 +40,6 @@ function ensureBlogImages(post: EditablePost): EditablePost {
     featuredImage,
     inlineImages: inlineImages.slice(0, 5),
   };
-}
-
-async function uploadImageFile(file: File, slug: string, title: string) {
-  const form = new FormData();
-  form.set("file", file);
-  form.set("title", title || file.name);
-  form.set("alt", title || file.name);
-  form.set("page", "blog");
-  form.set("tags", `blog,${slug}`);
-
-  const response = await fetch("/api/media", { method: "POST", body: form });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error ?? "Upload failed.");
-  return data.asset as ImageAsset;
 }
 
 function Field({
@@ -95,85 +81,28 @@ function ImageSlot({
   slug: string;
   onChange: (image: ImageAsset) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function onFile(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    setError("");
-    try {
-      const asset = await uploadImageFile(file, slug, image?.title || label);
-      onChange({
-        ...asset,
-        title: image?.title || label,
-        alt: image?.alt || label,
-        page: "blog",
-        caption: image?.caption ?? "",
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setBusy(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
   return (
-    <div className="rounded-[1.5rem] border border-forest/10 bg-cream/70 p-4 md:col-span-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-bold text-ink/70">{label}</p>
-        <span className="rounded-full bg-forest/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-forest">
-          Folder: Blog
-        </span>
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-4">
-        <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-inner">
-          {image?.url ? (
-            image.url.startsWith("data:image/") || image.url.startsWith("/api/media/file/") || image.url.startsWith("/uploads/") ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={image.url} alt={image.alt || label} className="h-full w-full object-cover" />
-            ) : (
-              <Image
-                src={image.url}
-                alt={image.alt || label}
-                fill
-                className="object-cover"
-                sizes="96px"
-              />
-            )
-          ) : (
-            <div className="grid h-full place-items-center text-xs text-ink/40">No image</div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-full bg-burgundy px-4 py-2 text-sm font-bold text-white transition hover:bg-forest disabled:opacity-60"
-          >
-            <Upload className="h-4 w-4" />
-            {busy ? "Uploading..." : image?.url ? "Replace Image" : "Upload Image"}
-          </button>
-          <p className="mt-2 text-xs text-ink/50">
-            {!image?.url
-              ? "No file selected"
-              : image.url.startsWith("data:image/")
-                ? "Embedded image saved"
-                : image.url.startsWith("/api/media/file/")
-                  ? "Saved media file"
-                  : image.url.length > 80
-                    ? `${image.url.slice(0, 64)}…`
-                    : image.url}
-          </p>
-          {error ? <p className="mt-1 text-xs text-burgundy">{error}</p> : null}
-        </div>
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(event) => onFile(event.target.files?.[0])} />
+    <div className="md:col-span-2">
+      <ImageUploadField
+        label={label}
+        folder="pages"
+        value={image?.url || ""}
+        onChange={(url) =>
+          onChange({
+            id: image?.id || `${slug}-${label.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}`,
+            title: image?.title || label,
+            alt: image?.alt || label,
+            caption: image?.caption ?? "",
+            url,
+            page: "blog",
+            status: "published",
+            width: image?.width ?? 1400,
+            height: image?.height ?? 1000,
+          })
+        }
+      />
       {image?.url ? (
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
           <Field label="Image Title" value={image.title ?? ""} onChange={(title) => onChange({ ...image, title })} />
           <Field label="Alt Text" value={image.alt ?? ""} onChange={(alt) => onChange({ ...image, alt })} />
         </div>

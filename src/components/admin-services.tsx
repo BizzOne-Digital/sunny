@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import { FormEvent, useRef, useState, type ReactNode } from "react";
-import { Save, Trash2, Upload } from "lucide-react";
+import { FormEvent, useState, type ReactNode } from "react";
+import { Save, Trash2 } from "lucide-react";
 import type { ImageAsset, Service } from "@/lib/site";
 import { AdminShell } from "@/components/admin";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 type EditableService = Service & Record<string, unknown>;
 
@@ -30,32 +30,11 @@ function blankImage(serviceSlug: string, label: string): ImageAsset {
 const HERO_LABELS = ["Hero Background", "Hero Card 1", "Hero Card 2", "Hero Card 3"];
 
 function ensureFourServiceImages(service: EditableService): EditableService {
-  const existing = [...(service.images ?? [])];
-  while (existing.length < 4) {
-    existing.push({
-      id: `${service.slug}-hero-${existing.length + 1}`,
-      title: HERO_LABELS[existing.length] ?? `Hero ${existing.length + 1}`,
-      alt: HERO_LABELS[existing.length] ?? `Hero ${existing.length + 1}`,
-      url: "",
-      page: "services",
-      status: "published",
-    });
+  const images = [...(service.images ?? [])];
+  while (images.length < 4) {
+    images.push(blankImage(service.slug, HERO_LABELS[images.length] ?? `Hero ${images.length + 1}`));
   }
-  return { ...service, images: existing.slice(0, 4) };
-}
-
-async function uploadImageFile(file: File, serviceSlug: string, title: string) {
-  const form = new FormData();
-  form.set("file", file);
-  form.set("title", title || file.name);
-  form.set("alt", title || file.name);
-  form.set("page", "services");
-  form.set("tags", `services,${serviceSlug}`);
-
-  const response = await fetch("/api/media", { method: "POST", body: form });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error ?? "Upload failed.");
-  return data.asset as ImageAsset;
+  return { ...service, images: images.slice(0, 4) };
 }
 
 function Field({
@@ -100,11 +79,11 @@ function ListField({
       {label}
       {help ? <span className="ml-2 font-normal text-ink/45">{help}</span> : null}
       <textarea
-        value={value.join("\n")}
+        value={(value ?? []).join("\n")}
         onChange={(event) =>
           onChange(
             event.target.value
-              .split(/\r?\n/)
+              .split("\n")
               .map((line) => line.trim())
               .filter(Boolean),
           )
@@ -127,79 +106,28 @@ function ImageSlot({
   serviceSlug: string;
   onChange: (image: ImageAsset) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function onFile(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    setError("");
-    try {
-      const asset = await uploadImageFile(file, serviceSlug, image?.title || label);
-      onChange({
-        ...asset,
-        title: image?.title || label,
-        alt: image?.alt || label,
-        page: "services",
-        caption: image?.caption ?? "",
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setBusy(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
   return (
-    <div className="rounded-[1.5rem] border border-forest/10 bg-cream/70 p-4 md:col-span-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-bold text-ink/70">{label}</p>
-        <span className="rounded-full bg-forest/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-forest">
-          Folder: Services
-        </span>
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-4">
-        <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-inner">
-          {image?.url ? (
-            image.url.startsWith("data:image/") || image.url.startsWith("/api/media/file/") || image.url.startsWith("/uploads/") ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={image.url} alt={image.alt || label} className="h-full w-full object-cover" />
-            ) : (
-              <Image src={image.url} alt={image.alt || label} fill className="object-cover" sizes="96px" />
-            )
-          ) : (
-            <div className="grid h-full place-items-center text-xs text-ink/40">No image</div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-full bg-burgundy px-4 py-2 text-sm font-bold text-white transition hover:bg-forest disabled:opacity-60"
-          >
-            <Upload className="h-4 w-4" />
-            {busy ? "Uploading..." : image?.url ? "Replace Image" : "Upload Image"}
-          </button>
-          <p className="mt-2 text-xs text-ink/50">
-            {!image?.url
-              ? "No file selected"
-              : image.url.startsWith("data:image/")
-                ? "Embedded image saved"
-                : image.url.startsWith("/api/media/file/")
-                  ? "Saved media file"
-                  : image.url.length > 80
-                    ? `${image.url.slice(0, 64)}…`
-                    : image.url}
-          </p>
-          {error ? <p className="mt-1 text-xs text-burgundy">{error}</p> : null}
-        </div>
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(event) => onFile(event.target.files?.[0])} />
+    <div className="md:col-span-2">
+      <ImageUploadField
+        label={label}
+        folder="pages"
+        value={image?.url || ""}
+        onChange={(url) =>
+          onChange({
+            id: image?.id || `${serviceSlug}-${label.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}`,
+            title: image?.title || label,
+            alt: image?.alt || label,
+            caption: image?.caption ?? "",
+            url,
+            page: "services",
+            status: "published",
+            width: image?.width ?? 1400,
+            height: image?.height ?? 1000,
+          })
+        }
+      />
       {image?.url ? (
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
           <Field label="Image Title" value={image.title ?? ""} onChange={(title) => onChange({ ...image, title })} />
           <Field label="Alt Text" value={image.alt ?? ""} onChange={(alt) => onChange({ ...image, alt })} />
         </div>
@@ -334,8 +262,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
                   selectedKey === key ? "bg-forest text-white" : "bg-cream hover:bg-sage",
                 )}
               >
-                <span className="block font-bold">{item.name || item.slug}</span>
-                <span className={cx("text-xs", selectedKey === key ? "text-white/70" : "text-ink/45")}>/{item.slug}</span>
+                {item.name || item.slug}
               </button>
             );
           })}
@@ -350,11 +277,11 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
               <select
                 value={service.status ?? "published"}
                 onChange={(event) => updateService((current) => ({ ...current, status: event.target.value as Service["status"] }))}
-                className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-sm"
+                className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-sm outline-none ring-forest/20 focus:ring-4"
               >
                 <option value="published">published</option>
                 <option value="draft">draft</option>
-                <option value="coming-soon">coming-soon</option>
+                <option value="hidden">hidden</option>
               </select>
             </label>
             <Field label="Eyebrow" value={service.eyebrow ?? ""} onChange={(eyebrow) => updateService((current) => ({ ...current, eyebrow }))} />
@@ -372,7 +299,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
           <SectionCard title="Hero images">
             {HERO_LABELS.map((label, index) => (
               <ImageSlot
-                key={`${service.slug}-hero-${index}`}
+                key={`${service.slug}-${label}`}
                 label={label}
                 image={heroImages[index]}
                 serviceSlug={service.slug}
@@ -383,7 +310,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
 
           <div className="flex flex-wrap items-center gap-4 rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5">
             <button className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy">
-              <Save className="h-4 w-4" /> Save Service
+              <Save className="h-4 w-4" /> Save
             </button>
             <button
               type="button"
@@ -392,7 +319,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
             >
               <Trash2 className="h-4 w-4" /> Delete
             </button>
-            {status ? <p className="text-sm text-burgundy">{status}</p> : null}
+            <p className="text-sm text-burgundy">{status}</p>
           </div>
         </form>
       </div>
