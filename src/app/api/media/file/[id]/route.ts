@@ -1,31 +1,37 @@
 import { NextResponse } from "next/server";
-import { getMediaFile } from "@/lib/media-file";
+import { getMediaFileBytes } from "@/lib/media-file";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { id } = await context.params;
-  if (!id) {
-    return NextResponse.json({ error: "Missing file id." }, { status: 400 });
+  try {
+    const { id: rawId } = await context.params;
+    const id = decodeURIComponent(rawId || "").trim();
+    if (!id) {
+      return NextResponse.json({ error: "Missing file id." }, { status: 400 });
+    }
+
+    const file = await getMediaFileBytes(id);
+    if (!file) {
+      return NextResponse.json({ error: "File not found." }, { status: 404 });
+    }
+
+    return new NextResponse(new Uint8Array(file.bytes), {
+      status: 200,
+      headers: {
+        "Content-Type": file.contentType,
+        "Content-Length": String(file.bytes.length),
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Disposition": `inline; filename="${file.filename.replace(/"/g, "")}"`,
+      },
+    });
+  } catch (error) {
+    console.error("Media file serve error:", error);
+    return NextResponse.json({ error: "Unable to load media file." }, { status: 500 });
   }
-
-  const file = await getMediaFile(id);
-  if (!file?.data) {
-    return NextResponse.json({ error: "File not found." }, { status: 404 });
-  }
-
-  const bytes = Buffer.isBuffer(file.data) ? file.data : Buffer.from(file.data as ArrayBuffer);
-
-  return new NextResponse(new Uint8Array(bytes), {
-    status: 200,
-    headers: {
-      "Content-Type": file.contentType || "application/octet-stream",
-      "Content-Length": String(bytes.length),
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
 }

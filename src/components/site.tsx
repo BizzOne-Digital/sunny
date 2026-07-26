@@ -713,6 +713,9 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
 
   const ease = [0.22, 1, 0.36, 1] as const;
   const enter = heroReady && !reducedMotion;
+  const cmsHeroBackground = (page?.hero?.images ?? []).find((image) => Boolean(image?.url));
+  const heroBackgroundSrc = cmsHeroBackground ? localImageUrl(cmsHeroBackground) : HERO_WAVE_SRC;
+  const heroBackgroundAlt = cmsHeroBackground?.alt || "Friendly dog in a calm home-style care setting";
 
   return (
     <PageEnter pageKey="home">
@@ -726,10 +729,11 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
         >
           <div className={cx("absolute inset-[-10%]", !reducedMotion && heroReady && "hero-ken-burns")}>
             <Image
-              src={HERO_WAVE_SRC}
-              alt="Friendly dog in a calm home-style care setting"
+              src={heroBackgroundSrc}
+              alt={heroBackgroundAlt}
               fill
               priority
+              unoptimized={Boolean(heroBackgroundSrc?.startsWith("/uploads/") || heroBackgroundSrc?.startsWith("/api/media/file/"))}
               className="object-cover object-[88%_15%] md:object-[85%_12%]"
               sizes="100vw"
             />
@@ -3002,8 +3006,8 @@ function TestimonialsPreview({ testimonials, full, embedded }: { testimonials: T
 function GalleryPreview({ images, page }: { images: ImageAsset[]; page?: PageContent }) {
   const galleryBlock = page?.blocks?.find(b => b.type === "gallery");
   const cmsImages = (galleryBlock?.images ?? []).filter((image) => Boolean(image?.url));
-  // Prefer CMS only when it has the full 10-card home slider set; otherwise keep the live home images.
-  const sliderImages = cmsImages.length >= 10 ? cmsImages : images;
+  // Prefer CMS gallery images whenever any are saved; otherwise keep seed preview strip.
+  const sliderImages = cmsImages.length > 0 ? cmsImages : images;
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-24">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">

@@ -16,8 +16,12 @@ function revalidateForCollection(collection: CollectionName, body?: Record<strin
       break;
     case "pages":
       if (typeof body?.slug === "string") {
-        revalidatePath(`/${body.slug}`);
-        revalidatePath("/");
+        if (body.slug === "home") {
+          revalidatePath("/");
+        } else {
+          revalidatePath(`/${body.slug}`);
+        }
+        revalidatePath("/", "layout");
       }
       break;
     case "pricing":
@@ -73,9 +77,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ coll
   const keyValue = body.slug ?? body.id;
   if (!keyValue) return NextResponse.json({ error: "Item must include slug or id." }, { status: 400 });
 
+  // Avoid writing Mongo internals / client-only fields back into the document.
+  const { _id, __v, createdAt, updatedAt, ...rest } = body as Record<string, unknown>;
+  void _id;
+  void __v;
+  void createdAt;
+  void updatedAt;
+
   const key = body.slug ? { slug: body.slug } : { id: body.id };
   const ModelCtor = modelFactory() as unknown as Model<Record<string, unknown>>;
-  await ModelCtor.updateOne(key, { $set: body }, { upsert: true });
+  await ModelCtor.updateOne(key, { $set: rest }, { upsert: true });
   revalidateForCollection(collection, body);
 
   return NextResponse.json({ ok: true });

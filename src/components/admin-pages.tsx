@@ -181,12 +181,14 @@ function normalizePages(items: EditablePage[]): EditablePage[] {
     if (galleryIndex >= 0) {
       const gallery = { ...blocks[galleryIndex] };
       const existing = (gallery.images ?? []).filter((image) => Boolean(image?.url));
-      const looksLikeHomeSlider =
-        existing.length >= 10 &&
-        existing
-          .slice(0, 10)
-          .every((image) => String(image.id || "").includes("home-gallery") || String(image.url || "").includes("/images/home/home-gallery-"));
-      gallery.images = looksLikeHomeSlider ? existing.slice(0, 10) : homeGalleryDefaults();
+      const defaults = homeGalleryDefaults();
+      // Keep CMS uploads (Cloudinary /api/media/file /uploads). Only pad missing slots.
+      gallery.images =
+        existing.length >= 10
+          ? existing.slice(0, 10)
+          : existing.length > 0
+            ? [...existing, ...defaults.slice(existing.length)].slice(0, 10)
+            : defaults;
       blocks[galleryIndex] = gallery;
     }
 
@@ -301,7 +303,12 @@ function ImageSlot({
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-inner">
           {image?.url ? (
-            <Image src={image.url} alt={image.alt || label} fill className="object-cover" sizes="96px" unoptimized={image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/")} />
+            image.url.startsWith("/api/media/file/") || image.url.startsWith("/uploads/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={image.url} alt={image.alt || label} className="h-full w-full object-cover" />
+            ) : (
+              <Image src={image.url} alt={image.alt || label} fill className="object-cover" sizes="96px" />
+            )
           ) : (
             <div className="grid h-full place-items-center text-xs text-ink/40">No image</div>
           )}
@@ -379,51 +386,14 @@ export function PagesManager({ initialItems }: { initialItems: unknown[] }) {
     });
   }
 
-  function setHeroImage(imageIndex: number, image: ImageAsset) {
-    updatePage((current) => {
-      const images = [...(current.hero?.images ?? [])];
-      while (images.length <= imageIndex) images.push(blankImage(current.slug, `Hero ${images.length + 1}`));
-      images[imageIndex] = image;
-      return { ...current, hero: { ...current.hero, images } };
-    });
-  }
-
-  function setBlockImage(blockIndex: number, imageIndex: number, image: ImageAsset) {
-    updatePage((current) => {
-      const blocks = [...(current.blocks ?? [])];
-      const block = { ...blocks[blockIndex] };
-      const images = [...(block.images ?? [])];
-      while (images.length <= imageIndex) images.push(blankImage(current.slug, `Section image ${images.length + 1}`));
-      images[imageIndex] = image;
-      block.images = images;
-      blocks[blockIndex] = block;
-      return { ...current, blocks };
-    });
-  }
-
-  function setBlockItemImage(blockIndex: number, itemIndex: number, image: ImageAsset) {
-    updatePage((current) => {
-      const blocks = [...(current.blocks ?? [])];
-      const block = { ...blocks[blockIndex] };
-      const itemsList = [...(block.items ?? [])];
-      itemsList[itemIndex] = { ...itemsList[itemIndex], image };
-      block.items = itemsList;
-      blocks[blockIndex] = block;
-      return { ...current, blocks };
-    });
-  }
-
-  async function save(event: FormEvent) {
-    event.preventDefault();
-    if (!page) return;
-    setStatus("Saving...");
-    const payload: EditablePage = {
-      ...page,
+  function buildPayload(source: EditablePage): EditablePage {
+    return {
+      ...source,
       hero: {
-        ...page.hero,
-        images: (page.hero?.images ?? []).filter((image) => Boolean(image?.url)),
+        ...source.hero,
+        images: (source.hero?.images ?? []).filter((image) => Boolean(image?.url)),
       },
-      blocks: (page.blocks ?? []).map((block) => ({
+      blocks: (source.blocks ?? []).map((block) => ({
         ...block,
         images: (block.images ?? []).filter((image) => Boolean(image?.url)),
         items: (block.items ?? []).map((item) =>
@@ -431,6 +401,11 @@ export function PagesManager({ initialItems }: { initialItems: unknown[] }) {
         ),
       })),
     };
+  }
+
+  async function persistPage(source: EditablePage, okMessage = "Saved. Live page will show these updates.") {
+    setStatus("Saving...");
+    const payload = buildPayload(source);
     const response = await fetch("/api/admin/content/pages", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -438,11 +413,61 @@ export function PagesManager({ initialItems }: { initialItems: unknown[] }) {
     });
     const next = await response.json();
     if (response.ok) {
-      setItems((current) => current.map((item) => (item.slug === payload.slug ? payload : item)));
-      setStatus("Saved. Live page will show these updates.");
-    } else {
-      setStatus(next.error ?? "Unable to save.");
+      setItems((current) => current.map((item) => (item.slug === payload.slug ? { ...ensureFourHeroImages(payload), blocks: payload.blocks } : item)));
+      setStatus(okMessage);
+      return true;
     }
+    setStatus(next.error ?? "Unable to save.");
+    return false;
+  }
+
+  function setHeroImage(imageIndex: number, image: ImageAsset) {
+    if (!page) return;
+    const images = [...(page.hero?.images ?? [])];
+    while (images.length <= imageIndex) images.push(blankImage(page.slug, `Hero ${images.length + 1}`));
+    images[imageIndex] = image;
+    const nextPage = { ...page, hero: { ...page.hero, images } };
+    setItems((current) =>
+      current.map((item, itemIndex) => (pageKey(item, itemIndex) === selectedKey ? nextPage : item)),
+    );
+    void persistPage(nextPage, "Image uploaded and saved to live page.");
+  }
+
+  function setBlockImage(blockIndex: number, imageIndex: number, image: ImageAsset) {
+    if (!page) return;
+    const blocks = [...(page.blocks ?? [])];
+    const block = { ...blocks[blockIndex] };
+    const images = [...(block.images ?? [])];
+    while (images.length <= imageIndex) images.push(blankImage(page.slug, `Section image ${images.length + 1}`));
+    images[imageIndex] = image;
+    block.images = images;
+    blocks[blockIndex] = block;
+    const nextPage = { ...page, blocks };
+    setItems((current) =>
+      current.map((item, itemIndex) => (pageKey(item, itemIndex) === selectedKey ? nextPage : item)),
+    );
+    void persistPage(nextPage, "Image uploaded and saved to live page.");
+  }
+
+  function setBlockItemImage(blockIndex: number, itemIndex: number, image: ImageAsset) {
+    if (!page) return;
+    const blocks = [...(page.blocks ?? [])];
+    const block = { ...blocks[blockIndex] };
+    const itemsList = [...(block.items ?? [])];
+    itemsList[itemIndex] = { ...itemsList[itemIndex], image };
+    block.items = itemsList;
+    blocks[blockIndex] = block;
+    const nextPage = { ...page, blocks };
+    setItems((current) =>
+      current.map((item, itemIndex) => (pageKey(item, itemIndex) === selectedKey ? nextPage : item)),
+    );
+    void persistPage(nextPage, "Image uploaded and saved to live page.");
+  }
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (!page) return;
+    await persistPage(page);
   }
 
   async function deletePage() {

@@ -59,6 +59,10 @@ async function uploadToLocal(file: File): Promise<MediaUploadResult> {
 async function uploadToMongo(file: File): Promise<MediaUploadResult> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+  // MongoDB docs max ~16MB; base64 expands ~33%, keep a safe ceiling.
+  if (buffer.length > 8 * 1024 * 1024) {
+    throw new Error("Image is too large (max 8MB). Compress it and try again.");
+  }
   const ext = path.extname(file.name).toLowerCase() || ".png";
   const base = slugify(path.basename(file.name, ext), { lower: true, strict: true }) || "upload";
   const id = `${base}-${Date.now()}`;
@@ -77,11 +81,18 @@ async function uploadToMongo(file: File): Promise<MediaUploadResult> {
 }
 
 export async function uploadMediaFile(file: File, folder = "dtdogs"): Promise<MediaUploadResult> {
+  const storageMode = process.env.MEDIA_STORAGE?.trim().toLowerCase();
+
   if (preferLocalDisk()) {
     return uploadToLocal(file);
   }
 
-  if (!preferMongoOnly() && hasCloudinaryCredentials()) {
+  // Prefer Mongo on deploy when explicitly requested, or when Cloudinary is flaky.
+  if (storageMode === "mongo" || preferMongoOnly()) {
+    return uploadToMongo(file);
+  }
+
+  if (hasCloudinaryCredentials()) {
     try {
       const result = await uploadToCloudinary(file, folder);
       return {

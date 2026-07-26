@@ -163,14 +163,12 @@ function ImageSlot({
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-inner">
           {image?.url ? (
-            <Image
-              src={image.url}
-              alt={image.alt || label}
-              fill
-              className="object-cover"
-              sizes="96px"
-              unoptimized={image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/")}
-            />
+            image.url.startsWith("/api/media/file/") || image.url.startsWith("/uploads/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={image.url} alt={image.alt || label} className="h-full w-full object-cover" />
+            ) : (
+              <Image src={image.url} alt={image.alt || label} fill className="object-cover" sizes="96px" />
+            )
           ) : (
             <div className="grid h-full place-items-center text-xs text-ink/40">No image</div>
           )}
@@ -230,21 +228,22 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
   }
 
   function setServiceImage(imageIndex: number, image: ImageAsset) {
-    updateService((current) => {
-      const images = [...(current.images ?? [])];
-      while (images.length <= imageIndex) images.push(blankImage(current.slug, HERO_LABELS[images.length] ?? `Hero ${images.length + 1}`));
-      images[imageIndex] = image;
-      return { ...current, images: images.slice(0, 4) };
-    });
+    if (!service) return;
+    const images = [...(service.images ?? [])];
+    while (images.length <= imageIndex) images.push(blankImage(service.slug, HERO_LABELS[images.length] ?? `Hero ${images.length + 1}`));
+    images[imageIndex] = image;
+    const nextService = { ...service, images: images.slice(0, 4) };
+    setItems((current) =>
+      current.map((item, itemIndex) => (serviceKey(item, itemIndex) === selectedKey ? nextService : item)),
+    );
+    void persistService(nextService, "Image uploaded and saved to live service page.");
   }
 
-  async function save(event: FormEvent) {
-    event.preventDefault();
-    if (!service) return;
+  async function persistService(source: EditableService, okMessage = "Saved. Live service page will show these updates.") {
     setStatus("Saving...");
     const payload: EditableService = {
-      ...service,
-      images: (service.images ?? []).filter((image) => Boolean(image?.url)).slice(0, 4),
+      ...source,
+      images: (source.images ?? []).filter((image) => Boolean(image?.url)).slice(0, 4),
     };
     const response = await fetch("/api/admin/content/services", {
       method: "PUT",
@@ -256,10 +255,17 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
       setItems((current) =>
         current.map((item) => (item.slug === payload.slug ? ensureFourServiceImages(payload) : item)),
       );
-      setStatus("Saved. Live service page will show these updates.");
-    } else {
-      setStatus(next.error ?? "Unable to save.");
+      setStatus(okMessage);
+      return true;
     }
+    setStatus(next.error ?? "Unable to save.");
+    return false;
+  }
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (!service) return;
+    await persistService(service);
   }
 
   async function deleteService() {
