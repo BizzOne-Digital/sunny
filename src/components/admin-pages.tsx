@@ -323,7 +323,17 @@ function ImageSlot({
             <Upload className="h-4 w-4" />
             {busy ? "Uploading..." : image?.url ? "Replace Image" : "Upload Image"}
           </button>
-          <p className="mt-2 break-all text-xs text-ink/50">{image?.url || "No file selected"}</p>
+          <p className="mt-2 text-xs text-ink/50">
+            {!image?.url
+              ? "No file selected"
+              : image.url.startsWith("data:image/")
+                ? "Embedded image saved"
+                : image.url.startsWith("/api/media/file/")
+                  ? "Saved media file"
+                  : image.url.length > 80
+                    ? `${image.url.slice(0, 64)}…`
+                    : image.url}
+          </p>
           {error ? <p className="mt-1 text-xs text-burgundy">{error}</p> : null}
         </div>
       </div>
