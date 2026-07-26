@@ -131,14 +131,18 @@ function ImageSlot({
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-inner">
           {image?.url ? (
-            <Image
-              src={image.url}
-              alt={image.alt || label}
-              fill
-              className="object-cover"
-              sizes="96px"
-              unoptimized={image.url.startsWith("/uploads/") || image.url.startsWith("/api/media/file/")}
-            />
+            image.url.startsWith("data:image/") || image.url.startsWith("/api/media/file/") || image.url.startsWith("/uploads/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={image.url} alt={image.alt || label} className="h-full w-full object-cover" />
+            ) : (
+              <Image
+                src={image.url}
+                alt={image.alt || label}
+                fill
+                className="object-cover"
+                sizes="96px"
+              />
+            )
           ) : (
             <div className="grid h-full place-items-center text-xs text-ink/40">No image</div>
           )}

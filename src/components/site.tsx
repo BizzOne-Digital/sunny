@@ -123,6 +123,7 @@ function treatImageUrl(order?: number) {
 function isCmsUploadedUrl(url?: string) {
   if (!url) return false;
   return (
+    url.startsWith("data:image/") ||
     url.startsWith("/uploads/") ||
     url.startsWith("/api/media/file/") ||
     url.startsWith("https://res.cloudinary.com/") ||
@@ -132,9 +133,10 @@ function isCmsUploadedUrl(url?: string) {
 }
 
 function localImageUrl(image: ImageAsset | undefined) {
-  if (!image || !image.id) return "/images/brand/logo.png"; // Fallback to logo
-  // Admin replacements (/uploads or Cloudinary) must win over hardcoded seed paths.
+  if (!image) return "/images/brand/logo.png";
+  // Admin replacements must win over hardcoded seed paths — even when id is missing.
   if (isCmsUploadedUrl(image.url)) return image.url;
+  if (!image.id) return image.url || "/images/brand/logo.png";
   if (image.id.startsWith("gallery-slot-")) return galleryImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   if (image.page === "treats") return treatImageUrl(image.order) ?? localImageUrls[image.id] ?? image.url;
   return localImageUrls[image.id] ?? image.url;
@@ -305,6 +307,15 @@ function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+function needsUnoptimized(src?: string) {
+  if (!src) return false;
+  return (
+    src.startsWith("data:image/") ||
+    src.startsWith("/uploads/") ||
+    src.startsWith("/api/media/file/")
+  );
+}
+
 function imageProps(image: ImageAsset | undefined, sizes = "(min-width: 1024px) 50vw, 100vw") {
   if (!image) {
     return {
@@ -322,7 +333,7 @@ function imageProps(image: ImageAsset | undefined, sizes = "(min-width: 1024px) 
     width: image.width ?? 1400,
     height: image.height ?? 1000,
     sizes,
-    unoptimized: Boolean(src?.startsWith("/uploads/") || src?.startsWith("/api/media/file/")),
+    unoptimized: needsUnoptimized(src),
   };
 }
 
@@ -728,15 +739,26 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
           transition={{ duration: 1.2, ease }}
         >
           <div className={cx("absolute inset-[-10%]", !reducedMotion && heroReady && "hero-ken-burns")}>
-            <Image
-              src={heroBackgroundSrc}
-              alt={heroBackgroundAlt}
-              fill
-              priority
-              unoptimized={Boolean(heroBackgroundSrc?.startsWith("/uploads/") || heroBackgroundSrc?.startsWith("/api/media/file/"))}
-              className="object-cover object-[88%_15%] md:object-[85%_12%]"
-              sizes="100vw"
-            />
+            {needsUnoptimized(heroBackgroundSrc) ? (
+              // Native img for data URLs / uploaded media so Next Image never blocks CMS updates.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={heroBackgroundSrc.slice(0, 120)}
+                src={heroBackgroundSrc}
+                alt={heroBackgroundAlt}
+                className="h-full w-full object-cover object-[88%_15%] md:object-[85%_12%]"
+              />
+            ) : (
+              <Image
+                key={heroBackgroundSrc}
+                src={heroBackgroundSrc}
+                alt={heroBackgroundAlt}
+                fill
+                priority
+                className="object-cover object-[88%_15%] md:object-[85%_12%]"
+                sizes="100vw"
+              />
+            )}
           </div>
         </motion.div>
 
@@ -1051,7 +1073,17 @@ function Hero({ page }: { page: PageContent }) {
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ duration: 1.35, ease }}
         >
-          <Image className="h-full w-full object-cover" priority {...imageProps(main, "100vw")} alt={main.alt} />
+          {needsUnoptimized(localImageUrl(main)) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={localImageUrl(main).slice(0, 120)}
+              src={localImageUrl(main)}
+              alt={main.alt}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Image key={localImageUrl(main)} className="h-full w-full object-cover" priority {...imageProps(main, "100vw")} alt={main.alt} />
+          )}
         </motion.div>
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-r from-forest/70 via-forest/35 to-forest/20" />

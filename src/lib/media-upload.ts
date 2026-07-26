@@ -12,9 +12,19 @@ export type MediaUploadResult = {
   storage: "cloudinary" | "local" | "mongo";
 };
 
-export function isUploadedMediaUrl(url?: string) {
+/** Uploaded/replaced media that must bypass Next image optimization / seed remaps. */
+export function isDynamicMediaUrl(url?: string) {
   if (!url) return false;
-  return url.startsWith("/uploads/") || url.startsWith("/api/media/file/");
+  return (
+    url.startsWith("data:image/") ||
+    url.startsWith("/uploads/") ||
+    url.startsWith("/api/media/file/") ||
+    url.startsWith("https://res.cloudinary.com/")
+  );
+}
+
+export function isUploadedMediaUrl(url?: string) {
+  return isDynamicMediaUrl(url);
 }
 
 function hasCloudinaryCredentials() {
@@ -59,23 +69,29 @@ async function uploadToLocal(file: File): Promise<MediaUploadResult> {
 async function uploadToMongo(file: File): Promise<MediaUploadResult> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  // MongoDB docs max ~16MB; base64 expands ~33%, keep a safe ceiling.
-  if (buffer.length > 8 * 1024 * 1024) {
-    throw new Error("Image is too large (max 8MB). Compress it and try again.");
+  // Keep payloads small enough for Vercel request limits when saved into page docs.
+  if (buffer.length > 1.5 * 1024 * 1024) {
+    throw new Error("Image is too large (max 1.5MB). Compress it and try again.");
   }
+
   const ext = path.extname(file.name).toLowerCase() || ".png";
   const base = slugify(path.basename(file.name, ext), { lower: true, strict: true }) || "upload";
   const id = `${base}-${Date.now()}`;
-  const saved = await saveMediaFile({
+  const contentType = file.type || "image/png";
+  const dataBase64 = buffer.toString("base64");
+
+  // Keep a MediaFile copy for /api/media/file fallback, but pages store a data URL
+  // so the live site never depends on a separate file fetch.
+  await saveMediaFile({
     id,
     filename: `${id}${ext}`,
-    contentType: file.type || "image/png",
+    contentType,
     buffer,
   });
 
   return {
-    url: saved.url,
-    bytes: saved.bytes,
+    url: `data:${contentType};base64,${dataBase64}`,
+    bytes: buffer.length,
     storage: "mongo",
   };
 }
@@ -87,8 +103,8 @@ export async function uploadMediaFile(file: File, folder = "dtdogs"): Promise<Me
     return uploadToLocal(file);
   }
 
-  // Prefer Mongo on deploy when explicitly requested, or when Cloudinary is flaky.
-  if (storageMode === "mongo" || preferMongoOnly()) {
+  // Vercel/mongo: embed as data URL so live pages update without a separate file CDN.
+  if (process.env.VERCEL || storageMode === "mongo" || preferMongoOnly()) {
     return uploadToMongo(file);
   }
 
@@ -107,6 +123,5 @@ export async function uploadMediaFile(file: File, folder = "dtdogs"): Promise<Me
     }
   }
 
-  // Durable storage for local + deployed environments (MongoDB Atlas survives deploys).
   return uploadToMongo(file);
 }

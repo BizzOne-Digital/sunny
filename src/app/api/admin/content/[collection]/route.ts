@@ -88,6 +88,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ coll
   const ModelCtor = modelFactory() as unknown as Model<Record<string, unknown>>;
   await ModelCtor.updateOne(key, { $set: rest }, { upsert: true });
   revalidateForCollection(collection, body);
+  // Bust any leftover cached HTML for this change.
+  revalidatePath("/", "layout");
 
   return NextResponse.json({ ok: true });
 }
