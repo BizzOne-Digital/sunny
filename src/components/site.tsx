@@ -3616,7 +3616,7 @@ function Footer({ services }: { services: Service[] }) {
             {/* Logo + Welcome heading */}
             <div className="flex items-center gap-4">
               <span className="relative grid h-24 w-24 shrink-0 place-items-center sm:h-28 sm:w-28">
-                <Image src={LOGO_SRC} alt="DTdogs.ca" width={112} height={112} className="h-full w-full object-contain" />
+                <Image src={INTRO_LOGO_SRC} alt="DTdogs.ca" width={112} height={112} className="h-full w-full object-contain" />
               </span>
               <div>
                 <p className="font-serif text-2xl leading-tight text-white sm:text-3xl">
