@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/site";
-import { getServices } from "@/lib/site";
+import { getServices, getSiteBrand } from "@/lib/site";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -42,7 +42,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const services = await getServices();
+  const [services, brandLogos] = await Promise.all([getServices(), getSiteBrand()]);
 
   return (
     <html
@@ -51,7 +51,9 @@ export default async function RootLayout({
       className={`${manrope.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <SiteChrome services={services}>{children}</SiteChrome>
+        <SiteChrome services={services} brandLogos={brandLogos}>
+          {children}
+        </SiteChrome>
       </body>
     </html>
   );

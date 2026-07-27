@@ -7,6 +7,8 @@ import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, CalendarDays, Camera, Check, ChevronDown, Clock, Heart, Mail, MapPin, Menu, PawPrint, Phone, Play, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import type { BlogPost, Faq, ImageAsset, PageContent, PricingPackage, Product, Service, TeamMember, Testimonial } from "@/lib/site";
+import { defaultSiteBrand, type SiteBrandLogos } from "@/lib/brand";
+import { BlogBody } from "@/components/BlogBody";
 
 const serviceAddOn = {
   name: "Add-On",
@@ -309,8 +311,9 @@ const nav = [
   { label: "Our Team", href: "/team" },
 ];
 
-const LOGO_SRC = "/images/brand/logo.png";
-const INTRO_LOGO_SRC = "/images/brand/intro-logo.png";
+const LOGO_SRC = defaultSiteBrand.headerLogo;
+const INTRO_LOGO_SRC = defaultSiteBrand.introLogo;
+const FOOTER_LOGO_SRC = defaultSiteBrand.footerLogo;
 const HERO_WAVE_SRC = "/images/home/hero-wave.png";
 const FOOTER_BG_SRC = "/images/brand/footer-bg.png";
 const FOOTER_PART_SRC = "/images/brand/footer-part.png";
@@ -349,8 +352,21 @@ function imageProps(image: ImageAsset | undefined, sizes = "(min-width: 1024px) 
   };
 }
 
-export function SiteChrome({ children, services }: { children: React.ReactNode; services: Service[] }) {
+export function SiteChrome({
+  children,
+  services,
+  brandLogos = defaultSiteBrand,
+}: {
+  children: React.ReactNode;
+  services: Service[];
+  brandLogos?: SiteBrandLogos;
+}) {
   const pathname = usePathname();
+  const logos = {
+    headerLogo: brandLogos.headerLogo || LOGO_SRC,
+    introLogo: brandLogos.introLogo || INTRO_LOGO_SRC,
+    footerLogo: brandLogos.footerLogo || FOOTER_LOGO_SRC,
+  };
 
   if (pathname.startsWith("/admin")) {
     return <main className="min-h-screen bg-cream text-ink">{children}</main>;
@@ -358,16 +374,16 @@ export function SiteChrome({ children, services }: { children: React.ReactNode; 
 
   return (
     <>
-      <IntroWrapper />
-      <Navigation services={services} />
+      <IntroWrapper logoSrc={logos.introLogo} />
+      <Navigation services={services} logoSrc={logos.headerLogo} />
       <PageTransition />
       <main className="min-h-screen overflow-x-clip bg-cream text-ink">{children}</main>
-      <Footer services={services} />
+      <Footer services={services} logoSrc={logos.footerLogo} />
     </>
   );
 }
 
-function IntroWrapper() {
+function IntroWrapper({ logoSrc }: { logoSrc: string }) {
   const [visible, setVisible] = useState(true);
   const [playIntro, setPlayIntro] = useState(false);
   const [logoReady, setLogoReady] = useState(false);
@@ -377,8 +393,8 @@ function IntroWrapper() {
     const img = new window.Image();
     img.onload = () => setLogoReady(true);
     img.onerror = () => setLogoReady(false);
-    img.src = INTRO_LOGO_SRC;
-  }, []);
+    img.src = logoSrc;
+  }, [logoSrc]);
 
   useEffect(() => {
     if (reducedMotion || sessionStorage.getItem("dtdogs_intro_seen")) {
@@ -449,12 +465,13 @@ function IntroWrapper() {
                 >
                   {logoReady ? (
                     <Image
-                      src={INTRO_LOGO_SRC}
+                      src={logoSrc}
                       alt="DT Dogs at Hand & Paw"
                       width={320}
                       height={110}
                       className="h-20 w-auto object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)] sm:h-24 md:h-28"
                       priority
+                      unoptimized={needsUnoptimized(logoSrc)}
                     />
                   ) : (
                     <span className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-coral to-burgundy shadow-2xl shadow-coral/40">
@@ -517,26 +534,27 @@ function PageTransition() {
   );
 }
 
-function BrandLogo({ inverted = false }: { inverted?: boolean }) {
+function BrandLogo({ inverted = false, src = LOGO_SRC }: { inverted?: boolean; src?: string }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const img = new window.Image();
     img.onload = () => setReady(true);
     img.onerror = () => setReady(false);
-    img.src = LOGO_SRC;
-  }, []);
+    img.src = src;
+  }, [src]);
 
   return (
     <Link href="/" className="group flex shrink-0 items-center gap-2">
       {ready ? (
         <Image
-          src={LOGO_SRC}
+          src={src}
           alt="DTdogs.ca"
           width={260}
           height={84}
           className="h-[75px] w-auto object-contain"
           priority
+          unoptimized={needsUnoptimized(src)}
         />
       ) : (
         <>
@@ -552,7 +570,7 @@ function BrandLogo({ inverted = false }: { inverted?: boolean }) {
   );
 }
 
-function Navigation({ services }: { services: Service[] }) {
+function Navigation({ services, logoSrc }: { services: Service[]; logoSrc: string }) {
   const [open, setOpen] = useState(false);
   const [solid, setSolid] = useState(false);
   const pathname = usePathname();
@@ -595,7 +613,7 @@ function Navigation({ services }: { services: Service[] }) {
 
       <div className={cx("px-2 pt-2 transition-all duration-500 sm:px-3 sm:pt-3 md:px-5", solid && "pb-2")}>
         <div className={cx("mx-auto flex max-w-[1400px] items-center justify-between gap-2 rounded-full border border-white/70 bg-white/95 px-2.5 py-2 shadow-[0_12px_40px_rgba(32,37,34,0.12)] backdrop-blur-xl transition-all duration-500 sm:gap-3 sm:px-4 sm:py-2.5 md:px-5 md:py-3", solid && "shadow-[0_16px_48px_rgba(32,37,34,0.16)]")}>
-          <BrandLogo />
+          <BrandLogo src={logoSrc} />
 
           <nav className="hidden items-center gap-0.5 text-[13px] font-semibold text-ink/75 xl:flex 2xl:gap-1">
             {nav.map((item) =>
@@ -1542,7 +1560,7 @@ export function BlogDetail({ post, related }: { post: BlogPost; related: BlogPos
           </Reveal>
           <Reveal from="right" delay={0.2}>
             <div className="prose prose-lg mt-12 max-w-none text-ink/75">
-              <p>{post.body}</p>
+              <BlogBody content={post.body} />
             </div>
           </Reveal>
           <ImageRibbon images={post.inlineImages} />
@@ -3587,7 +3605,7 @@ function Reveal({
   );
 }
 
-function Footer({ services }: { services: Service[] }) {
+function Footer({ services, logoSrc }: { services: Service[]; logoSrc: string }) {
   const serviceLinks = services
     .filter((service) => service.status !== "coming-soon" && service.status !== "draft")
     .map((service) => ({ label: service.name, href: `/services/${service.slug}` }));
@@ -3616,7 +3634,14 @@ function Footer({ services }: { services: Service[] }) {
             {/* Logo + Welcome heading */}
             <div className="flex items-center gap-4">
               <span className="relative grid h-24 w-24 shrink-0 place-items-center sm:h-28 sm:w-28">
-                <Image src={INTRO_LOGO_SRC} alt="DTdogs.ca" width={112} height={112} className="h-full w-full object-contain" />
+                <Image
+                  src={logoSrc}
+                  alt="DTdogs.ca"
+                  width={112}
+                  height={112}
+                  className="h-full w-full object-contain"
+                  unoptimized={needsUnoptimized(logoSrc)}
+                />
               </span>
               <div>
                 <p className="font-serif text-2xl leading-tight text-white sm:text-3xl">

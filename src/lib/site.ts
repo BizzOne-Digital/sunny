@@ -1,4 +1,8 @@
 import mongoose, { Model, Schema } from "mongoose";
+import { defaultSiteBrand, type SiteBrandLogos } from "@/lib/brand";
+
+export type { SiteBrandLogos } from "@/lib/brand";
+export { defaultSiteBrand } from "@/lib/brand";
 
 export type ImageAsset = {
   id: string;
@@ -1879,6 +1883,19 @@ export const Models = {
   GiftCardOrder: () => getModel<GiftCardOrder>("GiftCardOrder", new Schema<GiftCardOrder>({ denomination: String, quantity: { type: Number, default: 1 }, recipientName: String, recipientEmail: String, senderName: String, senderEmail: String, message: String, deliveryDate: String, paymentStatus: { type: String, default: "Payment Pending" }, status: { type: String, default: "New" } }, { timestamps: true })),
   AdminUser: () => getModel<{ email: string; passwordHash: string; role: string }>("AdminUser", new Schema({ email: { type: String, unique: true }, passwordHash: String, role: { type: String, default: "Owner/Admin" } }, { timestamps: true })),
   Gallery: () => getModel<ImageAsset>("Gallery", new Schema<ImageAsset>({ id: { type: String, unique: true }, title: String, alt: String, caption: String, url: String, width: Number, height: Number, tags: [String], status: String, order: Number }, { timestamps: true })),
+  SiteBrand: () =>
+    getModel<SiteBrandLogos>(
+      "SiteBrand",
+      new Schema<SiteBrandLogos>(
+        {
+          id: { type: String, unique: true, default: "brand" },
+          headerLogo: { type: String, default: defaultSiteBrand.headerLogo },
+          footerLogo: { type: String, default: defaultSiteBrand.footerLogo },
+          introLogo: { type: String, default: defaultSiteBrand.introLogo },
+        },
+        { timestamps: true },
+      ),
+    ),
 };
 
 export const collectionDefaults = {
@@ -2008,6 +2025,43 @@ export async function getService(slug: string) {
   return all.find((service) => service.slug === slug && service.status !== "draft");
 }
 
+function normalizeSiteBrand(raw?: Partial<SiteBrandLogos> | null): SiteBrandLogos {
+  return {
+    id: "brand",
+    headerLogo: (raw?.headerLogo || defaultSiteBrand.headerLogo).trim() || defaultSiteBrand.headerLogo,
+    footerLogo: (raw?.footerLogo || defaultSiteBrand.footerLogo).trim() || defaultSiteBrand.footerLogo,
+    introLogo: (raw?.introLogo || defaultSiteBrand.introLogo).trim() || defaultSiteBrand.introLogo,
+  };
+}
+
+export async function getSiteBrand(): Promise<SiteBrandLogos> {
+  try {
+    const db = await connectMongo();
+    if (!db) return defaultSiteBrand;
+
+    const BrandModel = Models.SiteBrand() as unknown as Model<Record<string, unknown>>;
+    const doc = await BrandModel.findOne({ id: "brand" }).lean();
+    if (!doc) {
+      await BrandModel.updateOne({ id: "brand" }, { $set: defaultSiteBrand }, { upsert: true });
+      return defaultSiteBrand;
+    }
+    return normalizeSiteBrand(JSON.parse(JSON.stringify(doc)) as Partial<SiteBrandLogos>);
+  } catch (error) {
+    console.error("Error fetching site brand logos:", error);
+    return defaultSiteBrand;
+  }
+}
+
+export async function saveSiteBrand(input: Partial<SiteBrandLogos>): Promise<SiteBrandLogos> {
+  const db = await connectMongo();
+  if (!db) throw new Error("MONGODB_URI is required to save brand logos.");
+
+  const next = normalizeSiteBrand({ ...defaultSiteBrand, ...input, id: "brand" });
+  const BrandModel = Models.SiteBrand() as unknown as Model<Record<string, unknown>>;
+  await BrandModel.updateOne({ id: "brand" }, { $set: next }, { upsert: true });
+  return next;
+}
+
 async function syncCollectionItems(collection: CollectionName, items: Record<string, unknown>[], replaceAll = true) {
   const db = await connectMongo();
   if (!db) return false;
@@ -2049,6 +2103,13 @@ export async function syncAllContent() {
   for (const collection of replaceCollections) {
     const data = collectionDefaults[collection] as Record<string, unknown>[];
     await syncCollectionItems(collection, data);
+  }
+
+  // Ensure brand logo document exists without overwriting custom uploads.
+  const BrandModel = Models.SiteBrand() as unknown as Model<Record<string, unknown>>;
+  const existingBrand = await BrandModel.findOne({ id: "brand" }).lean();
+  if (!existingBrand) {
+    await BrandModel.updateOne({ id: "brand" }, { $set: defaultSiteBrand }, { upsert: true });
   }
 }
 

@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { BarChart3, FileImage, LayoutDashboard, LogOut, PawPrint, Pencil, Save, Trash2, Upload, X } from "lucide-react";
 import type { CollectionName, ImageAsset } from "@/lib/site";
 import type { BookingRequest } from "@/lib/site";
+import type { SiteBrandLogos } from "@/lib/brand";
 import { ImageUploadField } from "@/components/ImageUploadField";
 
 const collections: { label: string; name: CollectionName }[] = [
@@ -44,6 +45,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <nav className="mt-5 grid gap-2">
             <AdminLink href="/admin" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
+            <AdminLink href="/admin/brand" icon={<PawPrint className="h-4 w-4" />} label="Brand Logos" />
             <AdminLink href="/admin/gallery" icon={<FileImage className="h-4 w-4" />} label="Gallery" />
             {collections.map((item) => (
               <AdminLink key={item.name} href={`/admin/${item.name}`} icon={<BarChart3 className="h-4 w-4" />} label={item.label} />
@@ -850,6 +852,89 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
           </form>
         </div>
       ) : null}
+    </AdminShell>
+  );
+}
+
+export function BrandLogosManager({ initialBrand }: { initialBrand: SiteBrandLogos }) {
+  const [brand, setBrand] = useState<SiteBrandLogos>(initialBrand);
+  const [status, setStatus] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    setStatus("Saving...");
+    try {
+      const response = await fetch("/api/admin/brand", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(brand),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setStatus(data.error ?? "Unable to save brand logos.");
+        return;
+      }
+      setBrand(data);
+      setStatus("Saved. Header, footer and intro logos will update on the live site.");
+    } catch {
+      setStatus("Unable to save brand logos.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <AdminShell>
+      <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
+        <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Brand</p>
+        <h1 className="mt-3 font-serif text-5xl text-forest">Logos</h1>
+        <p className="mt-4 max-w-3xl leading-8 text-ink/65">
+          Upload the header navbar logo, intro splash logo, and footer logo. Changes are stored in MongoDB and used across the live site.
+        </p>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          <div className="rounded-[1.5rem] border border-forest/10 bg-cream/60 p-5">
+            <ImageUploadField
+              label="Header logo"
+              folder="misc"
+              value={brand.headerLogo}
+              onChange={(headerLogo) => setBrand((current) => ({ ...current, headerLogo }))}
+            />
+            <p className="mt-3 text-xs leading-5 text-ink/55">Used in the top navigation bar.</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-forest/10 bg-cream/60 p-5">
+            <ImageUploadField
+              label="Intro logo"
+              folder="misc"
+              value={brand.introLogo}
+              onChange={(introLogo) => setBrand((current) => ({ ...current, introLogo }))}
+            />
+            <p className="mt-3 text-xs leading-5 text-ink/55">Used on the first-visit intro splash screen.</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-forest/10 bg-cream/60 p-5">
+            <ImageUploadField
+              label="Footer logo"
+              folder="misc"
+              value={brand.footerLogo}
+              onChange={(footerLogo) => setBrand((current) => ({ ...current, footerLogo }))}
+            />
+            <p className="mt-3 text-xs leading-5 text-ink/55">Used in the site footer branding block.</p>
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-full bg-forest px-6 py-3 font-bold text-white transition hover:bg-burgundy disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save Logos"}
+          </button>
+          {status ? <p className="text-sm text-burgundy">{status}</p> : null}
+        </div>
+      </div>
     </AdminShell>
   );
 }

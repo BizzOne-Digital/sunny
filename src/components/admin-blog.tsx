@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useState, type ReactNode } from "react";
-import { Save, Trash2 } from "lucide-react";
+import { FormEvent, useRef, useState, type ReactNode } from "react";
+import { Bold, Heading2, Heading3, Plus, Save, Trash2 } from "lucide-react";
 import type { BlogPost, ImageAsset } from "@/lib/site";
 import { AdminShell } from "@/components/admin";
+import { BlogBody } from "@/components/BlogBody";
 import { ImageUploadField } from "@/components/ImageUploadField";
 
 type EditablePost = BlogPost & Record<string, unknown>;
@@ -42,6 +43,35 @@ function ensureBlogImages(post: EditablePost): EditablePost {
   };
 }
 
+const NEW_POST_BODY_TEMPLATE = `Write your introduction here.
+
+## Section heading
+
+Add your paragraph under this heading.
+
+**Bold label:** Extra detail for this point.
+
+## Another section
+
+More content here.`;
+
+function createBlankPost(): EditablePost {
+  const stamp = Date.now();
+  const slug = `new-blog-${stamp}`;
+  return ensureBlogImages({
+    slug,
+    title: "New Blog Post",
+    excerpt: "",
+    category: "",
+    author: "DTdogs.ca",
+    date: new Date().toISOString().slice(0, 10),
+    body: NEW_POST_BODY_TEMPLATE,
+    featuredImage: blankImage(slug, "Featured Image"),
+    inlineImages: [],
+    status: "draft",
+  });
+}
+
 function Field({
   label,
   value,
@@ -67,6 +97,117 @@ function Field({
         <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className={className} />
       )}
     </label>
+  );
+}
+
+function BlogBodyEditor({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertSnippet(before: string, after = "", placeholder = "") {
+    const el = textareaRef.current;
+    if (!el) {
+      onChange(`${value}${value ? "\n\n" : ""}${before}${placeholder}${after}`);
+      return;
+    }
+
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? value.length;
+    const selected = value.slice(start, end) || placeholder;
+    const next = value.slice(0, start) + before + selected + after + value.slice(end);
+    onChange(next);
+
+    requestAnimationFrame(() => {
+      el.focus();
+      const cursor = start + before.length + selected.length + after.length;
+      el.setSelectionRange(cursor, cursor);
+    });
+  }
+
+  function insertBlock(snippet: string) {
+    const el = textareaRef.current;
+    if (!el) {
+      onChange(`${value}${value.trim() ? "\n\n" : ""}${snippet}`);
+      return;
+    }
+
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? value.length;
+    const needsLeadingBreak = start > 0 && value.slice(Math.max(0, start - 2), start) !== "\n\n";
+    const prefix = needsLeadingBreak ? (start > 0 && !value.slice(0, start).endsWith("\n") ? "\n\n" : "\n") : "";
+    const next = value.slice(0, start) + prefix + snippet + value.slice(end);
+    onChange(next);
+
+    requestAnimationFrame(() => {
+      el.focus();
+      const cursor = start + prefix.length + snippet.length;
+      el.setSelectionRange(cursor, cursor);
+    });
+  }
+
+  return (
+    <div className="md:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-bold text-ink/70">Post Body</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => insertBlock("## Heading title\n\n")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-forest/20 bg-white px-3 py-1.5 text-xs font-bold text-forest transition hover:bg-sage"
+          >
+            <Heading2 className="h-3.5 w-3.5" /> Heading
+          </button>
+          <button
+            type="button"
+            onClick={() => insertBlock("### Subheading\n\n")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-forest/20 bg-white px-3 py-1.5 text-xs font-bold text-forest transition hover:bg-sage"
+          >
+            <Heading3 className="h-3.5 w-3.5" /> Subheading
+          </button>
+          <button
+            type="button"
+            onClick={() => insertSnippet("**", "**", "bold text")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-forest/20 bg-white px-3 py-1.5 text-xs font-bold text-forest transition hover:bg-sage"
+          >
+            <Bold className="h-3.5 w-3.5" /> Bold
+          </button>
+          <button
+            type="button"
+            onClick={() => insertBlock("**Label:** details here.\n\n")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-forest/20 bg-white px-3 py-1.5 text-xs font-bold text-forest transition hover:bg-sage"
+          >
+            Bold label
+          </button>
+        </div>
+      </div>
+
+      <p className="mt-2 text-xs leading-5 text-ink/55">
+        Use <code className="rounded bg-cream px-1">## Heading</code>, <code className="rounded bg-cream px-1">### Subheading</code>, and{" "}
+        <code className="rounded bg-cream px-1">**bold**</code>. Leave a blank line between sections. Live site will show proper headings.
+      </p>
+
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={16}
+        spellCheck
+        className="mt-3 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 font-mono text-sm leading-7 outline-none ring-forest/20 focus:ring-4"
+        placeholder={"Intro paragraph.\n\n## Section heading\n\nParagraph text.\n\n**Point:** More detail."}
+      />
+
+      <div className="mt-4 rounded-[1.5rem] border border-forest/10 bg-white p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-burgundy">Live preview</p>
+        <div className="mt-4">
+          <BlogBody content={value} compact />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -140,6 +281,13 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
     });
   }
 
+  function addPost() {
+    const blank = createBlankPost();
+    setItems((current) => [blank, ...current]);
+    setSelectedKey(postKey(blank));
+    setStatus("New draft ready — edit headings in the body, then save.");
+  }
+
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!post) return;
@@ -149,6 +297,14 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
       featuredImage: post.featuredImage?.url ? post.featuredImage : blankImage(post.slug, "Featured Image"),
       inlineImages: (post.inlineImages ?? []).filter((image) => Boolean(image?.url)).slice(0, 5),
     };
+    if (!payload.slug?.trim()) {
+      setStatus("Please enter a URL slug before saving.");
+      return;
+    }
+    if (!payload.title?.trim()) {
+      setStatus("Please enter a title before saving.");
+      return;
+    }
     if (!payload.featuredImage.url) {
       setStatus("Please upload a featured image before saving.");
       return;
@@ -161,8 +317,9 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
     });
     const next = await response.json();
     if (response.ok) {
-      setItems((current) => current.map((item) => (item.slug === payload.slug ? ensureBlogImages(payload) : item)));
-      setStatus("Saved. Live blog will show these updates.");
+      setItems((current) => current.map((item) => (postKey(item) === selectedKey || item.slug === payload.slug ? ensureBlogImages(payload) : item)));
+      setSelectedKey(payload.slug);
+      setStatus("Saved. Live blog will show headings and formatting from this body.");
     } else {
       setStatus(next.error ?? "Unable to save.");
     }
@@ -190,7 +347,16 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
   if (!post) {
     return (
       <AdminShell>
-        <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">No blog posts found.</div>
+        <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
+          <p className="text-ink/70">No blog posts found.</p>
+          <button
+            type="button"
+            onClick={addPost}
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white"
+          >
+            <Plus className="h-4 w-4" /> Add blog post
+          </button>
+        </div>
       </AdminShell>
     );
   }
@@ -200,11 +366,23 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
   return (
     <AdminShell>
       <div className="rounded-[2rem] bg-white p-8 shadow-xl shadow-black/5">
-        <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Blog CMS</p>
-        <h1 className="mt-3 font-serif text-5xl text-forest">Edit blog posts and images.</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-ink/60">
-          Update post copy and replace featured / inline images. Uploads save locally and show on the live blog.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-burgundy">Blog CMS</p>
+            <h1 className="mt-3 font-serif text-5xl text-forest">Edit blog posts and images.</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-ink/60">
+              Add or update posts with <code className="rounded bg-cream px-1">##</code> headings and{" "}
+              <code className="rounded bg-cream px-1">**</code> bold — same format the live blog uses.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addPost}
+            className="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 font-bold text-white transition hover:bg-burgundy"
+          >
+            <Plus className="h-4 w-4" /> Add post
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[16rem_1fr]">
@@ -250,7 +428,10 @@ export function BlogsManager({ initialItems }: { initialItems: unknown[] }) {
             <Field label="Author" value={post.author ?? ""} onChange={(author) => updatePost((current) => ({ ...current, author }))} />
             <Field label="Publish Date" value={post.date ?? ""} onChange={(date) => updatePost((current) => ({ ...current, date }))} type="date" />
             <Field label="Excerpt" value={post.excerpt ?? ""} onChange={(excerpt) => updatePost((current) => ({ ...current, excerpt }))} multiline wide />
-            <Field label="Post Body" value={post.body ?? ""} onChange={(body) => updatePost((current) => ({ ...current, body }))} multiline wide />
+            <BlogBodyEditor
+              value={post.body ?? ""}
+              onChange={(body) => updatePost((current) => ({ ...current, body }))}
+            />
           </SectionCard>
 
           <SectionCard title="Featured image">
