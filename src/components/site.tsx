@@ -9,6 +9,7 @@ import { ArrowRight, CalendarDays, Camera, Check, ChevronDown, Clock, Heart, Mai
 import type { BlogPost, Faq, ImageAsset, PageContent, PricingPackage, Product, Service, TeamMember, Testimonial } from "@/lib/site";
 import { defaultSiteBrand, type SiteBrandLogos } from "@/lib/brand";
 import { BlogBody } from "@/components/BlogBody";
+import { BookingPaymentCheckout, type BookingPaymentResult } from "@/components/BookingPayment";
 
 const serviceAddOn = {
   name: "Add-On",
@@ -2016,19 +2017,13 @@ function FaqGroup({ title, faqs }: { title: string; faqs: Faq[] }) {
   );
 }
 
-function buildWeekDays(from = new Date()) {
-  const start = new Date(from);
-  start.setHours(0, 0, 0, 0);
-  return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(start);
-    day.setDate(start.getDate() + index);
-    return day;
-  });
-}
-
-function buildTimeSlots() {
+function buildTimeSlots(slotMinutes = 30) {
+  const step = Math.max(15, Math.min(slotMinutes, 12 * 60));
+  const dayStart = 7 * 60;
+  const dayEnd = 21 * 60;
+  const lastStart = dayEnd - step;
   const slots: string[] = [];
-  for (let minutes = 7 * 60; minutes <= 21 * 60; minutes += 30) {
+  for (let minutes = dayStart; minutes <= lastStart; minutes += step) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
@@ -2036,7 +2031,49 @@ function buildTimeSlots() {
   return slots;
 }
 
-const BOOKING_TIME_SLOTS = buildTimeSlots();
+function parseServiceSlotMinutes(service?: Service | null) {
+  if (!service) return 30;
+  const slug = service.slug;
+  const duration = (service.duration || "").toLowerCase();
+
+  if (slug === "daycare") return 180;
+  if (slug === "boarding") return 60;
+  if (slug === "behaviour-training") return 15;
+  if (slug === "nail-trim" || slug === "pet-dental-cleaning" || slug === "pet-dental") return 30;
+  if (slug === "grooming") return 60;
+  if (slug === "dog-walking") return 30;
+
+  const hoursMatch = duration.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b/);
+  if (hoursMatch) return Math.round(Number(hoursMatch[1]) * 60);
+
+  const minsMatch = duration.match(/(\d+)\s*min/);
+  if (minsMatch) return Number(minsMatch[1]);
+
+  if (/overnight|boarding/.test(duration)) return 60;
+  if (/quick|appointment|flexible/.test(duration)) return 30;
+  if (/half\s*day|6\s*hrs?/.test(duration)) return 360;
+  if (/full\s*day|10\s*hrs?/.test(duration)) return 600;
+  if (/3\s*hrs?|exceeding\s*3/.test(duration)) return 180;
+
+  return 30;
+}
+
+function formatSlotDurationLabel(minutes: number) {
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+  if (minutes > 60) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  }
+  return `${minutes} minutes`;
+}
+
+function todayKey() {
+  return formatDayKey(new Date());
+}
 
 function formatDayKey(date: Date) {
   const y = date.getFullYear();
@@ -2056,76 +2093,134 @@ function formatSlotLabel(slot: string) {
   return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
+function isTimeSlotPast(dateKey: string, slot: string) {
+  if (!dateKey || dateKey !== todayKey()) return false;
+  const now = new Date();
+  const [h, m] = slot.split(":").map(Number);
+  const slotMinutes = h * 60 + m;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return slotMinutes <= nowMinutes;
+}
+
 function BookingCalendar({
   selectedDate,
   selectedTime,
   onDateChange,
   onTimeChange,
+  service,
   required,
 }: {
   selectedDate: string;
   selectedTime: string;
   onDateChange: (value: string) => void;
   onTimeChange: (value: string) => void;
+  service?: Service | null;
   required?: boolean;
 }) {
-  const days = useMemo(() => buildWeekDays(), []);
+  const slotMinutes = useMemo(() => parseServiceSlotMinutes(service), [service]);
+  const slots = useMemo(() => buildTimeSlots(slotMinutes), [slotMinutes]);
+  const availableSlots = useMemo(
+    () => slots.filter((slot) => !isTimeSlotPast(selectedDate, slot)),
+    [slots, selectedDate],
+  );
+  const minDate = todayKey();
+  const durationLabel = formatSlotDurationLabel(slotMinutes);
+
+  useEffect(() => {
+    if (selectedTime && !availableSlots.includes(selectedTime)) {
+      onTimeChange("");
+    }
+  }, [availableSlots, selectedTime, onTimeChange]);
 
   return (
     <div className="md:col-span-2">
       <input type="hidden" name="preferredDate" value={selectedDate} required={required} />
       <input type="hidden" name="preferredTime" value={selectedTime} required={required} />
-      <p className="text-sm font-bold text-ink/70">Choose a day (next 7 days)</p>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {days.map((day) => {
-          const key = formatDayKey(day);
-          const active = selectedDate === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onDateChange(key)}
-              className={cx(
-                "rounded-2xl border px-2 py-3 text-center transition",
-                active ? "btn-gradient border-transparent text-white shadow-lg shadow-coral/30" : "border-forest/10 bg-cream text-ink hover:border-coral/50",
-              )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-bold text-ink/70">
+          Date
+          <span className="mt-2 flex items-center gap-2 rounded-2xl border border-forest/15 bg-cream px-4 py-3 focus-within:ring-4 focus-within:ring-forest/20">
+            <CalendarDays className="h-4 w-4 shrink-0 text-burgundy" />
+            <input
+              type="date"
+              min={minDate}
+              value={selectedDate}
+              onChange={(event) => {
+                const next = event.target.value;
+                if (next && next < minDate) return;
+                onDateChange(next);
+                onTimeChange("");
+              }}
+              className="w-full bg-transparent text-sm font-semibold text-ink outline-none"
+              required={required}
+            />
+          </span>
+          <span className="mt-1.5 block text-xs font-normal text-ink/50">Open the calendar and pick a day. Past dates are disabled.</span>
+        </label>
+
+        <label className="block text-sm font-bold text-ink/70">
+          Time
+          <span className="mt-2 flex items-center gap-2 rounded-2xl border border-forest/15 bg-cream px-4 py-3 focus-within:ring-4 focus-within:ring-forest/20">
+            <Clock className="h-4 w-4 shrink-0 text-burgundy" />
+            <select
+              value={selectedTime}
+              disabled={!selectedDate || availableSlots.length === 0}
+              onChange={(event) => onTimeChange(event.target.value)}
+              className="w-full bg-transparent text-sm font-semibold text-ink outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              required={required}
             >
-              <span className="block text-[10px] font-semibold tracking-wide opacity-70">{day.toLocaleDateString("en-CA", { weekday: "short" })}</span>
-              <span className="mt-1 block font-serif text-lg leading-none">{day.getDate()}</span>
-              <span className="mt-1 block text-[10px] opacity-70">{day.toLocaleDateString("en-CA", { month: "short" })}</span>
-            </button>
-          );
-        })}
+              <option value="">{selectedDate ? "Select a time" : "Choose a date first"}</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {formatSlotLabel(slot)}
+                  {slotMinutes > 30 ? ` · ${durationLabel}` : ""}
+                </option>
+              ))}
+            </select>
+          </span>
+          <span className="mt-1.5 block text-xs font-normal text-ink/50">
+            {service?.name ? `${service.name}: ` : ""}
+            {durationLabel} slots · 7:00 AM – 9:00 PM
+          </span>
+        </label>
       </div>
 
-      <p className="mt-6 text-sm font-bold text-ink/70">
-        30-minute slots · 7:00 AM – 9:00 PM{selectedDate ? ` · ${formatDayLabel(new Date(`${selectedDate}T12:00:00`))}` : ""}
-      </p>
-      <div className="mt-3 grid max-h-64 grid-cols-3 gap-2 overflow-y-auto rounded-[1.25rem] border border-forest/10 bg-cream/60 p-3 sm:grid-cols-4 md:grid-cols-5">
-        {BOOKING_TIME_SLOTS.map((slot) => {
-          const active = selectedTime === slot;
-          return (
-            <button
-              key={slot}
-              type="button"
-              disabled={!selectedDate}
-              onClick={() => onTimeChange(slot)}
-              className={cx(
-                "rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm",
-                !selectedDate && "cursor-not-allowed opacity-40",
-                active ? "btn-gradient text-white shadow-md shadow-coral/30" : "bg-white text-forest hover:bg-sage",
-              )}
-            >
-              {formatSlotLabel(slot)}
-            </button>
-          );
-        })}
-      </div>
+      {selectedDate ? (
+        <div className="mt-5">
+          <p className="text-sm font-bold text-ink/70">
+            Available start times · {durationLabel} · {formatDayLabel(new Date(`${selectedDate}T12:00:00`))}
+          </p>
+          <div className="mt-3 grid max-h-56 grid-cols-2 gap-2 overflow-y-auto rounded-[1.25rem] border border-forest/10 bg-cream/60 p-3 sm:grid-cols-3 md:grid-cols-4">
+            {availableSlots.length ? (
+              availableSlots.map((slot) => {
+                const active = selectedTime === slot;
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => onTimeChange(slot)}
+                    className={cx(
+                      "rounded-xl px-2 py-2.5 text-xs font-bold transition sm:text-sm",
+                      active ? "btn-gradient text-white shadow-md shadow-coral/30" : "bg-white text-forest hover:bg-sage",
+                    )}
+                  >
+                    {formatSlotLabel(slot)}
+                  </button>
+                );
+              })
+            ) : (
+              <p className="col-span-full px-2 py-4 text-sm text-burgundy/80">No remaining times today. Please choose another date.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {!selectedDate || !selectedTime ? (
-        <p className="mt-3 text-xs text-burgundy/80">Select a day and a 30-minute time slot to continue.</p>
+        <p className="mt-3 text-xs text-burgundy/80">Select a date and time to continue.</p>
       ) : (
         <p className="mt-3 text-xs text-forest/70">
-          Selected: {formatDayLabel(new Date(`${selectedDate}T12:00:00`))} at {formatSlotLabel(selectedTime)}
+          Selected: {formatDayLabel(new Date(`${selectedDate}T12:00:00`))} at {formatSlotLabel(selectedTime)} ({durationLabel} appointment)
         </p>
       )}
     </div>
@@ -2156,6 +2251,8 @@ function BookingForm({ services }: { services: Service[] }) {
   const [sizeLabel, setSizeLabel] = useState(searchParams.get("size") ?? "");
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
+  const [paymentResult, setPaymentResult] = useState<BookingPaymentResult | null>(null);
+  const paymentCompleted = Boolean(paymentResult?.paymentReference);
 
   const selectedService = bookableServices.find((service) => service.slug === selectedServiceSlug);
 
@@ -2185,6 +2282,14 @@ function BookingForm({ services }: { services: Service[] }) {
     }
   }, [selectedService, sizeLabel]);
 
+  useEffect(() => {
+    setPreferredTime("");
+  }, [selectedServiceSlug]);
+
+  useEffect(() => {
+    setPaymentResult(null);
+  }, [selectedServiceSlug, sizeLabel, includeAddon, packageName, packagePrice, isBundle]);
+
   const basePrice = getServiceBasePrice(selectedService, sizeLabel);
   const total = basePrice === null ? null : basePrice + (includeAddon ? serviceAddOn.priceAmount : 0);
   const packageSelection = [sizeLabel ? `Size: ${sizeLabel}` : null, includeAddon ? `Add-On (+${serviceAddOn.priceLabel})` : "No add-on"].filter(Boolean).join(" · ");
@@ -2195,9 +2300,23 @@ function BookingForm({ services }: { services: Service[] }) {
     : "";
   
   const displayPrice = isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total));
+  const checkoutAmountLabel = String(displayPrice || "Quote");
+  const confirmationStep = 6;
+  const checkoutStep = 5;
+
+  function canOpenStep(index: number) {
+    if (isBundle && index < 3) return false;
+    if (index >= confirmationStep && !paymentCompleted) return false;
+    return true;
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!paymentCompleted || !paymentResult) {
+      setStatus("Complete payment before submitting your booking.");
+      setStep(checkoutStep);
+      return;
+    }
     setStatus("Submitting...");
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
@@ -2209,6 +2328,10 @@ function BookingForm({ services }: { services: Service[] }) {
       addonSelected: isBundle ? false : includeAddon,
       estimatedTotal: isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total)),
       policyAgreement: data.policyAgreement === "on",
+      paymentMethod: paymentResult.paymentMethod,
+      paymentReference: paymentResult.paymentReference,
+      paymentStatus: "Paid" as const,
+      giftCardCode: paymentResult.giftCardCode || data.giftCardCode || "",
     };
     
     const response = await fetch("/api/bookings", {
@@ -2216,8 +2339,11 @@ function BookingForm({ services }: { services: Service[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(submissionData),
     });
-    setStatus(response.ok ? "Booking request received. We will contact you soon." : "Something went wrong. Please review the form and try again.");
-    if (response.ok) form.reset();
+    setStatus(response.ok ? "Booking confirmed. Payment received — we will contact you soon." : "Something went wrong. Please review the form and try again.");
+    if (response.ok) {
+      form.reset();
+      setPaymentResult(null);
+    }
   }
 
   return (
@@ -2227,7 +2353,13 @@ function BookingForm({ services }: { services: Service[] }) {
         onSubmit={(event) => {
           if (step === 2 && (!preferredDate || !preferredTime)) {
             event.preventDefault();
-            setStatus("Please choose a date and 30-minute time slot.");
+            setStatus("Please choose a date and time.");
+            return;
+          }
+          if (!paymentCompleted) {
+            event.preventDefault();
+            setStatus("Complete payment before submitting your booking.");
+            setStep(checkoutStep);
             return;
           }
           void submit(event);
@@ -2238,27 +2370,39 @@ function BookingForm({ services }: { services: Service[] }) {
         <input type="hidden" name="packageSelection" value={isBundle ? `Bundle: ${packageName}` : packageSelection} />
         <input type="hidden" name="addonSelected" value={isBundle ? "false" : (includeAddon ? "true" : "false")} />
         <input type="hidden" name="estimatedTotal" value={isBundle ? packagePrice || "" : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total))} />
+        <input type="hidden" name="paymentMethod" value={paymentResult?.paymentMethod ?? ""} />
+        <input type="hidden" name="paymentReference" value={paymentResult?.paymentReference ?? ""} />
+        <input type="hidden" name="paymentStatus" value={paymentResult ? "Paid" : "Payment Pending"} />
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
           {steps.map((label, index) => {
-            const isDisabledForBundle = isBundle && index < 3;
+            const locked = !canOpenStep(index);
             return (
               <button 
                 key={label} 
                 type="button" 
-                onClick={() => !isDisabledForBundle && setStep(index)} 
-                disabled={isDisabledForBundle}
+                onClick={() => {
+                  if (!canOpenStep(index)) {
+                    if (index >= confirmationStep && !paymentCompleted) {
+                      setStatus("Complete payment first to open confirmation.");
+                      setStep(checkoutStep);
+                    }
+                    return;
+                  }
+                  setStep(index);
+                }} 
+                disabled={locked}
                 className={cx(
                   "shrink-0 rounded-full px-3.5 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm", 
-                  isDisabledForBundle 
+                  locked 
                     ? "cursor-not-allowed opacity-30 bg-sage/50 text-ink/30" 
                     : step === index 
                     ? "btn-gradient text-white shadow-md shadow-coral/25" 
                     : "bg-sage text-ink"
                 )}
               >
-                <span className="sm:hidden">{isDisabledForBundle ? "—" : index + 1}</span>
-                <span className="hidden sm:inline">{isDisabledForBundle ? "—" : index + 1}. {label}</span>
+                <span className="sm:hidden">{locked && index >= confirmationStep ? "—" : index + 1}</span>
+                <span className="hidden sm:inline">{locked && index >= confirmationStep ? "Locked" : `${index + 1}.`} {label}</span>
               </button>
             );
           })}
@@ -2282,17 +2426,25 @@ function BookingForm({ services }: { services: Service[] }) {
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr_18rem]">
           <aside className="hidden rounded-[2rem] bg-forest p-4 text-white lg:block">
             {steps.map((label, index) => {
-              // For bundles, disable steps 0, 1, 2 (Service Selection, Pet & Hooman, Date & Time)
-              const isDisabledForBundle = isBundle && index < 3;
+              const locked = !canOpenStep(index);
               return (
                 <button 
                   key={label} 
                   type="button" 
-                  onClick={() => !isDisabledForBundle && setStep(index)} 
-                  disabled={isDisabledForBundle}
+                  onClick={() => {
+                    if (!canOpenStep(index)) {
+                      if (index >= confirmationStep && !paymentCompleted) {
+                        setStatus("Complete payment first to open confirmation.");
+                        setStep(checkoutStep);
+                      }
+                      return;
+                    }
+                    setStep(index);
+                  }} 
+                  disabled={locked}
                   className={cx(
                     "mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm", 
-                    isDisabledForBundle 
+                    locked 
                       ? "cursor-not-allowed opacity-30 text-white/30" 
                       : step === index 
                       ? "btn-gradient text-white shadow-md shadow-coral/25" 
@@ -2302,7 +2454,7 @@ function BookingForm({ services }: { services: Service[] }) {
                   )}
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 text-xs">
-                    {isDisabledForBundle ? "—" : index < step ? "✓" : index + 1}
+                    {locked && index >= confirmationStep ? "—" : index < step ? "✓" : index + 1}
                   </span>
                   {label}
                 </button>
@@ -2392,13 +2544,16 @@ function BookingForm({ services }: { services: Service[] }) {
             <div className={cx(step === 2 ? "contents" : "hidden")}>
               <div className="md:col-span-2">
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Pick a date & time</h3>
-                <p className="mt-2 text-sm text-ink/60">Choose an available appointment slot that works for you — 30-minute intervals from 7:00 AM to 9:00 PM.</p>
+                <p className="mt-2 text-sm text-ink/60">
+                  Open the calendar to choose a date (past days are unavailable). Then pick a start time between 7:00 AM and 9:00 PM — slot length matches the selected service duration.
+                </p>
               </div>
               <BookingCalendar
                 selectedDate={preferredDate}
                 selectedTime={preferredTime}
                 onDateChange={setPreferredDate}
                 onTimeChange={setPreferredTime}
+                service={selectedService}
                 required={step === 2}
               />
               <Field label="Pickup time (optional)" name="pickupTime" type="time" />
@@ -2431,21 +2586,42 @@ function BookingForm({ services }: { services: Service[] }) {
               <div className="rounded-[2rem] bg-sage/70 p-6">
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Checkout / Deposit</h3>
                 <p className="mt-3 leading-7 text-ink/70">
-                  Estimated total: <strong>{isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "Quote on confirmation" : formatMoney(total))}</strong>
-                  {isBundle ? " (Bundle Package)" : (includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : "")}. 
-                  Payments stay pending until confirmation.
+                  Estimated total: <strong>{checkoutAmountLabel}</strong>
+                  {isBundle ? " (Bundle Package)" : (includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : "")}.
+                  {" "}Pay now to unlock confirmation.
                 </p>
-                <div className="mt-4 rounded-[1.25rem] bg-white/70 p-4">
-                  <PaymentLogos light />
+                <div className="mt-5">
+                  <BookingPaymentCheckout
+                    amountLabel={checkoutAmountLabel}
+                    paid={paymentCompleted}
+                    result={paymentResult}
+                    interacEmail={brand.email}
+                    bitcoinAddress={process.env.NEXT_PUBLIC_BITCOIN_WALLET_ADDRESS || "bc1qdt-dogs-wallet-replace-in-env"}
+                    onPaid={(result) => {
+                      setPaymentResult(result);
+                      setStatus("Payment successful. Opening confirmation...");
+                      setStep(confirmationStep);
+                    }}
+                  />
                 </div>
-                <Field label="Gift card code" name="giftCardCode" />
-                <Field label="Payment note" name="paymentNote" textarea />
               </div>
             </div>
             <div className={cx("md:col-span-2", step === 6 ? "block" : "hidden")}>
               <div className="rounded-[2rem] bg-sage/70 p-6">
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Confirmation</h3>
-                <p className="mt-3 leading-7 text-ink/70">Submit to create a booking reference in the admin portal. Email confirmation sends only when Resend is configured.</p>
+                {paymentCompleted && paymentResult ? (
+                  <>
+                    <p className="mt-3 leading-7 text-ink/70">
+                      Payment received via <strong className="capitalize">{paymentResult.paymentMethod}</strong>. Reference{" "}
+                      <strong>{paymentResult.paymentReference}</strong>. Submit below to finalize your booking in the admin portal.
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-ink/60">Email confirmation sends only when Resend is configured.</p>
+                  </>
+                ) : (
+                  <p className="mt-3 leading-7 text-burgundy">
+                    Confirmation is locked until payment is completed on the Checkout step.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -2494,7 +2670,11 @@ function BookingForm({ services }: { services: Service[] }) {
                 type="button"
                 onClick={() => {
                   if (step === 2 && (!preferredDate || !preferredTime)) {
-                    setStatus("Please choose a date and 30-minute time slot.");
+                    setStatus("Please choose a date and time.");
+                    return;
+                  }
+                  if (step === checkoutStep && !paymentCompleted) {
+                    setStatus("Complete payment to unlock confirmation.");
                     return;
                   }
                   setStatus(null);
@@ -2502,10 +2682,16 @@ function BookingForm({ services }: { services: Service[] }) {
                 }}
                 className="btn-gradient rounded-full px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25"
               >
-                <span className="relative z-10">Continue</span>
+                <span className="relative z-10">{step === checkoutStep ? (paymentCompleted ? "Continue to confirmation" : "Pay to continue") : "Continue"}</span>
               </button>
             ) : (
-              <button type="submit" className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25"><span className="relative z-10">Submit Booking Request</span></button>
+              <button
+                type="submit"
+                disabled={!paymentCompleted}
+                className="btn-gradient rounded-full px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-coral/25 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="relative z-10">Submit Booking Request</span>
+              </button>
             )}
           </div>
           {status ? <p className="font-semibold text-burgundy">{status}</p> : null}

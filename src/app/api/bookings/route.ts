@@ -38,6 +38,9 @@ const bookingSchema = z.object({
   vaccinationUploadNote: z.string().optional(),
   giftCardCode: z.string().optional(),
   paymentNote: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  paymentReference: z.string().optional(),
+  paymentStatus: z.enum(["Not Required", "Payment Pending", "Deposit Pending", "Paid", "Refunded"]).optional(),
   notes: z.string().optional(),
   policyAgreement: z.boolean(),
 });
@@ -57,17 +60,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "MONGODB_URI is required for booking submissions." }, { status: 500 });
   }
 
+  const paid = parsed.data.paymentStatus === "Paid" && Boolean(parsed.data.paymentReference);
+
   const booking: BookingRequest = {
     ...parsed.data,
     customerName: parsed.data.customerName || parsed.data.fullName || "Customer",
     addonSelected: parsed.data.addonSelected === true || parsed.data.addonSelected === "true" || parsed.data.addonSelected === "on",
     estimatedTotal: parsed.data.estimatedTotal,
-    status: "Awaiting Payment" as BookingRequest["status"],
-    paymentStatus: "Payment Pending",
+    status: paid ? "Confirmed" : ("Awaiting Payment" as BookingRequest["status"]),
+    paymentStatus: paid ? "Paid" : "Payment Pending",
   };
 
   await Models.Booking().create(booking);
   await sendBookingEmails(booking);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, paid });
 }
