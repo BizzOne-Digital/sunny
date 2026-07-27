@@ -268,6 +268,18 @@ export function ContentManager({ collection, initialItems }: { collection: Colle
           </div>
           {collection === "pages" ? <PageSectionsEditor record={current} /> : null}
           {collection === "services" ? <ServiceFaqEditor record={current} /> : null}
+          {collection === "team" ? (
+            <TeamPhotoEditor
+              record={current}
+              onImageChange={(image) => {
+                setItems((list) =>
+                  list.map((item, itemIndex) =>
+                    itemKey(item, itemIndex) === selectedKey ? { ...item, image } : item,
+                  ),
+                );
+              }}
+            />
+          ) : null}
           {collection === "team" ? <TeamSocialLinksEditor record={current} /> : null}
           {collection === "products" ? (
             <ProductImagesEditor
@@ -485,6 +497,69 @@ function ServiceFaqEditor({ record }: { record: EditableRecord }) {
   );
 }
 
+function TeamPhotoEditor({
+  record,
+  onImageChange,
+}: {
+  record: EditableRecord;
+  onImageChange: (image: ImageAsset) => void;
+}) {
+  const image = (record.image && typeof record.image === "object" ? record.image : {}) as Partial<ImageAsset>;
+  const url = typeof image.url === "string" ? image.url : "";
+  const name = String(record.name ?? "Team member");
+
+  return (
+    <div className="mt-8 rounded-[2rem] bg-sage/60 p-5">
+      <h2 className="font-serif text-3xl text-forest">Profile Photo</h2>
+      <p className="mt-2 text-sm text-ink/60">
+        Upload a circular portrait for this team member. It appears on the Team page as a round photo.
+      </p>
+      <div className="mt-5 grid gap-4 rounded-[1.5rem] bg-white p-5 md:grid-cols-[10rem_1fr] md:items-start">
+        <div className="mx-auto h-36 w-36 overflow-hidden rounded-full border-[3px] border-white bg-cream shadow-md ring-2 ring-forest/15">
+          {url ? (
+            <Image
+              src={url}
+              alt={image.alt || name}
+              width={160}
+              height={160}
+              className="h-full w-full object-cover"
+              unoptimized={
+                url.startsWith("/api/uploads/") ||
+                url.startsWith("/api/media/file/") ||
+                url.startsWith("data:image/") ||
+                url.startsWith("/uploads/")
+              }
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center text-xs text-ink/40">No photo</div>
+          )}
+        </div>
+        <div className="grid gap-4">
+          <ImageUploadField
+            label="Team member photo"
+            folder="misc"
+            value={url}
+            onChange={(nextUrl) =>
+              onImageChange({
+                id: image.id || `team-${String(record.slug ?? "member")}-${Date.now()}`,
+                title: image.title || name,
+                alt: image.alt || `${name} portrait`,
+                caption: image.caption ?? "",
+                url: nextUrl,
+                page: "team",
+                status: "published",
+                width: image.width ?? 800,
+                height: image.height ?? 800,
+              })
+            }
+          />
+          <AdminFormField field={{ path: "image.alt", label: "Photo Alt Text", wide: true }} value={image.alt} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TeamSocialLinksEditor({ record }: { record: EditableRecord }) {
   return (
     <div className="mt-8 rounded-[2rem] bg-sage/60 p-5">
@@ -589,6 +664,7 @@ function formToRecord(form: HTMLFormElement, current: EditableRecord, collection
 
   if (collection === "team") {
     fields.push(
+      { path: "image.alt", label: "Photo Alt Text", wide: true },
       { path: "instagram", label: "Instagram URL", wide: true },
       { path: "facebook", label: "Facebook URL", wide: true },
       { path: "website", label: "Website URL", wide: true },
@@ -631,7 +707,17 @@ function createTemplate(collection: CollectionName): EditableRecord {
     case "products":
       return { ...base, title: "New Product", description: "", priceLabel: "Price to be confirmed", sizes: [], colors: [], inventory: 0, images: [] };
     case "team":
-      return { ...base, name: "New Team Member", role: "", bio: "", credentials: [], image: { title: "", url: "", alt: "" }, instagram: "", facebook: "", website: "" };
+      return {
+        ...base,
+        name: "New Team Member",
+        role: "",
+        bio: "",
+        credentials: [],
+        image: { id: `team-${slug}`, title: "New Team Member", url: "", alt: "Team member portrait", page: "team", status: "published" },
+        instagram: "",
+        facebook: "",
+        website: "",
+      };
     default:
       return { ...base, title: "New Page", navTitle: "New Page", seoTitle: "", metaDescription: "", hero: { eyebrow: "", title: "", body: "" }, blocks: [] };
   }

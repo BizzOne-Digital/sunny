@@ -2795,19 +2795,30 @@ function TeamGrid({ team, page }: { team: TeamMember[]; page?: PageContent }) {
         </p>
       </Reveal>
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {team.map((member, index) => (
-          <Reveal key={member.slug} from={directions[index % directions.length]} delay={index * 0.1}>
-            <article className="group h-full rounded-[2rem] bg-white p-5 shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:p-7">
-              <div className="mb-6 h-1.5 w-16 rounded-full bg-gradient-to-r from-coral to-burgundy transition-all duration-500 group-hover:w-28" />
-              <div className="p-5 sm:p-7">
-                <h2 className="font-serif text-3xl text-forest sm:text-4xl">{member.name}</h2>
-                <p className="mt-1 font-bold text-burgundy">{member.role}</p>
-                <p className="mt-4 leading-7 text-ink/65">{member.bio}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {member.credentials.map((credential) => <span key={credential} className="rounded-full bg-sage px-3 py-1 text-xs">{credential}</span>)}
+        {team.map((member, index) => {
+          const photo = imageProps(member.image, "160px");
+          return (
+            <Reveal key={member.slug} from={directions[index % directions.length]} delay={index * 0.1}>
+              <article className="group flex h-full flex-col items-center rounded-[2rem] bg-white px-6 py-8 text-center shadow-xl shadow-black/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-coral/15 sm:px-8 sm:py-10">
+                <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-full border-[3px] border-white shadow-[0_8px_28px_rgba(32,37,34,0.14)] ring-2 ring-forest/15 sm:h-40 sm:w-40">
+                  <Image
+                    {...photo}
+                    alt={member.image?.alt || member.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 </div>
+                <h2 className="mt-6 font-serif text-3xl text-forest sm:text-4xl">{member.name}</h2>
+                <p className="mt-2 text-sm font-bold uppercase tracking-[0.12em] text-burgundy">{member.role}</p>
+                <p className="mt-4 max-w-sm leading-7 text-ink/65">{member.bio}</p>
+                {member.credentials?.length ? (
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    {member.credentials.map((credential) => (
+                      <span key={credential} className="rounded-full bg-sage px-3 py-1 text-xs">{credential}</span>
+                    ))}
+                  </div>
+                ) : null}
                 {(member.instagram || member.facebook || member.website) ? (
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-5 flex flex-wrap justify-center gap-3">
                     {member.instagram ? (
                       <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-burgundy hover:underline">
                         Instagram
@@ -2825,10 +2836,10 @@ function TeamGrid({ team, page }: { team: TeamMember[]; page?: PageContent }) {
                     ) : null}
                   </div>
                 ) : null}
-              </div>
-            </article>
-          </Reveal>
-        ))}
+              </article>
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );
