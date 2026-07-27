@@ -310,6 +310,7 @@ const nav = [
 ];
 
 const LOGO_SRC = "/images/brand/logo.png";
+const INTRO_LOGO_SRC = "/images/brand/intro-logo.png";
 const HERO_WAVE_SRC = "/images/home/hero-wave.png";
 const FOOTER_BG_SRC = "/images/brand/footer-bg.png";
 const FOOTER_PART_SRC = "/images/brand/footer-part.png";
@@ -376,7 +377,7 @@ function IntroWrapper() {
     const img = new window.Image();
     img.onload = () => setLogoReady(true);
     img.onerror = () => setLogoReady(false);
-    img.src = LOGO_SRC;
+    img.src = INTRO_LOGO_SRC;
   }, []);
 
   useEffect(() => {
@@ -394,7 +395,7 @@ function IntroWrapper() {
       setVisible(false);
       document.documentElement.style.overflow = "";
       window.dispatchEvent(new Event("dtdogs-intro-done"));
-    }, 3400);
+    }, 1800);
 
     return () => {
       window.clearTimeout(hideTimer);
@@ -415,7 +416,7 @@ function IntroWrapper() {
         <motion.div
           className="bg-gradient-animated fixed inset-0 z-[100] grid place-items-center overflow-hidden text-white"
           initial={{ opacity: 1 }}
-          exit={{ y: "-100%", transition: { duration: 0.8, ease: [0.77, 0, 0.175, 1] } }}
+          exit={{ y: "-100%", transition: { duration: 0.45, ease: [0.77, 0, 0.175, 1] } }}
         >
           {playIntro ? (
             <>
@@ -426,29 +427,29 @@ function IntroWrapper() {
                 className="absolute -left-32 -top-32 h-[34rem] w-[34rem] rounded-full bg-gradient-to-br from-coral/40 to-burgundy/25 blur-3xl"
                 initial={{ scale: 0.4, opacity: 0 }}
                 animate={{ scale: [0.4, 1.1, 1], opacity: 1 }}
-                transition={{ duration: 2 }}
+                transition={{ duration: 1 }}
               />
               <motion.div
                 className="absolute -bottom-40 -right-24 h-[38rem] w-[38rem] rounded-full bg-gradient-to-tl from-forest/60 to-coral/30 blur-3xl"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 1.6, delay: 0.2 }}
+                transition={{ duration: 0.85, delay: 0.08 }}
               />
               <motion.div
                 className="relative flex flex-col items-center gap-6 text-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.25 }}
               >
                 <motion.div
                   initial={{ scale: 0, rotate: -12, opacity: 0 }}
                   animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  transition={{ duration: 0.9, ease: [0.34, 1.56, 0.64, 1] }}
+                  transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
                   className="relative"
                 >
                   {logoReady ? (
                     <Image
-                      src={LOGO_SRC}
+                      src={INTRO_LOGO_SRC}
                       alt="DT Dogs at Hand & Paw"
                       width={320}
                       height={110}
@@ -469,7 +470,7 @@ function IntroWrapper() {
                         className={cx("inline-block whitespace-pre", index >= 3 && "text-gradient")}
                         initial={{ opacity: 0, y: 40, rotateX: 60 }}
                         animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                        transition={{ duration: 0.7, delay: 0.5 + index * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.4, delay: 0.2 + index * 0.06, ease: [0.22, 1, 0.36, 1] }}
                       >
                         {word}{" "}
                       </motion.span>
@@ -480,13 +481,13 @@ function IntroWrapper() {
                   className="h-1 w-[min(18rem,72vw)] origin-left rounded-full bg-gradient-to-r from-coral via-peach to-burgundy"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
-                  transition={{ duration: 2.2, ease: "easeInOut", delay: 0.4 }}
+                  transition={{ duration: 1.1, ease: "easeInOut", delay: 0.15 }}
                 />
                 <motion.p
                   className="px-5 text-sm text-white/80 sm:text-lg"
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 1.2 }}
+                  transition={{ duration: 0.35, delay: 0.55 }}
                 >
                   Dog Daycare, Boarding and Pet Grooming
                 </motion.p>
@@ -702,7 +703,7 @@ export function HomePage({ page, services, testimonials, products }: { page?: Pa
     }
     const markReady = () => setHeroReady(true);
     window.addEventListener("dtdogs-intro-done", markReady);
-    const fallback = window.setTimeout(markReady, 4200);
+    const fallback = window.setTimeout(markReady, 2200);
     return () => {
       window.removeEventListener("dtdogs-intro-done", markReady);
       window.clearTimeout(fallback);
