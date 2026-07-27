@@ -3205,18 +3205,25 @@ function ProcessSection({ page }: { page?: PageContent }) {
 
 function SunnyismSection({ page }: { page?: PageContent }) {
   const founderBlock = page?.blocks?.find(b => b.type === "founder");
+  const founderImage = founderBlock?.images?.[0] ?? aboutStoryImages[0];
+  const founderProps = imageProps(founderImage, "(min-width: 768px) 40vw, 90vw");
+
   return (
     <section className="relative overflow-hidden py-12 text-white md:py-16">
       <div className="bg-gradient-animated absolute inset-0" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.15]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 md:grid-cols-[0.9fr_1.1fr] md:gap-12 md:px-8">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 md:grid-cols-[0.95fr_1.05fr] md:gap-12 md:px-8">
         <Reveal from="left">
-          <div className="overflow-hidden rounded-[1.75rem] border border-white/15 shadow-2xl sm:rounded-[2rem]">
-            {founderBlock?.images?.[0] ? (
-              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(founderBlock.images[0])} alt={founderBlock.images[0].alt} />
-            ) : (
-              <Image className="h-72 w-full object-cover sm:h-[26rem]" {...imageProps(aboutStoryImages[0])} alt="Sunnyism.Pro #DogDad" />
-            )}
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/15 bg-forest/30 shadow-2xl sm:max-w-none sm:rounded-[2rem] md:max-h-[36rem]">
+            <Image
+              src={founderProps.src}
+              alt={founderBlock?.images?.[0]?.alt || "Sunnyism.Pro #DogDad"}
+              fill
+              className="object-cover object-[center_18%]"
+              sizes={founderProps.sizes}
+              unoptimized={founderProps.unoptimized}
+              priority={false}
+            />
           </div>
         </Reveal>
         <Reveal from="right" delay={0.1}>
