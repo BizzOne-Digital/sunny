@@ -3738,9 +3738,19 @@ function Footer({ services }: { services: Service[] }) {
             ]}
           />
           <div>
-            <FooterColumn title="Policy and Community" links={[{ label: "Policy", href: "/policy" }]} footer="#PetPeople" />
-            <div className="mt-3 text-xs font-medium tracking-wide text-white/70">
-              #petparents #petpro #petpeople
+            <h3 className="font-serif text-2xl leading-tight text-white sm:text-3xl">
+              Policy and Community
+            </h3>
+            <div className="mt-5 flex flex-col items-start gap-2.5">
+              <Link
+                href="/policy"
+                className="w-fit text-sm text-white/75 transition-all duration-300 hover:translate-x-1 hover:text-peach"
+              >
+                Policy
+              </Link>
+              <p className="text-sm font-semibold tracking-wide text-peach">#petparents</p>
+              <p className="text-sm font-semibold tracking-wide text-peach">#petpro</p>
+              <p className="text-sm font-semibold tracking-wide text-peach">#petpeople</p>
             </div>
           </div>
         </div>
