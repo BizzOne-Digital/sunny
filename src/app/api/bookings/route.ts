@@ -61,14 +61,16 @@ export async function POST(request: Request) {
   }
 
   const paid = parsed.data.paymentStatus === "Paid" && Boolean(parsed.data.paymentReference);
+  const depositPending =
+    parsed.data.paymentStatus === "Deposit Pending" && Boolean(parsed.data.paymentReference);
 
   const booking: BookingRequest = {
     ...parsed.data,
     customerName: parsed.data.customerName || parsed.data.fullName || "Customer",
     addonSelected: parsed.data.addonSelected === true || parsed.data.addonSelected === "true" || parsed.data.addonSelected === "on",
     estimatedTotal: parsed.data.estimatedTotal,
-    status: paid ? "Confirmed" : ("Awaiting Payment" as BookingRequest["status"]),
-    paymentStatus: paid ? "Paid" : "Payment Pending",
+    status: paid ? "Confirmed" : depositPending ? "Awaiting Payment" : ("Awaiting Payment" as BookingRequest["status"]),
+    paymentStatus: paid ? "Paid" : depositPending ? "Deposit Pending" : "Payment Pending",
   };
 
   await Models.Booking().create(booking);

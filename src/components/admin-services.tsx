@@ -287,6 +287,26 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
             <Field label="Eyebrow" value={service.eyebrow ?? ""} onChange={(eyebrow) => updateService((current) => ({ ...current, eyebrow }))} />
             <Field label="Price Label" value={service.priceLabel ?? ""} onChange={(priceLabel) => updateService((current) => ({ ...current, priceLabel }))} />
             <Field label="Duration" value={service.duration ?? ""} onChange={(duration) => updateService((current) => ({ ...current, duration }))} />
+            <label className="block text-sm font-bold text-ink/70">
+              Discount %
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={Number(service.discountPercent ?? 0)}
+                onChange={(event) =>
+                  updateService((current) => ({
+                    ...current,
+                    discountPercent: Math.min(100, Math.max(0, Number(event.target.value) || 0)),
+                  }))
+                }
+                className="mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-sm outline-none ring-forest/20 focus:ring-4"
+              />
+              <span className="mt-1.5 block text-xs font-normal text-ink/50">
+                Optional. Example: 10 = 10% off this service before tax. Leave 0 for no discount.
+              </span>
+            </label>
             <Field label="Card Summary" value={service.summary ?? ""} onChange={(summary) => updateService((current) => ({ ...current, summary }))} multiline wide />
             <Field label="Full Description" value={service.description ?? ""} onChange={(description) => updateService((current) => ({ ...current, description }))} multiline wide />
             <Field label="Who It Is For" value={service.forWhom ?? ""} onChange={(forWhom) => updateService((current) => ({ ...current, forWhom }))} multiline wide />

@@ -360,6 +360,7 @@ function getFields(collection: CollectionName): FieldConfig[] {
       { path: "forWhom", label: "Who It Is For", type: "textarea", wide: true },
       { path: "priceLabel", label: "Price Label" },
       { path: "duration", label: "Duration" },
+      { path: "discountPercent", label: "Discount % (0–100)", type: "number", help: "Optional percent off before tax." },
       { path: "featured", label: "Featured Service", type: "checkbox" },
       { path: "benefits", label: "Benefits", type: "list", wide: true, help: "One benefit per line." },
       { path: "includes", label: "What Is Included", type: "list", wide: true, help: "One included item per line." },
@@ -695,7 +696,7 @@ function createTemplate(collection: CollectionName): EditableRecord {
   const base = { slug, status: "draft" };
   switch (collection) {
     case "services":
-      return { ...base, name: "New Service", eyebrow: "", summary: "", description: "", forWhom: "", benefits: [], includes: [], process: [], related: [], faqs: [], images: [] };
+      return { ...base, name: "New Service", eyebrow: "", summary: "", description: "", forWhom: "", benefits: [], includes: [], process: [], related: [], faqs: [], images: [], discountPercent: 0 };
     case "pricing":
       return { ...base, service: "New Service", name: "New Package", priceLabel: "Request Pricing", duration: "", features: [], featured: false };
     case "testimonials":

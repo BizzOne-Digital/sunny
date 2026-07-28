@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 import { z } from "zod";
 import {
   PAYMENT_METHODS,
@@ -7,6 +8,7 @@ import {
   digitsOnly,
   isExpiryValid,
   luhnCheck,
+  parseAmountToCents,
   type PaymentMethodId,
 } from "@/lib/payment";
 
@@ -19,10 +21,16 @@ const schema = z.object({
   cardCvc: z.string().optional(),
   interacReference: z.string().optional(),
   interacConfirmed: z.boolean().optional(),
-  bitcoinTxId: z.string().optional(),
+  storeBitcoinConfirmed: z.boolean().optional(),
   giftCardCode: z.string().optional(),
   paymentNote: z.string().optional(),
 });
+
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) return null;
+  return new Stripe(key);
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -39,6 +47,22 @@ export async function POST(request: Request) {
 
   try {
     if (methodMeta.kind === "card") {
+      const stripe = getStripe();
+      if (!stripe) {
+        return NextResponse.json(
+          { error: "Card payments are not configured yet. Missing Stripe secret key." },
+          { status: 503 },
+        );
+      }
+
+      const amountCents = parseAmountToCents(data.amountLabel);
+      if (!amountCents) {
+        return NextResponse.json(
+          { error: "This booking total cannot be charged online yet. Please choose Interac or pay at the store." },
+          { status: 400 },
+        );
+      }
+
       const cardName = (data.cardName || "").trim();
       const cardNumber = digitsOnly(data.cardNumber || "");
       const cardExpiry = data.cardExpiry || "";
@@ -71,16 +95,63 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: `Enter a ${cvcLen}-digit security code.` }, { status: 400 });
       }
 
-      // Card details are validated and discarded — only a reference + last4 are returned.
-      return NextResponse.json({
-        ok: true,
-        paymentStatus: "Paid",
-        paymentMethod: data.method,
-        paymentReference: createPaymentReference(data.method as PaymentMethodId),
-        last4: cardNumber.slice(-4),
-        amountLabel: data.amountLabel,
-        message: `${methodMeta.label} payment authorized.`,
-      });
+      const exp = digitsOnly(cardExpiry);
+      const expMonth = Number(exp.slice(0, 2));
+      const expYear = 2000 + Number(exp.slice(2, 4));
+
+      try {
+        const paymentMethod = await stripe.paymentMethods.create({
+          type: "card",
+          card: {
+            number: cardNumber,
+            exp_month: expMonth,
+            exp_year: expYear,
+            cvc: cardCvc,
+          },
+          billing_details: { name: cardName },
+        });
+
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amountCents,
+          currency: "cad",
+          confirm: true,
+          payment_method: paymentMethod.id,
+          payment_method_types: ["card"],
+          metadata: {
+            method: data.method,
+            amountLabel: data.amountLabel,
+            note: (data.paymentNote || "").slice(0, 400),
+          },
+          return_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.dtdogs.ca"}/booking`,
+        });
+
+        if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "requires_capture") {
+          return NextResponse.json(
+            {
+              error:
+                paymentIntent.status === "requires_action"
+                  ? "This card requires extra authentication. Please use Interac or another card, or share the Stripe Publishable Key so we can enable 3D Secure."
+                  : `Card payment status: ${paymentIntent.status}. Please try another method.`,
+            },
+            { status: 402 },
+          );
+        }
+
+        return NextResponse.json({
+          ok: true,
+          paymentStatus: "Paid",
+          paymentMethod: data.method,
+          paymentReference: paymentIntent.id,
+          last4: cardNumber.slice(-4),
+          amountLabel: data.amountLabel,
+          message: `${methodMeta.label} payment authorized via Stripe.`,
+        });
+      } catch (stripeError) {
+        const message =
+          stripeError instanceof Error ? stripeError.message : "Stripe could not charge this card.";
+        console.error("Stripe card charge failed:", stripeError);
+        return NextResponse.json({ error: message }, { status: 402 });
+      }
     }
 
     if (methodMeta.kind === "interac") {
@@ -102,23 +173,28 @@ export async function POST(request: Request) {
     }
 
     if (methodMeta.kind === "bitcoin") {
-      const txId = (data.bitcoinTxId || "").trim();
-      if (txId.length < 8) {
-        return NextResponse.json({ error: "Enter a valid Bitcoin transaction ID." }, { status: 400 });
+      if (!data.storeBitcoinConfirmed) {
+        return NextResponse.json(
+          { error: "Confirm you will complete Bitcoin payment in person at the store." },
+          { status: 400 },
+        );
       }
       return NextResponse.json({
         ok: true,
-        paymentStatus: "Paid",
+        paymentStatus: "Deposit Pending",
         paymentMethod: data.method,
-        paymentReference: `BTC-${txId.slice(0, 16).toUpperCase()}`,
+        paymentReference: createPaymentReference(data.method as PaymentMethodId),
         amountLabel: data.amountLabel,
-        message: "Bitcoin payment recorded.",
+        message: "Bitcoin payment will be completed in store.",
       });
     }
 
     const giftCode = (data.giftCardCode || "").trim().toUpperCase();
     if (!/^[A-Z0-9-]{6,32}$/.test(giftCode)) {
-      return NextResponse.json({ error: "Enter a valid DTdogs gift card code." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Enter a valid Clover / DTdogs gift card code (full amount only)." },
+        { status: 400 },
+      );
     }
     return NextResponse.json({
       ok: true,
@@ -127,7 +203,7 @@ export async function POST(request: Request) {
       paymentReference: `GIFT-${giftCode}`,
       giftCardCode: giftCode,
       amountLabel: data.amountLabel,
-      message: "Gift card payment applied.",
+      message: "Gift card payment applied (full amount).",
     });
   } catch (error) {
     console.error("Payment processing error:", error);

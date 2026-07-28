@@ -25,6 +25,7 @@ export interface IService {
   status: "published" | "draft" | "coming-soon";
   priceLabel?: string;
   duration?: string;
+  discountPercent?: number;
   priceTiers?: Array<{
     label: string;
     priceLabel: string;
@@ -90,6 +91,7 @@ const serviceSchema = new Schema<IService>(
     },
     priceLabel: String,
     duration: String,
+    discountPercent: { type: Number, default: 0 },
     priceTiers: [
       {
         label: String,

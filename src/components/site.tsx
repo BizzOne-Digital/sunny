@@ -27,7 +27,16 @@ function parseServicePrice(label?: string) {
 }
 
 function formatMoney(amount: number) {
-  return `$${amount.toLocaleString("en-CA", { minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+  return `$${amount.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Ontario HST */
+const HST_RATE = 0.13;
+
+function getServiceDiscountPercent(service?: Service | null) {
+  const value = Number(service?.discountPercent ?? 0);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(100, value);
 }
 
 function getServiceBasePrice(service: Service | undefined, sizeLabel?: string) {
@@ -38,6 +47,90 @@ function getServiceBasePrice(service: Service | undefined, sizeLabel?: string) {
     if (tierPrice !== null) return tierPrice;
   }
   return parseServicePrice(service.priceLabel);
+}
+
+function roundMoney(amount: number) {
+  return Math.round(amount * 100) / 100;
+}
+
+type PriceBreakdown = {
+  basePrice: number | null;
+  discountPercent: number;
+  discountAmount: number;
+  serviceAfterDiscount: number | null;
+  addon: number;
+  subtotal: number | null;
+  tax: number | null;
+  total: number | null;
+};
+
+function buildServicePriceBreakdown(
+  service: Service | undefined,
+  sizeLabel: string,
+  includeAddon: boolean,
+): PriceBreakdown {
+  const basePrice = getServiceBasePrice(service, sizeLabel);
+  const discountPercent = getServiceDiscountPercent(service);
+  const addon = includeAddon ? serviceAddOn.priceAmount : 0;
+
+  if (basePrice === null) {
+    return {
+      basePrice: null,
+      discountPercent,
+      discountAmount: 0,
+      serviceAfterDiscount: null,
+      addon,
+      subtotal: null,
+      tax: null,
+      total: null,
+    };
+  }
+
+  const discountAmount = roundMoney(basePrice * (discountPercent / 100));
+  const serviceAfterDiscount = roundMoney(basePrice - discountAmount);
+  const subtotal = roundMoney(serviceAfterDiscount + addon);
+  const tax = roundMoney(subtotal * HST_RATE);
+  const total = roundMoney(subtotal + tax);
+
+  return {
+    basePrice,
+    discountPercent,
+    discountAmount,
+    serviceAfterDiscount,
+    addon,
+    subtotal,
+    tax,
+    total,
+  };
+}
+
+function buildBundlePriceBreakdown(packagePriceLabel: string | null | undefined): PriceBreakdown {
+  const basePrice = parseServicePrice(packagePriceLabel ?? undefined);
+  if (basePrice === null) {
+    return {
+      basePrice: null,
+      discountPercent: 0,
+      discountAmount: 0,
+      serviceAfterDiscount: null,
+      addon: 0,
+      subtotal: null,
+      tax: null,
+      total: null,
+    };
+  }
+  const subtotal = roundMoney(basePrice);
+  const tax = roundMoney(subtotal * HST_RATE);
+  const total = roundMoney(subtotal + tax);
+  return {
+    basePrice,
+    discountPercent: 0,
+    discountAmount: 0,
+    serviceAfterDiscount: basePrice,
+    addon: 0,
+    subtotal,
+    tax,
+    total,
+  };
 }
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -1457,8 +1550,7 @@ export function ServiceDetail({ service, related }: { service: Service; related:
 function ServiceBookingPanel({ service }: { service: Service }) {
   const [includeAddon, setIncludeAddon] = useState(false);
   const [sizeLabel, setSizeLabel] = useState(service.priceTiers?.[0]?.label ?? "");
-  const basePrice = getServiceBasePrice(service, sizeLabel);
-  const total = basePrice === null ? null : basePrice + (includeAddon ? serviceAddOn.priceAmount : 0);
+  const pricing = buildServicePriceBreakdown(service, sizeLabel, includeAddon);
 
   const bookingHref = useMemo(() => {
     const params = new URLSearchParams({
@@ -1466,9 +1558,9 @@ function ServiceBookingPanel({ service }: { service: Service }) {
       addon: includeAddon ? "1" : "0",
     });
     if (sizeLabel) params.set("size", sizeLabel);
-    if (total !== null) params.set("total", String(total));
+    if (pricing.total !== null) params.set("total", String(pricing.total));
     return `/booking?${params.toString()}#booking-form`;
-  }, [service.slug, includeAddon, sizeLabel, total]);
+  }, [service.slug, includeAddon, sizeLabel, pricing.total]);
 
   return (
     <section id="book-service" className="relative z-10 -mt-4 px-4 pb-6 sm:px-6 md:-mt-8">
@@ -1521,16 +1613,39 @@ function ServiceBookingPanel({ service }: { service: Service }) {
         <div className="flex flex-col justify-between rounded-[1.75rem] bg-gradient-to-br from-forest to-burgundy p-6 text-white sm:p-7">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-peach">Estimated total</p>
-            <p className="mt-3 font-serif text-4xl sm:text-5xl">{total === null ? service.priceLabel ?? "Quote" : formatMoney(total)}</p>
+            <p className="mt-3 font-serif text-4xl sm:text-5xl">
+              {pricing.total === null ? service.priceLabel ?? "Quote" : formatMoney(pricing.total)}
+            </p>
+            {pricing.discountPercent > 0 ? (
+              <p className="mt-2 text-sm text-peach">{pricing.discountPercent}% discount applied</p>
+            ) : null}
             <ul className="mt-5 space-y-2 text-sm text-white/80">
               <li className="flex justify-between gap-3">
                 <span>Service{sizeLabel ? ` (${sizeLabel})` : ""}</span>
-                <span>{basePrice === null ? service.priceLabel ?? "—" : formatMoney(basePrice)}</span>
+                <span>{pricing.basePrice === null ? service.priceLabel ?? "—" : formatMoney(pricing.basePrice)}</span>
               </li>
+              {pricing.discountPercent > 0 ? (
+                <li className="flex justify-between gap-3 text-peach">
+                  <span>Discount ({pricing.discountPercent}%)</span>
+                  <span>−{formatMoney(pricing.discountAmount)}</span>
+                </li>
+              ) : null}
               <li className="flex justify-between gap-3">
                 <span>Add-on</span>
-                <span>{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0"}</span>
+                <span>{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0.00"}</span>
               </li>
+              {pricing.subtotal !== null ? (
+                <li className="flex justify-between gap-3">
+                  <span>Subtotal</span>
+                  <span>{formatMoney(pricing.subtotal)}</span>
+                </li>
+              ) : null}
+              {pricing.tax !== null ? (
+                <li className="flex justify-between gap-3">
+                  <span>HST (13%)</span>
+                  <span>{formatMoney(pricing.tax)}</span>
+                </li>
+              ) : null}
             </ul>
           </div>
           <Link
@@ -2290,16 +2405,28 @@ function BookingForm({ services }: { services: Service[] }) {
     setPaymentResult(null);
   }, [selectedServiceSlug, sizeLabel, includeAddon, packageName, packagePrice, isBundle]);
 
-  const basePrice = getServiceBasePrice(selectedService, sizeLabel);
-  const total = basePrice === null ? null : basePrice + (includeAddon ? serviceAddOn.priceAmount : 0);
-  const packageSelection = [sizeLabel ? `Size: ${sizeLabel}` : null, includeAddon ? `Add-On (+${serviceAddOn.priceLabel})` : "No add-on"].filter(Boolean).join(" · ");
+  const servicePricing = buildServicePriceBreakdown(selectedService, sizeLabel, includeAddon);
+  const bundlePricing = buildBundlePriceBreakdown(packagePrice);
+  const pricing = isBundle ? bundlePricing : servicePricing;
+  const total = pricing.total;
+  const basePrice = pricing.basePrice;
+  const packageSelection = [
+    sizeLabel ? `Size: ${sizeLabel}` : null,
+    includeAddon ? `Add-On (+${serviceAddOn.priceLabel})` : "No add-on",
+    pricing.discountPercent > 0 ? `Discount ${pricing.discountPercent}%` : null,
+    pricing.tax !== null ? "HST 13%" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const bookingServiceLabel = isBundle 
     ? packageName || "Bundle Package"
     : selectedService
     ? serviceBookingLabel(selectedService, bookableServices)
     : "";
   
-  const displayPrice = isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total));
+  const displayPrice = total === null
+    ? (isBundle ? packagePrice : selectedService?.priceLabel ?? "Quote")
+    : formatMoney(total);
   const checkoutAmountLabel = String(displayPrice || "Quote");
   const confirmationStep = 6;
   const checkoutStep = 5;
@@ -2326,11 +2453,13 @@ function BookingForm({ services }: { services: Service[] }) {
       service: bookingServiceLabel,
       packageSelection: isBundle ? `Bundle: ${packageName}` : packageSelection,
       addonSelected: isBundle ? false : includeAddon,
-      estimatedTotal: isBundle ? packagePrice : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total)),
+      estimatedTotal: total === null
+        ? (isBundle ? packagePrice : selectedService?.priceLabel ?? "")
+        : formatMoney(total),
       policyAgreement: data.policyAgreement === "on",
       paymentMethod: paymentResult.paymentMethod,
       paymentReference: paymentResult.paymentReference,
-      paymentStatus: "Paid" as const,
+      paymentStatus: paymentResult.paymentStatus,
       giftCardCode: paymentResult.giftCardCode || data.giftCardCode || "",
     };
     
@@ -2369,10 +2498,10 @@ function BookingForm({ services }: { services: Service[] }) {
         <input type="hidden" name="service" value={bookingServiceLabel} />
         <input type="hidden" name="packageSelection" value={isBundle ? `Bundle: ${packageName}` : packageSelection} />
         <input type="hidden" name="addonSelected" value={isBundle ? "false" : (includeAddon ? "true" : "false")} />
-        <input type="hidden" name="estimatedTotal" value={isBundle ? packagePrice || "" : (total === null ? selectedService?.priceLabel ?? "" : formatMoney(total))} />
+        <input type="hidden" name="estimatedTotal" value={total === null ? (isBundle ? packagePrice || "" : selectedService?.priceLabel ?? "") : formatMoney(total)} />
         <input type="hidden" name="paymentMethod" value={paymentResult?.paymentMethod ?? ""} />
         <input type="hidden" name="paymentReference" value={paymentResult?.paymentReference ?? ""} />
-        <input type="hidden" name="paymentStatus" value={paymentResult ? "Paid" : "Payment Pending"} />
+        <input type="hidden" name="paymentStatus" value={paymentResult?.paymentStatus ?? "Payment Pending"} />
 
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
           {steps.map((label, index) => {
@@ -2519,9 +2648,38 @@ function BookingForm({ services }: { services: Service[] }) {
               </label>
 
               <div className="rounded-[1.5rem] bg-sage/60 p-5 md:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-burgundy">Live total</p>
-                <p className="mt-2 font-serif text-3xl text-forest sm:text-4xl">{total === null ? selectedService?.priceLabel ?? "Request quote" : formatMoney(total)}</p>
-                <p className="mt-2 text-sm text-ink/60">Service {basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}{includeAddon ? ` + Add-on ${formatMoney(serviceAddOn.priceAmount)}` : ""}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-burgundy">Live total (incl. HST)</p>
+                <p className="mt-2 font-serif text-3xl text-forest sm:text-4xl">
+                  {total === null ? selectedService?.priceLabel ?? "Request quote" : formatMoney(total)}
+                </p>
+                <div className="mt-3 space-y-1.5 text-sm text-ink/65">
+                  <div className="flex justify-between gap-3">
+                    <span>Service</span>
+                    <span>{basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}</span>
+                  </div>
+                  {pricing.discountPercent > 0 ? (
+                    <div className="flex justify-between gap-3 text-burgundy">
+                      <span>Discount ({pricing.discountPercent}%)</span>
+                      <span>−{formatMoney(pricing.discountAmount)}</span>
+                    </div>
+                  ) : null}
+                  <div className="flex justify-between gap-3">
+                    <span>Add-on</span>
+                    <span>{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0.00"}</span>
+                  </div>
+                  {pricing.subtotal !== null ? (
+                    <div className="flex justify-between gap-3">
+                      <span>Subtotal</span>
+                      <span>{formatMoney(pricing.subtotal)}</span>
+                    </div>
+                  ) : null}
+                  {pricing.tax !== null ? (
+                    <div className="flex justify-between gap-3">
+                      <span>HST (13%)</span>
+                      <span>{formatMoney(pricing.tax)}</span>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
             <div className={cx(step === 1 ? "contents" : "hidden")}>
@@ -2587,7 +2745,9 @@ function BookingForm({ services }: { services: Service[] }) {
                 <h3 className="font-serif text-2xl text-forest sm:text-3xl">Checkout / Deposit</h3>
                 <p className="mt-3 leading-7 text-ink/70">
                   Estimated total: <strong>{checkoutAmountLabel}</strong>
-                  {isBundle ? " (Bundle Package)" : (includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : "")}.
+                  {isBundle ? " (Bundle Package)" : (includeAddon ? ` (includes ${serviceAddOn.priceLabel} add-on)` : "")}
+                  {pricing.discountPercent > 0 ? ` · ${pricing.discountPercent}% discount` : ""}
+                  {pricing.tax !== null ? " · includes 13% HST" : ""}.
                   {" "}Pay now to unlock confirmation.
                 </p>
                 <div className="mt-5">
@@ -2595,11 +2755,15 @@ function BookingForm({ services }: { services: Service[] }) {
                     amountLabel={checkoutAmountLabel}
                     paid={paymentCompleted}
                     result={paymentResult}
-                    interacEmail={brand.email}
-                    bitcoinAddress={process.env.NEXT_PUBLIC_BITCOIN_WALLET_ADDRESS || "bc1qdt-dogs-wallet-replace-in-env"}
+                    interacEmail="connect@dtdogs.ca"
+                    interacAutodepositName="Khushwant Haresh Motiani or DTdogs.ca"
                     onPaid={(result) => {
                       setPaymentResult(result);
-                      setStatus("Payment successful. Opening confirmation...");
+                      setStatus(
+                        result.paymentStatus === "Deposit Pending"
+                          ? "In-store Bitcoin arranged. Opening confirmation..."
+                          : "Payment successful. Opening confirmation...",
+                      );
                       setStep(confirmationStep);
                     }}
                   />
@@ -2612,10 +2776,22 @@ function BookingForm({ services }: { services: Service[] }) {
                 {paymentCompleted && paymentResult ? (
                   <>
                     <p className="mt-3 leading-7 text-ink/70">
-                      Payment received via <strong className="capitalize">{paymentResult.paymentMethod}</strong>. Reference{" "}
-                      <strong>{paymentResult.paymentReference}</strong>. Submit below to finalize your booking in the admin portal.
+                      {paymentResult.paymentStatus === "Deposit Pending" ? (
+                        <>
+                          Bitcoin payment arranged <strong>in store</strong> via{" "}
+                          <strong className="capitalize">{paymentResult.paymentMethod}</strong>. Reference{" "}
+                          <strong>{paymentResult.paymentReference}</strong>. Submit below to finalize your booking.
+                        </>
+                      ) : (
+                        <>
+                          Payment received via <strong className="capitalize">{paymentResult.paymentMethod}</strong>. Reference{" "}
+                          <strong>{paymentResult.paymentReference}</strong>. Submit below to finalize your booking in the admin portal.
+                        </>
+                      )}
                     </p>
-                    <p className="mt-3 text-sm leading-6 text-ink/60">Email confirmation sends only when Resend is configured.</p>
+                    <p className="mt-3 text-sm leading-6 text-ink/60">
+                      Email confirmation sends when Hostinger SMTP (or Resend) is configured.
+                    </p>
                   </>
                 ) : (
                   <p className="mt-3 leading-7 text-burgundy">
@@ -2636,19 +2812,56 @@ function BookingForm({ services }: { services: Service[] }) {
             </p>
             {isBundle ? (
               <div className="mt-5 space-y-2 border-t border-forest/10 pt-4 text-sm">
-                <div className="flex justify-between gap-3 text-base font-bold text-forest">
-                  <span>Package Total</span>
-                  <span>{packagePrice}</span>
+                <div className="flex justify-between gap-3">
+                  <span>Package</span>
+                  <span className="font-semibold">{pricing.basePrice === null ? packagePrice : formatMoney(pricing.basePrice)}</span>
+                </div>
+                {pricing.tax !== null ? (
+                  <div className="flex justify-between gap-3">
+                    <span>HST (13%)</span>
+                    <span className="font-semibold">{formatMoney(pricing.tax)}</span>
+                  </div>
+                ) : null}
+                <div className="flex justify-between gap-3 border-t border-forest/10 pt-3 text-base font-bold text-forest">
+                  <span>Total</span>
+                  <span>{total === null ? packagePrice : formatMoney(total)}</span>
                 </div>
               </div>
             ) : (
               <div className="mt-5 space-y-2 border-t border-forest/10 pt-4 text-sm">
-                <div className="flex justify-between gap-3"><span>Service</span><span className="font-semibold">{basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}</span></div>
-                <div className="flex justify-between gap-3"><span>Add-on</span><span className="font-semibold">{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0"}</span></div>
-                <div className="flex justify-between gap-3 border-t border-forest/10 pt-3 text-base font-bold text-forest"><span>Total</span><span>{total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total)}</span></div>
+                <div className="flex justify-between gap-3">
+                  <span>Service</span>
+                  <span className="font-semibold">{basePrice === null ? selectedService?.priceLabel ?? "—" : formatMoney(basePrice)}</span>
+                </div>
+                {pricing.discountPercent > 0 ? (
+                  <div className="flex justify-between gap-3 text-burgundy">
+                    <span>Discount ({pricing.discountPercent}%)</span>
+                    <span className="font-semibold">−{formatMoney(pricing.discountAmount)}</span>
+                  </div>
+                ) : null}
+                <div className="flex justify-between gap-3">
+                  <span>Add-on</span>
+                  <span className="font-semibold">{includeAddon ? formatMoney(serviceAddOn.priceAmount) : "$0.00"}</span>
+                </div>
+                {pricing.subtotal !== null ? (
+                  <div className="flex justify-between gap-3">
+                    <span>Subtotal</span>
+                    <span className="font-semibold">{formatMoney(pricing.subtotal)}</span>
+                  </div>
+                ) : null}
+                {pricing.tax !== null ? (
+                  <div className="flex justify-between gap-3">
+                    <span>HST (13%)</span>
+                    <span className="font-semibold">{formatMoney(pricing.tax)}</span>
+                  </div>
+                ) : null}
+                <div className="flex justify-between gap-3 border-t border-forest/10 pt-3 text-base font-bold text-forest">
+                  <span>Total</span>
+                  <span>{total === null ? selectedService?.priceLabel ?? "Quote" : formatMoney(total)}</span>
+                </div>
               </div>
             )}
-            <p className="mt-4 text-xs leading-6 text-ink/55">Final confirmation remains admin-controlled for capacity and timing.</p>
+            <p className="mt-4 text-xs leading-6 text-ink/55">Prices include Ontario HST (13%) when a numeric total is available. Discounts are set per service in Admin.</p>
           </aside>
         </div>
         <div className="mt-8 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">

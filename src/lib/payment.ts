@@ -70,3 +70,13 @@ export function createPaymentReference(method: PaymentMethodId) {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `DT-${method.slice(0, 3).toUpperCase()}-${stamp}-${rand}`;
 }
+
+/** Parse labels like "$30", "CAD $150.00", "From $20" into Stripe cents (CAD). */
+export function parseAmountToCents(amountLabel: string): number | null {
+  const cleaned = amountLabel.replace(/,/g, "");
+  const match = cleaned.match(/(\d+(?:\.\d{1,2})?)/);
+  if (!match) return null;
+  const dollars = Number(match[1]);
+  if (!Number.isFinite(dollars) || dollars <= 0) return null;
+  return Math.round(dollars * 100);
+}

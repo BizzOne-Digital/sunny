@@ -43,6 +43,8 @@ export type Service = {
   status?: "published" | "draft" | "coming-soon";
   priceLabel?: string;
   duration?: string;
+  /** Percent off the service price (0–100). Set from admin. */
+  discountPercent?: number;
   priceTiers?: ServicePriceTier[];
 };
 
@@ -1873,7 +1875,7 @@ function getModel<T>(name: string, schema: Schema<T>): Model<T> {
 
 export const Models = {
   Page: () => getModel<PageContent>("Page", new Schema<PageContent>({ slug: { type: String, unique: true }, title: String, navTitle: String, seoTitle: String, metaDescription: String, hero: Schema.Types.Mixed, blocks: [Schema.Types.Mixed], status: String }, { timestamps: true })),
-  Service: () => getModel<Service>("Service", new Schema<Service>({ slug: { type: String, unique: true }, name: String, eyebrow: String, summary: String, description: String, forWhom: String, benefits: [String], includes: [String], process: [String], faqs: [Schema.Types.Mixed], related: [String], images: [imageSchema], featured: Boolean, status: String, priceLabel: String, duration: String, priceTiers: [Schema.Types.Mixed] }, { timestamps: true })),
+  Service: () => getModel<Service>("Service", new Schema<Service>({ slug: { type: String, unique: true }, name: String, eyebrow: String, summary: String, description: String, forWhom: String, benefits: [String], includes: [String], process: [String], faqs: [Schema.Types.Mixed], related: [String], images: [imageSchema], featured: Boolean, status: String, priceLabel: String, duration: String, discountPercent: Number, priceTiers: [Schema.Types.Mixed] }, { timestamps: true })),
   MediaAsset: () => getModel<ImageAsset>("MediaAsset", new Schema<ImageAsset>({ id: { type: String, unique: true }, title: String, alt: String, caption: String, url: String, mobileUrl: String, width: Number, height: Number, fileSize: Number, page: String, tags: [String], status: String, focalPoint: Schema.Types.Mixed, order: Number }, { timestamps: true })),
   PricingPackage: () => getModel<PricingPackage>("PricingPackage", new Schema<PricingPackage>({ slug: { type: String, unique: true }, service: String, name: String, priceLabel: String, duration: String, features: [String], featured: Boolean, status: String }, { timestamps: true })),
   BlogPost: () => getModel<BlogPost>("BlogPost", new Schema<BlogPost>({ slug: { type: String, unique: true }, title: String, excerpt: String, category: String, author: String, date: String, body: String, featuredImage: imageSchema, inlineImages: [imageSchema], status: String }, { timestamps: true })),

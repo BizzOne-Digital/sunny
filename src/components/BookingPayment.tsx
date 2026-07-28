@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, MapPin } from "lucide-react";
 import {
   PAYMENT_METHODS,
   formatCardNumber,
@@ -16,7 +16,7 @@ function cx(...classes: Array<string | false | undefined>) {
 export type BookingPaymentResult = {
   paymentMethod: PaymentMethodId;
   paymentReference: string;
-  paymentStatus: "Paid";
+  paymentStatus: "Paid" | "Deposit Pending";
   giftCardCode?: string;
   last4?: string;
 };
@@ -27,7 +27,7 @@ type BookingPaymentCheckoutProps = {
   result: BookingPaymentResult | null;
   onPaid: (result: BookingPaymentResult) => void;
   interacEmail?: string;
-  bitcoinAddress?: string;
+  interacAutodepositName?: string;
 };
 
 export function BookingPaymentCheckout({
@@ -36,7 +36,7 @@ export function BookingPaymentCheckout({
   result,
   onPaid,
   interacEmail = "connect@dtdogs.ca",
-  bitcoinAddress = "bc1qdt-dogs-wallet-replace-in-env",
+  interacAutodepositName = "Khushwant Haresh Motiani or DTdogs.ca",
 }: BookingPaymentCheckoutProps) {
   const [method, setMethod] = useState<PaymentMethodId | "">(result?.paymentMethod ?? "");
   const [busy, setBusy] = useState(false);
@@ -47,7 +47,7 @@ export function BookingPaymentCheckout({
   const [cardCvc, setCardCvc] = useState("");
   const [interacReference, setInteracReference] = useState("");
   const [interacConfirmed, setInteracConfirmed] = useState(false);
-  const [bitcoinTxId, setBitcoinTxId] = useState("");
+  const [storeBitcoinConfirmed, setStoreBitcoinConfirmed] = useState(false);
   const [giftCardCode, setGiftCardCode] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
 
@@ -73,7 +73,7 @@ export function BookingPaymentCheckout({
           cardCvc,
           interacReference,
           interacConfirmed,
-          bitcoinTxId,
+          storeBitcoinConfirmed,
           giftCardCode,
           paymentNote,
         }),
@@ -86,7 +86,7 @@ export function BookingPaymentCheckout({
       onPaid({
         paymentMethod: data.paymentMethod,
         paymentReference: data.paymentReference,
-        paymentStatus: "Paid",
+        paymentStatus: data.paymentStatus === "Deposit Pending" ? "Deposit Pending" : "Paid",
         giftCardCode: data.giftCardCode,
         last4: data.last4,
       });
@@ -105,7 +105,9 @@ export function BookingPaymentCheckout({
             <Check className="h-5 w-5" />
           </span>
           <div>
-            <p className="font-serif text-2xl text-forest">Payment received</p>
+            <p className="font-serif text-2xl text-forest">
+              {result.paymentStatus === "Deposit Pending" ? "Store payment arranged" : "Payment received"}
+            </p>
             <p className="mt-1 text-sm leading-6 text-ink/65">
               {PAYMENT_METHODS.find((item) => item.id === result.paymentMethod)?.label ?? "Payment"} · {amountLabel}
               {result.last4 ? ` · **** ${result.last4}` : ""}
@@ -121,6 +123,13 @@ export function BookingPaymentCheckout({
 
   const inputClass =
     "mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-sm outline-none ring-forest/20 focus:ring-4";
+
+  const payLabel =
+    selected?.kind === "bitcoin"
+      ? "Confirm in-store Bitcoin payment"
+      : selected?.kind === "gift"
+        ? `Apply gift card for ${amountLabel}`
+        : `Pay ${amountLabel} now`;
 
   return (
     <div className="space-y-5">
@@ -154,6 +163,9 @@ export function BookingPaymentCheckout({
 
       {selected?.kind === "card" ? (
         <div className="grid gap-4 rounded-[1.5rem] border border-forest/10 bg-white p-4 sm:grid-cols-2">
+          <p className="text-sm leading-6 text-ink/65 sm:col-span-2">
+            Secure card payment via Stripe (CAD). Visa, Mastercard and Amex accepted.
+          </p>
           <label className="block text-sm font-bold text-ink/70 sm:col-span-2">
             Name on card
             <input value={cardName} onChange={(e) => setCardName(e.target.value)} className={inputClass} autoComplete="cc-name" />
@@ -198,7 +210,10 @@ export function BookingPaymentCheckout({
         <div className="rounded-[1.5rem] border border-forest/10 bg-white p-4">
           <p className="text-sm leading-7 text-ink/70">
             Send an Interac e-Transfer for <strong>{amountLabel}</strong> to{" "}
-            <strong>{interacEmail}</strong>, then enter your transfer reference below.
+            <strong>{interacEmail}</strong>.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-ink/60">
+            Autodeposit name: <strong>{interacAutodepositName}</strong>
           </p>
           <label className="mt-4 block text-sm font-bold text-ink/70">
             Interac reference
@@ -213,26 +228,42 @@ export function BookingPaymentCheckout({
 
       {selected?.kind === "bitcoin" ? (
         <div className="rounded-[1.5rem] border border-forest/10 bg-white p-4">
-          <p className="text-sm leading-7 text-ink/70">
-            Send Bitcoin equal to <strong>{amountLabel}</strong> to:
-          </p>
-          <p className="mt-3 break-all rounded-2xl bg-cream px-4 py-3 font-mono text-xs text-forest">{bitcoinAddress}</p>
-          <label className="mt-4 block text-sm font-bold text-ink/70">
-            Transaction ID
-            <input value={bitcoinTxId} onChange={(e) => setBitcoinTxId(e.target.value)} className={inputClass} placeholder="Paste BTC tx id" />
+          <div className="flex items-start gap-3">
+            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-burgundy" />
+            <div>
+              <p className="text-sm leading-7 text-ink/70">
+                Bitcoin is accepted <strong>in person at the store only</strong>. Online wallet payments are not available.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">
+                Visit the store to complete a Bitcoin payment of <strong>{amountLabel}</strong>.
+              </p>
+            </div>
+          </div>
+          <label className="mt-4 flex items-start gap-3 text-sm text-ink/70">
+            <input
+              type="checkbox"
+              checked={storeBitcoinConfirmed}
+              onChange={(e) => setStoreBitcoinConfirmed(e.target.checked)}
+              className="mt-1"
+            />
+            I will complete Bitcoin payment in person at the store.
           </label>
         </div>
       ) : null}
 
       {selected?.kind === "gift" ? (
         <div className="rounded-[1.5rem] border border-forest/10 bg-white p-4">
-          <label className="block text-sm font-bold text-ink/70">
-            Gift card code
+          <p className="text-sm leading-7 text-ink/70">
+            Gift cards are issued through <strong>Clover</strong> by <strong>Sunny and Yazz</strong>.{" "}
+            <strong>Full amount only</strong>. For custom payment amounts, contact the store in person.
+          </p>
+          <label className="mt-4 block text-sm font-bold text-ink/70">
+            Clover gift card code
             <input
               value={giftCardCode}
               onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
               className={inputClass}
-              placeholder="e.g. DTDOGS-150-ABC"
+              placeholder="Enter Clover gift card code"
             />
           </label>
         </div>
@@ -252,12 +283,12 @@ export function BookingPaymentCheckout({
         className="btn-gradient inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         <Lock className="h-4 w-4" />
-        <span className="relative z-10">{busy ? "Processing payment..." : `Pay ${amountLabel} now`}</span>
+        <span className="relative z-10">{busy ? "Processing..." : payLabel}</span>
       </button>
 
       {error ? <p className="text-sm font-semibold text-burgundy">{error}</p> : null}
       <p className="text-xs leading-5 text-ink/50">
-        Confirmation unlocks only after payment succeeds. Card details are validated securely and are not stored.
+        Confirmation unlocks after payment (or in-store Bitcoin arrangement) is confirmed. PayPal can be added later.
       </p>
     </div>
   );
