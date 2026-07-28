@@ -193,7 +193,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
       setItems((current) =>
         current.map((item) => (item.slug === payload.slug ? ensureFourServiceImages(payload) : item)),
       );
-      setStatus(okMessage);
+      setStatus(okMessage || "Saved. Live service + booking pages will use this price.");
       return true;
     }
     setStatus(next.error ?? "Unable to save.");
@@ -203,7 +203,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!service) return;
-    await persistService(service);
+    await persistService(service, "Saved. Service page and booking totals will use the updated price.");
   }
 
   async function deleteService() {
@@ -286,6 +286,16 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
             </label>
             <Field label="Eyebrow" value={service.eyebrow ?? ""} onChange={(eyebrow) => updateService((current) => ({ ...current, eyebrow }))} />
             <Field label="Price Label" value={service.priceLabel ?? ""} onChange={(priceLabel) => updateService((current) => ({ ...current, priceLabel }))} />
+            <p className="md:col-span-2 -mt-2 text-xs leading-5 text-ink/50">
+              Booking uses the first number in this label. Example: <code className="rounded bg-cream px-1">150 and up</code> or{" "}
+              <code className="rounded bg-cream px-1">From $150</code> → booking charges <strong>$150</strong> (+ tax).
+              {service.priceTiers?.length ? (
+                <>
+                  {" "}
+                  This service also has <strong>price options</strong> below — booking uses the selected option’s price, not only this label.
+                </>
+              ) : null}
+            </p>
             <Field label="Duration" value={service.duration ?? ""} onChange={(duration) => updateService((current) => ({ ...current, duration }))} />
             <label className="block text-sm font-bold text-ink/70">
               Discount %
@@ -307,6 +317,74 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
                 Optional. Example: 10 = 10% off this service before tax. Leave 0 for no discount.
               </span>
             </label>
+            <div className="md:col-span-2 space-y-3 rounded-2xl border border-forest/10 bg-white/70 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold text-ink/70">Price options (tiers)</p>
+                  <p className="mt-1 text-xs font-normal text-ink/50">
+                    Optional. Used on booking when the customer picks an option (size / package). Leave empty to book from Price Label only.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateService((current) => ({
+                      ...current,
+                      priceTiers: [...(current.priceTiers ?? []), { label: "New option", priceLabel: "$0" }],
+                    }))
+                  }
+                  className="rounded-full border border-forest/20 px-3 py-1.5 text-xs font-bold text-forest hover:bg-sage/40"
+                >
+                  Add option
+                </button>
+              </div>
+              {(service.priceTiers ?? []).length === 0 ? (
+                <p className="text-xs text-ink/45">No options — booking uses Price Label.</p>
+              ) : (
+                <div className="space-y-2">
+                  {(service.priceTiers ?? []).map((tier, index) => (
+                    <div key={`tier-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                      <input
+                        value={tier.label}
+                        onChange={(event) =>
+                          updateService((current) => {
+                            const priceTiers = [...(current.priceTiers ?? [])];
+                            priceTiers[index] = { ...priceTiers[index], label: event.target.value };
+                            return { ...current, priceTiers };
+                          })
+                        }
+                        placeholder="Option label"
+                        className="rounded-2xl border border-forest/15 bg-cream px-3 py-2.5 text-sm outline-none ring-forest/20 focus:ring-4"
+                      />
+                      <input
+                        value={tier.priceLabel}
+                        onChange={(event) =>
+                          updateService((current) => {
+                            const priceTiers = [...(current.priceTiers ?? [])];
+                            priceTiers[index] = { ...priceTiers[index], priceLabel: event.target.value };
+                            return { ...current, priceTiers };
+                          })
+                        }
+                        placeholder="$150 or 150 and up"
+                        className="rounded-2xl border border-forest/15 bg-cream px-3 py-2.5 text-sm outline-none ring-forest/20 focus:ring-4"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateService((current) => ({
+                            ...current,
+                            priceTiers: (current.priceTiers ?? []).filter((_, i) => i !== index),
+                          }))
+                        }
+                        className="rounded-2xl border border-burgundy/20 px-3 py-2 text-xs font-bold text-burgundy hover:bg-burgundy/5"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Field label="Card Summary" value={service.summary ?? ""} onChange={(summary) => updateService((current) => ({ ...current, summary }))} multiline wide />
             <Field label="Full Description" value={service.description ?? ""} onChange={(description) => updateService((current) => ({ ...current, description }))} multiline wide />
             <Field label="Who It Is For" value={service.forWhom ?? ""} onChange={(forWhom) => updateService((current) => ({ ...current, forWhom }))} multiline wide />

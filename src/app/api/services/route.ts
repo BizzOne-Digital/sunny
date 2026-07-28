@@ -1,41 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Service from "@/models/Service";
-import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { getServices } from "@/lib/site";
 
-// GET all services (public)
+/** Always read live Mongo prices — never serve a build-time snapshot. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+/** Public services list — same Mongo source as booking / service pages. */
 export async function GET() {
   try {
-    await connectDB();
-    const services = await Service.find({ status: "published" }).sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, services });
+    const services = await getServices();
+    const published = services.filter(
+      (service) => service.status !== "draft" && service.status !== "coming-soon",
+    );
+    return NextResponse.json(
+      { success: true, services: published },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      },
+    );
   } catch (error) {
     console.error("Get services error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST new service (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    await requireAuth();
-    await connectDB();
-
-    const body = await request.json();
-    const service = await Service.create(body);
-
-    return NextResponse.json({ success: true, service }, { status: 201 });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    console.error("Create service error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

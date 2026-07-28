@@ -1947,8 +1947,15 @@ export async function getPage(slug: string) {
 }
 
 export async function getServices() {
-  // Fetch from MongoDB, fallback to seed data if DB not available
-  return await getCollection<Service>("services", services.filter((service) => service.status !== "draft"));
+  const db = await connectMongo();
+  if (!db) return services.filter((service) => service.status !== "draft");
+
+  const ModelCtor = Models.Service() as unknown as Model<Record<string, unknown>>;
+  // Always read fresh documents so admin price edits show on booking.
+  const docs = await ModelCtor.find({}).lean().exec();
+  const parsed = JSON.parse(JSON.stringify(docs)) as Service[];
+  const usable = parsed.filter((service) => service.status !== "draft");
+  return usable.length ? usable : services.filter((service) => service.status !== "draft");
 }
 
 export async function getTeamMembers() {

@@ -71,9 +71,11 @@ export function createPaymentReference(method: PaymentMethodId) {
   return `DT-${method.slice(0, 3).toUpperCase()}-${stamp}-${rand}`;
 }
 
-/** Parse labels like "$30", "CAD $150.00", "From $20" into Stripe cents (CAD). */
+/** Parse labels like "$30", "CAD $150.00", "From $20", "150 and up" into Stripe cents (CAD). */
 export function parseAmountToCents(amountLabel: string): number | null {
-  const cleaned = amountLabel.replace(/,/g, "");
+  const cleaned = amountLabel.replace(/,/g, "").trim();
+  if (!cleaned) return null;
+  // Prefer first number so "150 and up" charges 150.00.
   const match = cleaned.match(/(\d+(?:\.\d{1,2})?)/);
   if (!match) return null;
   const dollars = Number(match[1]);

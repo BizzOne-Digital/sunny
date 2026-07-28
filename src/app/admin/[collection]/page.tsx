@@ -6,6 +6,8 @@ import { ServicesManager } from "@/components/admin-services";
 import { getAdminSession } from "@/lib/auth";
 import { CollectionName, collectionDefaults, collectionModelMap, getCollection } from "@/lib/site";
 
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
   return Object.keys(collectionModelMap)
     .filter((collection) => !["media"].includes(collection))

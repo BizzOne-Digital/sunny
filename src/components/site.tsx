@@ -21,9 +21,22 @@ const serviceAddOn = {
 
 function parseServicePrice(label?: string) {
   if (!label) return null;
-  if (/free/i.test(label)) return 0;
-  const match = label.replace(/,/g, "").match(/(\d+(?:\.\d+)?)/);
-  return match ? Number(match[1]) : null;
+  const normalized = label.replace(/,/g, "").trim();
+  if (!normalized) return null;
+  // Only treat as free when there is no dollar amount in the label.
+  if (/\bfree\b/i.test(normalized) && !/\d/.test(normalized)) return 0;
+
+  // Prefer the first currency-like amount: "$150", "CAD 150", "150 and up", "From $150+".
+  const currencyMatch = normalized.match(/(?:cad\s*)?\$?\s*(\d+(?:\.\d{1,2})?)/i);
+  if (currencyMatch) {
+    const value = Number(currencyMatch[1]);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const anyMatch = normalized.match(/(\d+(?:\.\d{1,2})?)/);
+  if (!anyMatch) return null;
+  const value = Number(anyMatch[1]);
+  return Number.isFinite(value) ? value : null;
 }
 
 function formatMoney(amount: number) {
@@ -46,6 +59,7 @@ function getServiceBasePrice(service: Service | undefined, sizeLabel?: string) {
     const tierPrice = parseServicePrice(tier?.priceLabel);
     if (tierPrice !== null) return tierPrice;
   }
+  // Labels like "150 and up" / "From $150" book at the first number (150).
   return parseServicePrice(service.priceLabel);
 }
 
@@ -2350,18 +2364,67 @@ function BookingForm({ services }: { services: Service[] }) {
   
   const [step, setStep] = useState(isBundle ? 3 : 0); // Start at Contact (step 3) for bundles
   const [status, setStatus] = useState<string | null>(null);
+  const [liveServices, setLiveServices] = useState<Service[]>(services);
   const steps = ["Service Selection", "Pet & Hooman", "Date & Time", "Contact", "Pet Details", "Checkout / Deposit", "Confirmation"];
-  const bookableServices = useMemo(() => services.filter((service) => service.status !== "coming-soon"), [services]);
+  const bookableServices = useMemo(
+    () => liveServices.filter((service) => service.status !== "coming-soon" && service.status !== "draft"),
+    [liveServices],
+  );
 
-  const resolveServiceSlug = (value: string | null) => {
-    if (!value) return bookableServices[0]?.slug ?? "";
-    const bySlug = bookableServices.find((service) => service.slug === value);
+  useEffect(() => {
+    setLiveServices(services);
+  }, [services]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function refreshServices() {
+      try {
+        const response = await fetch(`/api/services?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { Pragma: "no-cache", "Cache-Control": "no-cache" },
+        });
+        const data = await response.json();
+        const list = Array.isArray(data?.services) ? (data.services as Service[]) : [];
+        if (active && list.length) setLiveServices(list);
+      } catch {
+        // Keep server-provided services if refresh fails.
+      }
+    }
+
+    void refreshServices();
+    const onFocus = () => void refreshServices();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refreshServices();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    const interval = window.setInterval(() => void refreshServices(), 20_000);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const resolveServiceSlug = (value: string | null, list: Service[] = bookableServices) => {
+    if (!value) return list[0]?.slug ?? "";
+    const bySlug = list.find((service) => service.slug === value);
     if (bySlug) return bySlug.slug;
-    const byName = bookableServices.find((service) => service.name === value);
-    return byName?.slug ?? bookableServices[0]?.slug ?? "";
+    const byName = list.find((service) => service.name === value);
+    return byName?.slug ?? list[0]?.slug ?? "";
   };
 
-  const [selectedServiceSlug, setSelectedServiceSlug] = useState(() => resolveServiceSlug(searchParams.get("service")));
+  const [selectedServiceSlug, setSelectedServiceSlug] = useState(() => {
+    const initial = services.filter((service) => service.status !== "coming-soon" && service.status !== "draft");
+    const value = searchParams.get("service");
+    if (!value) return initial[0]?.slug ?? "";
+    return initial.find((service) => service.slug === value)?.slug
+      ?? initial.find((service) => service.name === value)?.slug
+      ?? initial[0]?.slug
+      ?? "";
+  });
   const [includeAddon, setIncludeAddon] = useState(searchParams.get("addon") === "1");
   const [sizeLabel, setSizeLabel] = useState(searchParams.get("size") ?? "");
   const [preferredDate, setPreferredDate] = useState("");
@@ -2386,6 +2449,14 @@ function BookingForm({ services }: { services: Service[] }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from query string
   }, [searchParams]);
+
+  // Keep selection valid when live service list refreshes with latest admin prices.
+  useEffect(() => {
+    if (!bookableServices.length) return;
+    if (!bookableServices.some((service) => service.slug === selectedServiceSlug)) {
+      setSelectedServiceSlug(bookableServices[0].slug);
+    }
+  }, [bookableServices, selectedServiceSlug]);
 
   useEffect(() => {
     if (!selectedService?.priceTiers?.length) {
