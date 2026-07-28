@@ -1563,7 +1563,8 @@ export function ServiceDetail({ service, related }: { service: Service; related:
 
 function ServiceBookingPanel({ service }: { service: Service }) {
   const [includeAddon, setIncludeAddon] = useState(false);
-  const [sizeLabel, setSizeLabel] = useState(service.priceTiers?.[0]?.label ?? "");
+  // Default to main Price Label; only use a tier after the customer picks one.
+  const [sizeLabel, setSizeLabel] = useState("");
   const pricing = buildServicePriceBreakdown(service, sizeLabel, includeAddon);
 
   const bookingHref = useMemo(() => {
@@ -1587,7 +1588,8 @@ function ServiceBookingPanel({ service }: { service: Service }) {
 
           {service.priceTiers?.length ? (
             <div className="mt-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-forest/70">Choose dog size</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-forest/70">Price option</p>
+              <p className="mt-1 text-xs text-ink/50">Optional — total defaults to the listed service price until you pick an option.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {service.priceTiers.map((tier) => (
                   <button
@@ -2463,8 +2465,10 @@ function BookingForm({ services }: { services: Service[] }) {
       setSizeLabel("");
       return;
     }
-    if (!selectedService.priceTiers.some((tier) => tier.label === sizeLabel)) {
-      setSizeLabel(selectedService.priceTiers[0].label);
+    // Keep a valid option if already chosen; otherwise fall back to Price Label
+    // (important for pet dental cleaning — admin Price Label must drive the total).
+    if (sizeLabel && !selectedService.priceTiers.some((tier) => tier.label === sizeLabel)) {
+      setSizeLabel("");
     }
   }, [selectedService, sizeLabel]);
 
@@ -2699,7 +2703,8 @@ function BookingForm({ services }: { services: Service[] }) {
 
               {selectedService?.priceTiers?.length ? (
                 <div className="md:col-span-2">
-                  <p className="text-sm font-bold text-ink/70">Dog size</p>
+                  <p className="text-sm font-bold text-ink/70">Price option</p>
+                  <p className="mt-1 text-xs text-ink/50">Optional — defaults to the service Price Label from admin.</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {selectedService.priceTiers.map((tier) => (
                       <button key={tier.label} type="button" onClick={() => setSizeLabel(tier.label)} className={cx("rounded-full px-4 py-2 text-sm font-bold transition", sizeLabel === tier.label ? "btn-gradient text-white shadow-md shadow-coral/25" : "bg-sage text-ink hover:bg-peach/50")}>

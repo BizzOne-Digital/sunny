@@ -287,9 +287,6 @@ export function BookingPaymentCheckout({
       </button>
 
       {error ? <p className="text-sm font-semibold text-burgundy">{error}</p> : null}
-      <p className="text-xs leading-5 text-ink/50">
-        Confirmation unlocks after payment (or in-store Bitcoin arrangement) is confirmed. PayPal can be added later.
-      </p>
     </div>
   );
 }

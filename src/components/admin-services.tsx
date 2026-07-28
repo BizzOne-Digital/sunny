@@ -292,7 +292,7 @@ export function ServicesManager({ initialItems }: { initialItems: unknown[] }) {
               {service.priceTiers?.length ? (
                 <>
                   {" "}
-                  This service also has <strong>price options</strong> below — booking uses the selected option’s price, not only this label.
+                  Kit/options below are optional on booking — the total defaults to this Price Label. Update option prices too if each kit should differ.
                 </>
               ) : null}
             </p>
