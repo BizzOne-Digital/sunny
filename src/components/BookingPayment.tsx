@@ -124,12 +124,7 @@ export function BookingPaymentCheckout({
   const inputClass =
     "mt-2 w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-sm outline-none ring-forest/20 focus:ring-4";
 
-  const payLabel =
-    selected?.kind === "bitcoin"
-      ? "Confirm in-store Bitcoin payment"
-      : selected?.kind === "gift"
-        ? `Apply gift card for ${amountLabel}`
-        : `Pay ${amountLabel} now`;
+  const isCard = selected?.kind === "card";
 
   return (
     <div className="space-y-5">
@@ -161,7 +156,7 @@ export function BookingPaymentCheckout({
         </div>
       </div>
 
-      {selected?.kind === "card" ? (
+      {isCard ? (
         <div className="grid gap-4 rounded-[1.5rem] border border-forest/10 bg-white p-4 sm:grid-cols-2">
           <p className="text-sm leading-6 text-ink/65 sm:col-span-2">
             Secure card payment via Stripe (CAD). Visa, Mastercard and Amex accepted.
@@ -276,15 +271,55 @@ export function BookingPaymentCheckout({
 
       <input type="hidden" name="giftCardCode" value={giftCardCode || result?.giftCardCode || ""} />
 
-      <button
-        type="button"
-        onClick={() => void pay()}
-        disabled={busy || !method}
-        className="btn-gradient inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-      >
-        <Lock className="h-4 w-4" />
-        <span className="relative z-10">{busy ? "Processing..." : payLabel}</span>
-      </button>
+      {/* Pay now only for Visa / Mastercard / Amex */}
+      {isCard ? (
+        <button
+          type="button"
+          onClick={() => void pay()}
+          disabled={busy || !method}
+          className="btn-gradient inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        >
+          <Lock className="h-4 w-4" />
+          <span className="relative z-10">{busy ? "Processing..." : `Pay ${amountLabel} now`}</span>
+        </button>
+      ) : null}
+
+      {/* Alternate confirm actions — not "Pay now" */}
+      {selected?.kind === "interac" ? (
+        <button
+          type="button"
+          onClick={() => void pay()}
+          disabled={busy || !interacConfirmed || !interacReference.trim()}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-forest bg-white px-6 py-3.5 font-bold text-forest transition hover:bg-sage/40 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        >
+          <Check className="h-4 w-4" />
+          <span>{busy ? "Saving..." : "Confirm Interac transfer"}</span>
+        </button>
+      ) : null}
+
+      {selected?.kind === "bitcoin" ? (
+        <button
+          type="button"
+          onClick={() => void pay()}
+          disabled={busy || !storeBitcoinConfirmed}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-forest bg-white px-6 py-3.5 font-bold text-forest transition hover:bg-sage/40 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        >
+          <Check className="h-4 w-4" />
+          <span>{busy ? "Saving..." : "Confirm in-store Bitcoin"}</span>
+        </button>
+      ) : null}
+
+      {selected?.kind === "gift" ? (
+        <button
+          type="button"
+          onClick={() => void pay()}
+          disabled={busy || !giftCardCode.trim()}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-forest bg-white px-6 py-3.5 font-bold text-forest transition hover:bg-sage/40 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        >
+          <Check className="h-4 w-4" />
+          <span>{busy ? "Saving..." : "Confirm gift card"}</span>
+        </button>
+      ) : null}
 
       {error ? <p className="text-sm font-semibold text-burgundy">{error}</p> : null}
     </div>
