@@ -42,6 +42,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Upload error:", error);
     const message = error instanceof Error ? error.message : "Upload failed.";
+    // Always JSON so the admin UI never hits "Unexpected token R..."
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

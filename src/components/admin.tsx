@@ -9,6 +9,7 @@ import type { CollectionName, ImageAsset } from "@/lib/site";
 import type { BookingRequest } from "@/lib/site";
 import type { SiteBrandLogos } from "@/lib/brand";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { prepareUploadPng, readUploadResponse } from "@/lib/prepare-upload-image";
 
 const collections: { label: string; name: CollectionName }[] = [
   { label: "Pages", name: "pages" },
@@ -781,21 +782,36 @@ export function MediaLibrary({ initialItems }: { initialItems: ImageAsset[] }) {
     event.preventDefault();
     setStatus("Uploading...");
     const form = event.currentTarget;
-    const response = await fetch("/api/media", {
-      method: "POST",
-      body: new FormData(form),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setItems([data.asset, ...items]);
-      setStatus(data.message ? `Uploaded (${data.storage}). ${data.message}` : "Uploaded and saved.");
-      try {
-        form.reset();
-      } catch {
-        // Form may unmount during re-render after upload.
+    try {
+      const formData = new FormData(form);
+      const raw = formData.get("file");
+      if (!(raw instanceof File) || !raw.size) {
+        setStatus("Choose an image file first.");
+        return;
       }
-    } else {
-      setStatus(data.error ?? "Upload failed.");
+      formData.set("file", await prepareUploadPng(raw));
+      const response = await fetch("/api/media", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await readUploadResponse(response);
+      if (response.ok) {
+        setItems([data.asset as ImageAsset, ...items]);
+        setStatus(
+          data.message
+            ? `Uploaded as PNG (${String(data.storage)}). ${String(data.message)}`
+            : "Uploaded and saved as PNG.",
+        );
+        try {
+          form.reset();
+        } catch {
+          // Form may unmount during re-render after upload.
+        }
+      } else {
+        setStatus(String(data.error ?? "Upload failed."));
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Upload failed.");
     }
   }
 
@@ -1064,80 +1080,96 @@ export function GalleryManager({ initialItems = [] }: { initialItems?: ImageAsse
     event.preventDefault();
     setStatus("Uploading...");
     const form = event.currentTarget;
-    const formData = new FormData(form);
-    formData.set("folder", "gallery");
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await response.json();
-    if (response.ok) {
-      const title = String(formData.get("title") ?? "Gallery image");
-      const galleryResponse = await fetch("/api/gallery", {
+    try {
+      const formData = new FormData(form);
+      const raw = formData.get("file");
+      if (!(raw instanceof File) || !raw.size) {
+        setStatus("Choose an image file first.");
+        return;
+      }
+      const prepared = await prepareUploadPng(raw);
+      formData.set("file", prepared);
+      formData.set("folder", "gallery");
+      const response = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: `gallery-${Date.now()}`,
-          title,
-          alt: String(formData.get("alt") ?? title),
-          caption: String(formData.get("caption") ?? ""),
-          url: data.url,
-          width: 1400,
-          height: 1000,
-          tags: ["Gallery"],
-          status: "published",
-          order: items.length + 1,
-        }),
+        body: formData,
       });
-      const galleryData = await galleryResponse.json();
+      const data = await readUploadResponse(response);
+      if (response.ok) {
+        const title = String(formData.get("title") ?? "Gallery image");
+        const galleryResponse = await fetch("/api/gallery", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: `gallery-${Date.now()}`,
+            title,
+            alt: String(formData.get("alt") ?? title),
+            caption: String(formData.get("caption") ?? ""),
+            url: data.url,
+            width: 1400,
+            height: 1000,
+            tags: ["Gallery"],
+            status: "published",
+            order: items.length + 1,
+          }),
+        });
+        const galleryData = await galleryResponse.json();
 
-      if (galleryResponse.ok) {
-        setItems((current) => [galleryData.gallery, ...current]);
-        setStatus("Uploaded to gallery!");
-        try {
-          form.reset();
-        } catch {
-          // Form may unmount during re-render after upload.
+        if (galleryResponse.ok) {
+          setItems((current) => [galleryData.gallery, ...current]);
+          setStatus("Uploaded to gallery as PNG!");
+          try {
+            form.reset();
+          } catch {
+            // Form may unmount during re-render after upload.
+          }
+        } else {
+          setStatus(galleryData.error ?? "Uploaded but failed to add to gallery.");
         }
       } else {
-        setStatus(galleryData.error ?? "Uploaded but failed to add to gallery.");
+        setStatus(String(data.error ?? "Upload failed."));
       }
-    } else {
-      setStatus(data.error ?? "Upload failed.");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Upload failed.");
     }
   }
 
   async function replaceImage(image: ImageAsset, file: File) {
     setStatus("Replacing image...");
-    const form = new FormData();
-    form.set("file", file);
-    form.set("folder", "gallery");
+    try {
+      const prepared = await prepareUploadPng(file);
+      const form = new FormData();
+      form.set("file", prepared);
+      form.set("folder", "gallery");
 
-    const uploadResponse = await fetch("/api/upload", { method: "POST", body: form });
-    const uploadData = await uploadResponse.json();
-    if (!uploadResponse.ok) {
-      setStatus(uploadData.error ?? "Upload failed.");
-      return;
-    }
+      const uploadResponse = await fetch("/api/upload", { method: "POST", body: form });
+      const uploadData = await readUploadResponse(uploadResponse);
+      if (!uploadResponse.ok) {
+        setStatus(String(uploadData.error ?? "Upload failed."));
+        return;
+      }
 
-    const next: ImageAsset = {
-      ...image,
-      url: uploadData.url,
-      fileSize: uploadData.size ?? image.fileSize,
-    };
+      const next: ImageAsset = {
+        ...image,
+        url: String(uploadData.url),
+        fileSize: typeof uploadData.size === "number" ? uploadData.size : image.fileSize,
+      };
 
-    const response = await fetch(`/api/gallery/${image.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setItems((current) => current.map((item) => (item.id === image.id ? next : item)));
-      if (editing?.id === image.id) setEditing(next);
-      setStatus("Gallery image replaced.");
-    } else {
-      setStatus(data.error ?? "Unable to replace image.");
+      const response = await fetch(`/api/gallery/${image.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setItems((current) => current.map((item) => (item.id === image.id ? next : item)));
+        if (editing?.id === image.id) setEditing(next);
+        setStatus("Gallery image replaced (PNG).");
+      } else {
+        setStatus(data.error ?? "Unable to replace image.");
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Upload failed.");
     }
   }
 
@@ -1368,21 +1400,32 @@ export function PagesMediaLibrary({ initialItems }: { initialItems: ImageAsset[]
     event.preventDefault();
     setStatus("Uploading...");
     const form = event.currentTarget;
-    const response = await fetch("/api/media", {
-      method: "POST",
-      body: new FormData(form),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setItems([data.asset, ...items]);
-      setStatus(data.message ? `Uploaded. ${data.message}` : "Uploaded and saved.");
-      try {
-        form.reset();
-      } catch {
-        // Form may unmount during re-render after upload.
+    try {
+      const formData = new FormData(form);
+      const raw = formData.get("file");
+      if (!(raw instanceof File) || !raw.size) {
+        setStatus("Choose an image file first.");
+        return;
       }
-    } else {
-      setStatus(data.error ?? "Upload failed.");
+      formData.set("file", await prepareUploadPng(raw));
+      const response = await fetch("/api/media", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await readUploadResponse(response);
+      if (response.ok) {
+        setItems([data.asset as ImageAsset, ...items]);
+        setStatus(data.message ? `Uploaded as PNG. ${String(data.message)}` : "Uploaded and saved as PNG.");
+        try {
+          form.reset();
+        } catch {
+          // Form may unmount during re-render after upload.
+        }
+      } else {
+        setStatus(String(data.error ?? "Upload failed."));
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Upload failed.");
     }
   }
 

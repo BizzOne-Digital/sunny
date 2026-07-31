@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { Trash2, Upload } from "lucide-react";
 import type { UploadFolder } from "@/lib/upload/store";
+import { prepareUploadPng, readUploadResponse } from "@/lib/prepare-upload-image";
 
 type ImageUploadFieldProps = {
   value?: string;
@@ -13,37 +14,6 @@ type ImageUploadFieldProps = {
   /** Optional: also delete previous /api/uploads URL when replacing/removing */
   onRemoved?: (previousUrl: string) => void;
 };
-
-async function compressImage(file: File, maxWidth = 2000, quality = 0.8): Promise<File> {
-  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
-  if (typeof window === "undefined" || typeof document === "undefined") return file;
-
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxWidth / Math.max(bitmap.width, 1));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-
-    const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, outputType, outputType === "image/jpeg" ? quality : undefined),
-    );
-    if (!blob) return file;
-
-    const ext = outputType === "image/png" ? ".png" : ".jpg";
-    const name = file.name.replace(/\.\w+$/, "") + ext;
-    return new File([blob], name, { type: outputType, lastModified: Date.now() });
-  } catch {
-    return file;
-  }
-}
 
 function previewNeedsNativeImg(url: string) {
   return (
@@ -56,7 +26,7 @@ function previewNeedsNativeImg(url: string) {
 
 function displayStatus(url?: string) {
   if (!url) return "No file selected";
-  if (url.startsWith("/api/uploads/")) return "Uploaded to MongoDB";
+  if (url.startsWith("/api/uploads/")) return "Uploaded to MongoDB (PNG)";
   if (url.startsWith("data:image/")) return "Embedded image saved";
   if (url.startsWith("/api/media/file/")) return "Legacy media file";
   if (url.startsWith("/uploads/")) return "Legacy local path (will fall back on site)";
@@ -80,21 +50,25 @@ export function ImageUploadField({
     setBusy(true);
     setError("");
     try {
-      const compressed = await compressImage(file);
+      // Always convert JPG/WebP/GIF → compressed PNG before send (avoids Vercel 413).
+      const prepared = await prepareUploadPng(file);
       const form = new FormData();
-      form.set("file", compressed);
+      form.set("file", prepared);
       form.set("folder", folder);
 
       const response = await fetch("/api/upload", { method: "POST", body: form });
-      const data = await response.json();
+      const data = await readUploadResponse(response);
       if (!response.ok) {
-        throw new Error(data.error ?? "Upload failed.");
+        throw new Error(String(data.error ?? "Upload failed."));
       }
 
-      if (value && value !== data.url && value.startsWith("/api/uploads/")) {
+      const nextUrl = String(data.url ?? "");
+      if (!nextUrl) throw new Error("Upload succeeded but no image URL was returned.");
+
+      if (value && value !== nextUrl && value.startsWith("/api/uploads/")) {
         onRemoved?.(value);
       }
-      onChange(String(data.url));
+      onChange(nextUrl);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed.";
       setError(message);
@@ -118,7 +92,7 @@ export function ImageUploadField({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-bold text-ink/70">{label}</p>
         <span className="rounded-full bg-forest/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-forest">
-          Folder: {folder}
+          Folder: {folder} · PNG
         </span>
       </div>
 
@@ -160,6 +134,7 @@ export function ImageUploadField({
             ) : null}
           </div>
           <p className="mt-2 text-xs text-ink/50">{displayStatus(value)}</p>
+          <p className="mt-1 text-[11px] text-ink/40">JPG/PNG/WebP accepted — saved as compressed PNG (max ~3MB).</p>
           {error ? <p className="mt-1 text-xs text-burgundy">{error}</p> : null}
         </div>
       </div>
@@ -167,7 +142,7 @@ export function ImageUploadField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
         className="hidden"
         onChange={(event) => uploadFile(event.target.files?.[0])}
       />

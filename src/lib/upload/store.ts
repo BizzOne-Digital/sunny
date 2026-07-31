@@ -11,17 +11,18 @@ export { UPLOAD_FOLDERS, type UploadFolder };
 export const MAX_UPLOAD_BYTES = Math.floor(4.5 * 1024 * 1024);
 
 const ALLOWED_MIME = new Set([
+  "image/png",
+  // Still accept these if an older client sends them; admin UI always converts to PNG.
   "image/jpeg",
   "image/jpg",
-  "image/png",
   "image/webp",
   "image/gif",
 ]);
 
 const EXT_BY_MIME: Record<string, string> = {
+  "image/png": ".png",
   "image/jpeg": ".jpg",
   "image/jpg": ".jpg",
-  "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
 };
@@ -85,7 +86,7 @@ export async function saveFolderUpload(file: File, folder: UploadFolder): Promis
   const bytes = Buffer.from(await file.arrayBuffer());
   if (!bytes.length) throw new Error("Uploaded file was empty.");
   if (bytes.length > MAX_UPLOAD_BYTES) {
-    throw new Error("Image is too large (max 4.5MB). Compress it and try again.");
+    throw new Error("Image is too large (max 4.5MB after compression). Use a smaller photo.");
   }
 
   const filename = buildFilename(file, mimeType);
