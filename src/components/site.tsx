@@ -4219,25 +4219,42 @@ function Footer({ services, logoSrc }: { services: Service[]; logoSrc: string })
             <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
               <MapPin className="h-3.5 w-3.5" /> Our Locations
             </p>
-            <p className="text-sm text-white/85">717 Queen St E Unit# 100A</p>
-            <p className="text-sm text-white/85">Toronto, ON M4M 1H1</p>
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=717%20Queen%20St%20E%20Unit%23%20100A%2C%20Toronto%2C%20ON%20M4M%201H1"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-peach"
-            >
-              <MapPin className="h-3 w-3" /> View on Google Maps
-            </a>
-            <div className="mt-3 overflow-hidden rounded-xl border border-white/15 shadow-lg shadow-black/20">
-              <iframe
-                title="DTdogs.ca location map — 717 Queen St E Unit# 100A"
-                src="https://maps.google.com/maps?q=717+Queen+St+E+Unit+100A,+Toronto,+ON+M4M+1H1&z=15&output=embed"
-                className="h-40 w-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
+            <div className="flex flex-col gap-5">
+              {[
+                {
+                  line1: "717 Queen St E Unit# 100A",
+                  line2: "Toronto, ON M4M 1H1",
+                  query: "717 Queen St E Unit# 100A, Toronto, ON M4M 1H1",
+                },
+                {
+                  line1: "218 Queen Street East",
+                  line2: "Toronto, ON M5A 1S3",
+                  query: "218 Queen Street East, Toronto, ON M5A 1S3",
+                },
+              ].map((loc) => (
+                <div key={loc.query}>
+                  <p className="text-sm text-white/85">{loc.line1}</p>
+                  <p className="text-sm text-white/85">{loc.line2}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.query)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-peach"
+                  >
+                    <MapPin className="h-3 w-3" /> View on Google Maps
+                  </a>
+                  <div className="mt-3 overflow-hidden rounded-xl border border-white/15 shadow-lg shadow-black/20">
+                    <iframe
+                      title={`DTdogs.ca location map — ${loc.line1}`}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(loc.query)}&z=15&output=embed`}
+                      className="h-36 w-full border-0"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
