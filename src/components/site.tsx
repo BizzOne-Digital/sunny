@@ -3973,7 +3973,7 @@ function SectionHeading({ eyebrow, title, align = "center", inverse }: { eyebrow
           <span className={cx("hidden h-px w-8 sm:block", inverse ? "bg-gradient-to-l from-transparent to-peach" : "bg-gradient-to-l from-transparent to-burgundy")} />
         </p>
       ) : null}
-      <h2 className={cx("font-serif text-[1.5rem] leading-[1.12] tracking-tight sm:text-[1.75rem] md:text-[2rem] lg:text-[2.4rem]", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
+      <h2 className={cx("font-serif text-[1.5rem] leading-[1.3] tracking-tight sm:text-[1.75rem] md:text-[2rem] lg:text-[2.4rem]", inverse ? "text-white" : "text-gradient-forest")}>{title}</h2>
       <motion.div
         className={cx("mt-5 h-1 rounded-full bg-gradient-to-r from-coral via-burgundy to-forest sm:mt-6", align === "center" ? "mx-auto w-20 sm:w-24" : "w-20 sm:w-24")}
         initial={{ scaleX: 0, opacity: 0 }}
@@ -4214,21 +4214,35 @@ function Footer({ services, logoSrc }: { services: Service[]; logoSrc: string })
             </div>
           </div>
 
-          {/* Location */}
+          {/* Locations */}
           <div>
             <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-peach">
-              <MapPin className="h-3.5 w-3.5" /> Base Location
+              <MapPin className="h-3.5 w-3.5" /> Our Locations
             </p>
-            <p className="text-sm text-white/85">218 Queen Street East</p>
-            <p className="text-sm text-white/85">Toronto, M5A 1S3</p>
-            <a
-              href="https://www.google.com/maps/place/218+Queen+St+E,+Toronto,+ON+M5A+1S3"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-peach"
-            >
-              <MapPin className="h-3 w-3" /> View on Google Maps
-            </a>
+            <div className="flex flex-col gap-4">
+              {[
+                "717 Queen St E Unit# 100A, Toronto, ON M4M 1H1",
+                "218 Queen Street East, Toronto, ON M5A 1S3",
+              ].map((location) => {
+                const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+                const [line1, ...rest] = location.split(", ");
+                const line2 = rest.join(", ");
+                return (
+                  <div key={location}>
+                    <p className="text-sm text-white/85">{line1}</p>
+                    {line2 ? <p className="text-sm text-white/85">{line2}</p> : null}
+                    <a
+                      href={mapsHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-peach"
+                    >
+                      <MapPin className="h-3 w-3" /> View on Google Maps
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

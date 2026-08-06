@@ -205,6 +205,10 @@ textarea {
   color: transparent;
   -webkit-text-fill-color: transparent;
   animation: gradient-pan 6s ease-in-out infinite;
+  /* background-clip:text clips Fraunces descenders (g/y/p) without extra ink room */
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
+  overflow: visible;
 }
 
 .text-gradient-forest {
@@ -215,6 +219,10 @@ textarea {
   color: transparent;
   -webkit-text-fill-color: transparent;
   animation: gradient-pan 7s ease-in-out infinite;
+  /* background-clip:text clips Fraunces descenders (g/y/p) without extra ink room */
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
+  overflow: visible;
 }
 
 .bg-gradient-animated {

@@ -221,6 +221,7 @@ export const brand = {
   whatsapp: "https://wa.me/14379375112",
   payments: "Pay online, in store, Interac, Amex, or with a DTdogs.ca gift card after confirmation.",
   locations: [
+    "717 Queen St E Unit# 100A, Toronto, ON M4M 1H1",
     "218 Queen Street East, Toronto, ON M5A 1S3",
     "Floor 15, 65 High Park Avenue, Toronto, ON M6P 2R7",
   ],
